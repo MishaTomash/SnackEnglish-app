@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   Sparkles,
   ChevronRight,
   Mic,
+  AlertCircle,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -21,6 +22,8 @@ import { useUserStore } from "../store/userStore";
 import { getWordsByIds } from "../entities/word/api";
 import type { Word } from "../entities/word/types";
 import type { UnitStepType } from "../entities/unit/types";
+import { useSpeechRecognition } from "../shared/lib/useSpeechRecognition";
+import { calculateSimilarity } from "../shared/lib/similarity";
 
 export const UnitStepPage = () => {
   const { unitId, stepType } = useParams<{
@@ -49,14 +52,42 @@ export const UnitStepPage = () => {
   const [readingAnswer, setReadingAnswer] = useState<number | null>(null);
 
   // Стан для speaking
-  const [speakingStatus, setSpeakingStatus] = useState<
-    "idle" | "recording" | "done"
-  >("idle");
+  const [similarityScore, setSimilarityScore] = useState<number | null>(null);
+  const [hasEvaluated, setHasEvaluated] = useState(false);
 
   // Стан для test
   const [testQuestionIdx, setTestQuestionIdx] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [isTestFinished, setIsTestFinished] = useState(false);
+
+  const targetSentence =
+    words[0]?.exampleSentence ?? "Hello, nice to meet you!";
+
+  const handleSpeechEnd = useCallback(
+    (finalTranscript: string) => {
+      if (!finalTranscript.trim()) {
+        setSimilarityScore(0);
+        setHasEvaluated(true);
+        return;
+      }
+      const score = calculateSimilarity(finalTranscript, targetSentence);
+      setSimilarityScore(score);
+      setHasEvaluated(true);
+    },
+    [targetSentence],
+  );
+
+  const {
+    isListening,
+    transcript,
+    isSupported,
+    startListening,
+    stopListening,
+    resetTranscript,
+  } = useSpeechRecognition({
+    lang: "en-US",
+    onEnd: handleSpeechEnd,
+  });
 
   useEffect(() => {
     if (unit?.wordIds) {
@@ -139,18 +170,18 @@ export const UnitStepPage = () => {
         <Card className="p-6 text-center space-y-4 min-h-[260px] flex flex-col justify-center">
           <div className="flex items-center justify-center gap-2">
             <span className="text-3xl font-extrabold">{word.text}</span>
-            <Volume2 className="w-5 h-5 text-[var(--tg-theme-button-color,#3390ec)] cursor-pointer" />
+            <Volume2 className="w-5 h-5 text-primary cursor-pointer" />
           </div>
-          <span className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] font-mono">
+          <span className="text-sm text-cookieText-muted font-mono">
             {word.transcription}
           </span>
-          <div className="text-xl font-semibold text-[var(--tg-theme-button-color,#3390ec)]">
+          <div className="text-xl font-semibold text-primary">
             {word.translation}
           </div>
 
-          <div className="mt-4 pt-4 border-t border-[var(--tg-theme-hint-color,#8e8e93)]/20 text-left text-sm space-y-1 bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)]/40 p-3 rounded-xl">
+          <div className="mt-4 pt-4 border-t border-card-border text-left text-sm space-y-1 bg-amber-50/50 dark:bg-amber-950/20 p-3 rounded-2xl">
             <p className="font-medium">"{word.exampleSentence}"</p>
-            <p className="text-xs text-[var(--tg-theme-hint-color,#8e8e93)]">
+            <p className="text-xs text-cookieText-muted">
               {word.exampleTranslation}
             </p>
           </div>
@@ -192,31 +223,23 @@ export const UnitStepPage = () => {
           {unit.grammarExplanation}
         </div>
 
-        <div className="space-y-2 pt-2 border-t border-[var(--tg-theme-hint-color,#8e8e93)]/20">
-          <span className="text-xs font-bold text-[var(--tg-theme-hint-color,#8e8e93)] uppercase">
+        <div className="space-y-2 pt-2 border-t border-card-border">
+          <span className="text-xs font-bold text-cookieText-muted uppercase">
             Приклади речень:
           </span>
-          <div className="p-3 bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] rounded-xl space-y-1 text-sm">
+          <div className="p-3 bg-secondary rounded-2xl space-y-1 text-sm">
             <p>
-              • I{" "}
-              <span className="font-bold underline text-[var(--tg-theme-button-color,#3390ec)]">
-                am
-              </span>{" "}
+              • I <span className="font-bold underline text-primary">am</span>{" "}
               from Ukraine.
             </p>
             <p>
-              • She{" "}
-              <span className="font-bold underline text-[var(--tg-theme-button-color,#3390ec)]">
-                is
-              </span>{" "}
+              • She <span className="font-bold underline text-primary">is</span>{" "}
               a great student.
             </p>
             <p>
               • They{" "}
-              <span className="font-bold underline text-[var(--tg-theme-button-color,#3390ec)]">
-                are
-              </span>{" "}
-              our best friends.
+              <span className="font-bold underline text-primary">are</span> our
+              best friends.
             </p>
           </div>
         </div>
@@ -232,7 +255,7 @@ export const UnitStepPage = () => {
 
   const renderVideo = () => (
     <div className="space-y-4 my-auto">
-      <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-md bg-black">
+      <div className="w-full aspect-video rounded-3xl overflow-hidden shadow-md bg-black">
         <iframe
           className="w-full h-full"
           src={getEmbedUrl(unit.videoUrl)}
@@ -241,7 +264,7 @@ export const UnitStepPage = () => {
           allowFullScreen
         />
       </div>
-      <Card className="p-4 text-xs text-[var(--tg-theme-hint-color,#8e8e93)]">
+      <Card className="p-4 text-xs text-cookieText-muted">
         Подивіться це короткохвилинне відео для закріплення правильної
         артикуляції та темпу мови.
       </Card>
@@ -261,7 +284,7 @@ export const UnitStepPage = () => {
         </p>
 
         {showReadingTranslation && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-xl text-sm leading-relaxed">
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-2xl text-sm leading-relaxed">
             {unit.readingTranslation}
           </div>
         )}
@@ -277,7 +300,7 @@ export const UnitStepPage = () => {
 
       {/* Питання на розуміння */}
       <Card className="p-4 space-y-3">
-        <span className="text-xs font-semibold text-[var(--tg-theme-hint-color,#8e8e93)]">
+        <span className="text-xs font-semibold text-cookieText-muted">
           Запитання на розуміння:
         </span>
         <p className="text-sm font-medium">Is Anna from Ukraine?</p>
@@ -288,8 +311,8 @@ export const UnitStepPage = () => {
               onClick={() => setReadingAnswer(i)}
               className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
                 readingAnswer === i
-                  ? "bg-[var(--tg-theme-button-color,#3390ec)] text-white border-transparent"
-                  : "bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] border-transparent text-[var(--tg-theme-text-color,#000000)]"
+                  ? "bg-primary text-primary-foreground border-transparent"
+                  : "bg-secondary text-secondary-foreground border-transparent"
               }`}
             >
               {opt}
@@ -308,55 +331,130 @@ export const UnitStepPage = () => {
     </div>
   );
 
-  // 6. КРОК: ГОВОРІННЯ (SPEAKING MOCK)
+  // 6. КРОК: ГОВОРІННЯ (REAL SPEECH RECOGNITION)
   const renderSpeaking = () => {
-    const handleRecord = () => {
-      setSpeakingStatus("recording");
-      setTimeout(() => {
-        setSpeakingStatus("done");
-      }, 1000);
+    const isPassed = (similarityScore ?? 0) >= 70;
+
+    const handleMicClick = () => {
+      if (isListening) {
+        stopListening();
+      } else {
+        setHasEvaluated(false);
+        setSimilarityScore(null);
+        resetTranscript();
+        startListening();
+      }
     };
+
+    const handleRetry = () => {
+      setHasEvaluated(false);
+      setSimilarityScore(null);
+      resetTranscript();
+    };
+
+    if (!isSupported) {
+      return (
+        <div className="space-y-4 my-auto">
+          <Card className="p-6 text-center space-y-4">
+            <div className="w-14 h-14 mx-auto rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center">
+              <AlertCircle className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-bold text-lg">Розпізнавання недоступне</h3>
+              <p className="text-xs text-cookieText-muted">
+                Ваш браузер або клієнт Telegram не підтримує Web Speech API. Ви
+                можете повторити фразу подумки та продовжити урок.
+              </p>
+            </div>
+            <div className="p-4 bg-secondary rounded-2xl">
+              <p className="text-lg font-bold text-cookieText-primary">
+                "{targetSentence}"
+              </p>
+            </div>
+          </Card>
+          <Button onClick={handleStepCompletion} variant="primary">
+            Пропустити та продовжити
+          </Button>
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-4 my-auto">
         <Card className="p-6 text-center space-y-4">
-          <span className="text-xs uppercase font-bold text-[var(--tg-theme-hint-color,#8e8e93)]">
+          <span className="text-xs uppercase font-bold text-cookieText-muted tracking-wider">
             Вимовіть уголос
           </span>
-          <p className="text-xl font-bold">
-            "{words[0]?.exampleSentence ?? "Hello, nice to meet you!"}"
+          <p className="text-xl font-bold text-cookieText-primary leading-relaxed">
+            "{targetSentence}"
           </p>
 
-          <div className="pt-4 flex flex-col items-center gap-3">
-            {speakingStatus === "idle" && (
+          {transcript && (
+            <div className="p-3 bg-secondary rounded-2xl text-xs space-y-1">
+              <span className="text-cookieText-muted font-medium">
+                Ви сказали:
+              </span>
+              <p className="font-semibold text-cookieText-primary italic">
+                "{transcript}"
+              </p>
+            </div>
+          )}
+
+          <div className="pt-2 flex flex-col items-center gap-3">
+            {!isListening && !hasEvaluated && (
               <button
-                onClick={handleRecord}
-                className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                onClick={handleMicClick}
+                className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-cookie active:scale-95 transition-transform"
+                title="Почати запис"
               >
                 <Mic className="w-7 h-7" />
               </button>
             )}
 
-            {speakingStatus === "recording" && (
+            {isListening && (
               <div className="flex flex-col items-center gap-2">
-                <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center animate-pulse">
+                <button
+                  onClick={handleMicClick}
+                  className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center animate-pulse shadow-lg"
+                  title="Зупинити запис"
+                >
                   <Mic className="w-7 h-7" />
-                </div>
-                <span className="text-xs font-semibold text-red-500">
-                  Слухаємо...
+                </button>
+                <span className="text-xs font-semibold text-red-500 animate-pulse">
+                  Слухаємо... Натисніть, щоб завершити
                 </span>
               </div>
             )}
 
-            {speakingStatus === "done" && (
+            {!isListening && hasEvaluated && isPassed && (
               <div className="w-full p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-1">
-                <div className="flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-base">
+                <div className="flex items-center justify-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-base">
                   <CheckCircle2 className="w-5 h-5" />
-                  <span>Добре! 85% збіг</span>
+                  <span>Відмінно! {similarityScore}% збіг</span>
                 </div>
-                <p className="text-xs text-[var(--tg-theme-hint-color,#8e8e93)]">
-                  Чудова інтонація та правильний наголос!
+                <p className="text-xs text-cookieText-muted">
+                  Чудова вимова! Ви подолали поріг у 70%.
                 </p>
+              </div>
+            )}
+
+            {!isListening && hasEvaluated && !isPassed && (
+              <div className="w-full p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-3">
+                <div className="flex items-center justify-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold text-base">
+                  <RotateCcw className="w-5 h-5" />
+                  <span>Збіг: {similarityScore}% (потрібно 70%)</span>
+                </div>
+                <p className="text-xs text-cookieText-muted">
+                  Спробуйте чіткіше артикулювати слова та повторіть знову.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleRetry}
+                  className="w-full"
+                >
+                  Спробувати ще раз
+                </Button>
               </div>
             )}
           </div>
@@ -365,7 +463,7 @@ export const UnitStepPage = () => {
         <Button
           onClick={handleStepCompletion}
           variant="primary"
-          disabled={speakingStatus !== "done"}
+          disabled={!isPassed}
         >
           Продовжити
         </Button>
@@ -394,7 +492,6 @@ export const UnitStepPage = () => {
     }
 
     if (isTestFinished) {
-      // 0-й варіант завжди правильний у нашому генераторі мок-питань
       const correctCount = selectedAnswers.filter((ans) => ans === 0).length;
       const scorePercent = Math.round((correctCount / 5) * 100);
       const isPassed = scorePercent >= 75;
@@ -423,7 +520,7 @@ export const UnitStepPage = () => {
                   ? "Тест складено успішно!"
                   : "Не вистачило балів для проходження"}
               </p>
-              <p className="text-xs text-[var(--tg-theme-hint-color,#8e8e93)] mt-1">
+              <p className="text-xs text-cookieText-muted mt-1">
                 Правильних відповідей: {correctCount} з 5 (потрібно мінімум 4)
               </p>
             </div>
@@ -435,13 +532,13 @@ export const UnitStepPage = () => {
             </Button>
           ) : (
             <Button
-              variant="danger"
+              variant="outline"
               onClick={() => {
                 setSelectedAnswers([]);
                 setTestQuestionIdx(0);
                 setIsTestFinished(false);
               }}
-              className="flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-2 border-red-500 text-red-500 hover:bg-red-500/10"
             >
               <RotateCcw className="w-4 h-4" />
               Спробувати ще раз
@@ -452,7 +549,6 @@ export const UnitStepPage = () => {
     }
 
     const currentWord = testWords[testQuestionIdx];
-    // Генеруємо 4 варіанти: 1 правильний і 3 рандомні
     const otherTranslations = words
       .filter((w) => w.id !== currentWord.id)
       .map((w) => w.translation)
@@ -461,17 +557,19 @@ export const UnitStepPage = () => {
 
     return (
       <div className="space-y-4 my-auto">
-        <div className="flex justify-between items-center text-xs font-semibold text-[var(--tg-theme-hint-color,#8e8e93)]">
+        <div className="flex justify-between items-center text-xs font-semibold text-cookieText-muted">
           <span>Питання {testQuestionIdx + 1} з 5</span>
           <span>{Math.round(((testQuestionIdx + 1) / 5) * 100)}%</span>
         </div>
         <ProgressBar progress={((testQuestionIdx + 1) / 5) * 100} />
 
         <Card className="p-6 text-center space-y-2">
-          <span className="text-xs text-[var(--tg-theme-hint-color,#8e8e93)] uppercase font-semibold">
+          <span className="text-xs text-cookieText-muted uppercase font-semibold">
             Оберіть правильний переклад
           </span>
-          <h2 className="text-3xl font-extrabold">{currentWord.text}</h2>
+          <h2 className="text-3xl font-extrabold text-cookieText-primary">
+            {currentWord.text}
+          </h2>
         </Card>
 
         <div className="space-y-2">
@@ -479,10 +577,10 @@ export const UnitStepPage = () => {
             <button
               key={opt}
               onClick={() => handleSelectTestOption(idx)}
-              className="w-full p-4 rounded-xl font-semibold text-left border border-[var(--tg-theme-hint-color,#8e8e93)]/20 bg-[var(--tg-theme-bg-color,#ffffff)] text-[var(--tg-theme-text-color,#000000)] active:bg-[var(--tg-theme-button-color,#3390ec)] active:text-white transition-all flex items-center justify-between"
+              className="w-full p-4 rounded-2xl font-semibold text-left border border-card-border bg-card text-cookieText-primary hover:bg-card-hover active:bg-primary active:text-primary-foreground transition-all flex items-center justify-between shadow-cookie-sm"
             >
               <span>{opt}</span>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
+              <ChevronRight className="w-4 h-4 text-cookieText-muted" />
             </button>
           ))}
         </div>
@@ -498,8 +596,10 @@ export const UnitStepPage = () => {
           <Trophy className="w-10 h-10" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black">Юніт завершено! 🎉</h1>
-          <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] max-w-xs">
+          <h1 className="text-2xl font-black text-cookieText-primary">
+            Юніт завершено! 🎉
+          </h1>
+          <p className="text-sm text-cookieText-muted max-w-xs">
             Ви успішно пройшли всі 7 кроків теми «{unit.title}». Наступний юніт
             розблоковано!
           </p>
@@ -518,10 +618,10 @@ export const UnitStepPage = () => {
   return (
     <Screen className="justify-between">
       {/* Навігаційний заголовок кроку */}
-      <div className="flex items-center justify-between pb-3 border-b border-[var(--tg-theme-hint-color,#8e8e93)]/20">
+      <div className="flex items-center justify-between pb-3 border-b border-card-border">
         <button
           onClick={() => navigate(`/path/${unit.id}`)}
-          className="p-2 rounded-xl bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] text-[var(--tg-theme-text-color,#000000)]"
+          className="p-2 rounded-2xl bg-secondary text-secondary-foreground"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
