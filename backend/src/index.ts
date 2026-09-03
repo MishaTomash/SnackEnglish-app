@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { authMiddleware } from "./middlewares/authMiddleware.js";
 import progressRoutes from "./routes/progressRoutes.js";
+import { bot } from "./bot.js";
+import { initCronJobs } from "./services/cronService.js";
 
 dotenv.config();
 
@@ -41,9 +43,21 @@ async function bootstrap(): Promise<void> {
     await mongoose.connect(MONGODB_URI);
     console.log("Successfully connected to MongoDB.");
 
+    // Ініціалізація фонових задач утримання (Cron)
+    initCronJobs();
+
+    // Запуск Telegram бота у режимі polling
+    void bot.launch(() => {
+      console.log("Telegram bot is running.");
+    });
+
     app.listen(PORT, () => {
       console.log(`SnackEnglish backend is running on port ${PORT}`);
     });
+
+    // Graceful stop
+    process.once("SIGINT", () => bot.stop("SIGINT"));
+    process.once("SIGTERM", () => bot.stop("SIGTERM"));
   } catch (error: unknown) {
     console.error("Failed to start server:", error);
     process.exit(1);
