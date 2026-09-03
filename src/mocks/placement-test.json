@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "question": "Оберіть правильне привітання для ранку:",
+    "options": ["Good night", "Good morning", "Goodbye", "Good evening"],
+    "correctIndex": 1,
+    "type": "vocabulary"
+  },
+  {
+    "id": 2,
+    "question": "She _____ from Ukraine.",
+    "options": ["is", "are", "am", "be"],
+    "correctIndex": 0,
+    "type": "grammar"
+  },
+  {
+    "id": 3,
+    "question": "I usually drink _____ with milk for breakfast.",
+    "options": ["bread", "coffee", "book", "table"],
+    "correctIndex": 1,
+    "type": "vocabulary"
+  },
+  {
+    "id": 4,
+    "question": "They _____ in Kyiv right now.",
+    "options": ["lives", "living", "live", "is live"],
+    "correctIndex": 2,
+    "type": "grammar"
+  },
+  {
+    "id": 5,
+    "question": "Який документ потрібен для подорожі за кордон?",
+    "options": ["Ticket", "Passport", "Map", "Key"],
+    "correctIndex": 1,
+    "type": "vocabulary"
+  },
+  {
+    "id": 6,
+    "question": "We are waiting for our flight _____ the airport.",
+    "options": ["at", "on", "under", "to"],
+    "correctIndex": 0,
+    "type": "grammar"
+  },
+  {
+    "id": 7,
+    "question": "He _____ wake up early on weekends.",
+    "options": ["doesn't", "don't", "isn't", "aren't"],
+    "correctIndex": 0,
+    "type": "grammar"
+  },
+  {
+    "id": 8,
+    "question": "Our plane _____ was delayed by two hours.",
+    "options": ["flight", "hotel", "tourist", "luggage"],
+    "correctIndex": 0,
+    "type": "vocabulary"
+  }
+]

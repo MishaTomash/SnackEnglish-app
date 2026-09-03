@@ -1,6 +1,14 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { initTelegramApp, subscribeToTheme } from "../shared/lib/telegram";
+import { useUserStore } from "../store/userStore";
+import { OnboardingPage } from "../pages/OnboardingPage";
 import { HomePage } from "../pages/HomePage";
 import { UnitPathPage } from "../pages/UnitPathPage";
 import { UnitStepPage } from "../pages/UnitStepPage";
@@ -8,13 +16,26 @@ import { PracticePage } from "../pages/PracticePage";
 import { BottomNav } from "../widgets/BottomNav";
 
 const AppContent = () => {
+  const level = useUserStore((state) => state.level);
   const location = useLocation();
-  // Приховуємо нижній бар під час проходження окремого кроку для фокусу
+
   const isInsideStep = location.pathname.includes("/step/");
+  const isOnboarding = location.pathname === "/onboarding";
+
+  // Якщо рівень ще не обрано — перенаправляємо на онбординг
+  if (!level && !isOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // Якщо рівень вже є, але користувач заходить на онбординг — ведемо на головну
+  if (level && isOnboarding) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="relative min-h-screen bg-[var(--tg-theme-bg-color,#ffffff)] text-[var(--tg-theme-text-color,#000000)]">
       <Routes>
+        <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/" element={<HomePage />} />
         <Route path="/path" element={<UnitPathPage />} />
         <Route path="/path/:unitId" element={<UnitPathPage />} />
@@ -22,7 +43,7 @@ const AppContent = () => {
         <Route path="/practice" element={<PracticePage />} />
       </Routes>
 
-      {!isInsideStep && <BottomNav />}
+      {!isInsideStep && !isOnboarding && <BottomNav />}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import type { EnglishLevel } from "../entities/word/types";
 
 interface UserState {
-  level: EnglishLevel;
+  level: EnglishLevel | null;
   streak: number;
   wordsLearnedCount: number;
   setLevel: (level: EnglishLevel) => void;
@@ -14,9 +14,9 @@ interface UserState {
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
-      level: "A1",
-      streak: 5,
-      wordsLearnedCount: 16,
+      level: null,
+      streak: 1,
+      wordsLearnedCount: 0,
       setLevel: (level) => set({ level }),
       incrementStreak: () => set((state) => ({ streak: state.streak + 1 })),
       incrementWordsLearned: (count = 1) =>
