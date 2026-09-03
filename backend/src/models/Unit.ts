@@ -1,87 +1,93 @@
-import { Schema, model, Document, Types } from "mongoose";
-import type { EnglishLevel } from "./Word.js";
+import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IUnit extends Document {
-  unitId: string;
   title: string;
-  level: EnglishLevel;
-  topic: string;
+  description: string;
+  level: "A1" | "A2" | "B1" | "B2" | "C1";
   order: number;
   wordIds: Types.ObjectId[];
-  grammarTopic: string;
-  grammarExplanation: string;
+  grammar: {
+    title: string;
+    explanation: string;
+    examples: Array<{ en: string; ua: string }>;
+  };
   videoUrl: string;
-  readingText: string;
-  readingTranslation: string;
-  createdAt: Date;
-  updatedAt: Date;
+  reading: {
+    title: string;
+    text: string;
+    questions: Array<{
+      question: string;
+      options: string[];
+      correctAnswer: number;
+    }>;
+  };
+  dialogue: {
+    title: string;
+    scenario: string;
+    lines: Array<{
+      speaker: string;
+      text: string;
+      translation: string;
+    }>;
+  };
+  quiz: Array<{
+    question: string;
+    options: string[];
+    correctAnswer: number;
+    explanation?: string;
+  }>;
 }
 
-const unitSchema = new Schema<IUnit>(
+const UnitSchema = new Schema<IUnit>(
   {
-    unitId: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-      trim: true,
-    },
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    title: { type: String, required: true, unique: true },
+    description: { type: String, required: true },
     level: {
       type: String,
       required: true,
-      enum: ["A1", "A2", "B1", "B2", "C1", "C2"],
+      enum: ["A1", "A2", "B1", "B2", "C1"],
     },
-    topic: {
-      type: String,
-      required: true,
-      trim: true,
+    order: { type: Number, required: true },
+    wordIds: [{ type: Schema.Types.ObjectId, ref: "Word" }],
+    grammar: {
+      title: { type: String, required: true },
+      explanation: { type: String, required: true },
+      examples: [{ en: String, ua: String }],
     },
-    order: {
-      type: Number,
-      required: true,
-      index: true,
+    videoUrl: { type: String, required: true },
+    reading: {
+      title: { type: String, required: true },
+      text: { type: String, required: true },
+      questions: [
+        {
+          question: { type: String, required: true },
+          options: [{ type: String, required: true }],
+          correctAnswer: { type: Number, required: true },
+        },
+      ],
     },
-    wordIds: [
+    dialogue: {
+      title: { type: String, required: true },
+      scenario: { type: String, required: true },
+      lines: [
+        {
+          speaker: { type: String, required: true },
+          text: { type: String, required: true },
+          translation: { type: String, required: true },
+        },
+      ],
+    },
+    quiz: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Word",
-        required: true,
+        question: { type: String, required: true },
+        options: [{ type: String, required: true }],
+        correctAnswer: { type: Number, required: true },
+        explanation: { type: String },
       },
     ],
-    grammarTopic: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    grammarExplanation: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    videoUrl: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    readingText: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    readingTranslation: {
-      type: String,
-      required: true,
-      trim: true,
-    },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-export const Unit = model<IUnit>("Unit", unitSchema);
+export const Unit =
+  mongoose.models.Unit || mongoose.model<IUnit>("Unit", UnitSchema);

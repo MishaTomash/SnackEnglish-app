@@ -1,69 +1,31 @@
-import { Schema, model, Document } from "mongoose";
-
-export type EnglishLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IWord extends Document {
-  wordId: string;
   text: string;
-  translation: string;
   transcription: string;
+  translation: string;
   exampleSentence: string;
   exampleTranslation: string;
-  level: EnglishLevel;
-  topic: string;
-  createdAt: Date;
-  updatedAt: Date;
+  level: "A1" | "A2" | "B1" | "B2" | "C1";
 }
 
-const wordSchema = new Schema<IWord>(
+const WordSchema = new Schema<IWord>(
   {
-    wordId: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-      trim: true,
-    },
-    text: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    translation: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    transcription: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    exampleSentence: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    exampleTranslation: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    text: { type: String, required: true, trim: true },
+    transcription: { type: String, required: true },
+    translation: { type: String, required: true },
+    exampleSentence: { type: String, required: true },
+    exampleTranslation: { type: String, required: true },
     level: {
       type: String,
       required: true,
-      enum: ["A1", "A2", "B1", "B2", "C1", "C2"],
-    },
-    topic: {
-      type: String,
-      required: true,
-      trim: true,
-      index: true,
+      enum: ["A1", "A2", "B1", "B2", "C1"],
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-export const Word = model<IWord>("Word", wordSchema);
+WordSchema.index({ text: 1, level: 1 }, { unique: true });
+
+export const Word =
+  mongoose.models.Word || mongoose.model<IWord>("Word", WordSchema);
