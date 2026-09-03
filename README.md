@@ -1,32 +1,28 @@
-# React + TypeScript + Vite
+# Telegram Mini App (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Базовий шаблон для створення Telegram Mini App (TMA).
 
-Currently, two official plugins are available:
+## 1. Реєстрація бота
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Відкрий Telegram і знайди [@BotFather](https://t.me/BotFather).
+2. Відправ команду `/newbot`, вибери ім'я та юзернейм бота.
+3. BotFather видасть тобі **Token** (збережи його, він знадобиться для бекенду пізніше).
 
-## React Compiler
+## 2. Підключення Web App (Mini App) URL
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. У @BotFather відправ команду `/newapp`.
+2. Вибери бота, до якого прив'язуєш додаток.
+3. Вкажи назву, короткий опис та завантаж фото.
+4. На етапі введення URL встав **HTTPS-посилання** на твій додаток.
+5. _(Альтернативно)_: Перейди в `/mybots` -> вибери бота -> **Bot Settings** -> **Menu Button** -> **Configure menu button** і встав туди URL, щоб додаток відкривався по кнопці зліва від поля вводу.
 
-## Expanding the Oxlint configuration
+## 3. Локальна розробка (HTTPS Тунель)
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Telegram Mini Apps **НЕ ПРАЦЮЮТЬ** з `http://localhost`. Додаток повинен відкриватися виключно по захищеному протоколу `https`.
+Щоб тестувати додаток локально в самому клієнті Telegram, потрібно використати тунель:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+**За допомогою Cloudflare (рекомендовано, безкоштовно):**
+
+```bash
+npx cloudflared tunnel --url http://localhost:5173
 ```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
