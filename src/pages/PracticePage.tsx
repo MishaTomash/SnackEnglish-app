@@ -1,85 +1,40 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Volume2, Sparkles, CalendarCheck, RotateCcw } from "lucide-react";
+import { Sparkles, CalendarCheck, RotateCcw } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { ProgressBar } from "../shared/ui/ProgressBar";
-import { useProgressStore } from "../store/progressStore";
 import { useRepetitionStore } from "../store/repetitionStore";
-import { getWordsByIds } from "../entities/word/api";
-import type { Word } from "../entities/word/types";
 
 export const PracticePage = () => {
   const navigate = useNavigate();
 
-  const units = useProgressStore((state) => state.units);
-  const { items, initWordsFromCompletedUnits, recordReview } =
-    useRepetitionStore();
+  const {
+    dailyQueue,
+    currentWordIndex,
+    isLoading,
+    isFinished,
+    loadDailyWords,
+    submitReview,
+  } = useRepetitionStore();
 
-  const [wordsMap, setWordsMap] = useState<Record<string, Word>>({});
-  const [isLoading, setIsLoading] = useState(true);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // 1. Збираємо всі wordIds із завершених юнітів
-  const completedWordIds = useMemo(() => {
-    return units
-      .filter((u) => u.status === "completed")
-      .flatMap((u) => u.wordIds);
-  }, [units]);
-
-  // 2. Ініціалізуємо нові слова в SM-2 чергу
   useEffect(() => {
-    if (completedWordIds.length > 0) {
-      initWordsFromCompletedUnits(completedWordIds);
-    }
-  }, [completedWordIds, initWordsFromCompletedUnits]);
+    void loadDailyWords();
+  }, [loadDailyWords]);
 
-  // 3. Завантажуємо сутності слів
-  useEffect(() => {
-    if (completedWordIds.length === 0) {
-      setIsLoading(false);
-      return;
-    }
+  const currentWord = dailyQueue[currentWordIndex];
+  const totalDueToday = dailyQueue.length;
 
-    getWordsByIds(completedWordIds).then((fetchedWords) => {
-      const map: Record<string, Word> = {};
-      fetchedWords.forEach((w) => {
-        map[w.id] = w;
-      });
-      setWordsMap(map);
-      setIsLoading(false);
-    });
-  }, [completedWordIds]);
+  const handleAnswer = async (remembered: boolean) => {
+    if (!currentWord) return;
 
-  // 4. Фільтруємо слова, у яких nextReviewDate <= зараз
-  const dueWordIds = useMemo(() => {
-    const now = Date.now();
-    return completedWordIds.filter((id) => {
-      const repItem = items[id];
-      if (!repItem) return true;
-      return new Date(repItem.nextReviewDate).getTime() <= now;
-    });
-  }, [completedWordIds, items]);
-
-  const currentWordId = dueWordIds[currentIndex];
-  const currentWord = currentWordId ? wordsMap[currentWordId] : null;
-  const totalDueToday = dueWordIds.length;
-
-  const handleAnswer = (remembered: boolean) => {
-    if (!currentWordId) return;
-
-    // SM-2: "Не пам'ятаю" = quality 1, "Пам'ятаю" = quality 4
+    // SM-2: 4 (успішне згадування), 1 (забув)
     const quality = remembered ? 4 : 1;
-    recordReview(currentWordId, quality);
-
     setIsRevealed(false);
-    if (currentIndex < dueWordIds.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      setCurrentIndex(0);
-    }
+    await submitReview(quality);
   };
 
   if (isLoading) {
@@ -92,8 +47,7 @@ export const PracticePage = () => {
     );
   }
 
-  // Порожній стан: немає слів на сьогодні
-  if (!currentWord || totalDueToday === 0) {
+  if (isFinished || totalDueToday === 0 || !currentWord) {
     return (
       <Screen className="justify-center items-center text-center p-6 space-y-6">
         <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -119,16 +73,16 @@ export const PracticePage = () => {
   }
 
   const progressPercent = Math.round(
-    ((currentIndex + 1) / totalDueToday) * 100,
+    ((currentWordIndex + 1) / totalDueToday) * 100,
   );
 
   return (
     <Screen className="justify-between space-y-4">
-      {/* Верхній прогрес сесії */}
+      {/* Прогрес сесії */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-xs font-semibold text-[var(--tg-theme-hint-color,#8e8e93)]">
           <span>
-            Слово {currentIndex + 1} з {totalDueToday}
+            Слово {currentWordIndex + 1} з {totalDueToday}
           </span>
           <span>{progressPercent}%</span>
         </div>
@@ -145,7 +99,6 @@ export const PracticePage = () => {
             <Sparkles className="w-3.5 h-3.5" /> Флешкартка
           </span>
 
-          {/* Слово та транскрипція */}
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold">{currentWord.text}</h1>
             <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] font-mono">
@@ -153,9 +106,8 @@ export const PracticePage = () => {
             </p>
           </div>
 
-          {/* Контент зворотного боку картки */}
           {isRevealed ? (
-            <div className="space-y-3 pt-4 border-t border-[var(--tg-theme-hint-color,#8e8e93)]/20 w-full animate-fadeIn">
+            <div className="space-y-3 pt-4 border-t border-[var(--tg-theme-hint-color,#8e8e93)]/20 w-full">
               <div className="text-2xl font-bold text-[var(--tg-theme-button-color,#3390ec)]">
                 {currentWord.translation}
               </div>
@@ -175,20 +127,20 @@ export const PracticePage = () => {
         </Card>
       </div>
 
-      {/* Кнопки оцінки відповіді */}
+      {/* Кнопки оцінки */}
       <div className="space-y-2">
         {isRevealed ? (
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="danger"
-              onClick={() => handleAnswer(false)}
+              onClick={() => void handleAnswer(false)}
               className="py-3 text-sm font-bold"
             >
               Не пам'ятаю
             </Button>
             <Button
               variant="primary"
-              onClick={() => handleAnswer(true)}
+              onClick={() => void handleAnswer(true)}
               className="py-3 text-sm font-bold"
             >
               Пам'ятаю

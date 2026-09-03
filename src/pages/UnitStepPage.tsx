@@ -114,7 +114,8 @@ export const UnitStepPage = () => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, roleplayHint]);
 
-  const targetSentence = words[0]?.exampleSentence ?? "Hello, nice to meet you!";[cite: 1]
+  const targetSentence =
+    words[0]?.exampleSentence ?? "Hello, nice to meet you!";
 
   const handleSpeechEnd = useCallback(
     (finalTranscript: string) => {
@@ -127,7 +128,7 @@ export const UnitStepPage = () => {
       setSimilarityScore(score);
       setHasEvaluated(true);
     },
-    [targetSentence]
+    [targetSentence],
   );
 
   const {
@@ -281,13 +282,17 @@ export const UnitStepPage = () => {
           </span>
           <div className="p-3 bg-secondary rounded-2xl space-y-1 text-sm">
             <p>
-              • I <span className="font-bold underline text-primary">am</span> from Ukraine.
+              • I <span className="font-bold underline text-primary">am</span>{" "}
+              from Ukraine.
             </p>
             <p>
-              • She <span className="font-bold underline text-primary">is</span> a great student.
+              • She <span className="font-bold underline text-primary">is</span>{" "}
+              a great student.
             </p>
             <p>
-              • They <span className="font-bold underline text-primary">are</span> our best friends.
+              • They{" "}
+              <span className="font-bold underline text-primary">are</span> our
+              best friends.
             </p>
           </div>
         </div>
@@ -313,7 +318,8 @@ export const UnitStepPage = () => {
         />
       </div>
       <Card className="p-4 text-xs text-cookieText-muted">
-        Подивіться це короткохвилинне відео для закріплення правильної артикуляції та темпу мови.
+        Подивіться це короткохвилинне відео для закріплення правильної
+        артикуляції та темпу мови.
       </Card>
       <Button onClick={handleStepCompletion} variant="primary">
         Я подивився, продовжити
@@ -408,8 +414,8 @@ export const UnitStepPage = () => {
             <div className="space-y-1">
               <h3 className="font-bold text-lg">Розпізнавання недоступне</h3>
               <p className="text-xs text-cookieText-muted">
-                Ваш браузер або клієнт Telegram не підтримує Web Speech API.
-                Ви можете повторити фразу подумки та продовжити урок.
+                Ваш браузер або клієнт Telegram не підтримує Web Speech API. Ви
+                можете повторити фразу подумки та продовжити урок.
               </p>
             </div>
             <div className="p-4 bg-secondary rounded-2xl">
@@ -437,7 +443,9 @@ export const UnitStepPage = () => {
 
           {transcript && (
             <div className="p-3 bg-secondary rounded-2xl text-xs space-y-1">
-              <span className="text-cookieText-muted font-medium">Ви сказали:</span>
+              <span className="text-cookieText-muted font-medium">
+                Ви сказали:
+              </span>
               <p className="font-semibold text-cookieText-primary italic">
                 "{transcript}"
               </p>
@@ -521,7 +529,9 @@ export const UnitStepPage = () => {
       return (
         <div className="space-y-4 my-auto">
           <Card className="p-6 text-center space-y-2">
-            <p className="text-sm font-medium">Для цього уроку ще немає сценарію рольової гри.</p>
+            <p className="text-sm font-medium">
+              Для цього уроку ще немає сценарію рольової гри.
+            </p>
           </Card>
           <Button onClick={handleStepCompletion} variant="primary">
             Пропустити крок
@@ -554,7 +564,8 @@ export const UnitStepPage = () => {
         }
       } else {
         setRoleplayHint(
-          currentItem.hint ?? "Хм, це не зовсім природна фраза для цієї ситуації. Спробуй ще раз!"
+          currentItem.hint ??
+            "Хм, це не зовсім природна фраза для цієї ситуації. Спробуй ще раз!",
         );
       }
     };
@@ -576,7 +587,9 @@ export const UnitStepPage = () => {
                 key={msg.id}
                 className={`flex items-end gap-2 ${isBot ? "justify-start" : "justify-end"}`}
               >
-                {isBot && <CookieMascot state="happy" size={28} className="shrink-0" />}
+                {isBot && (
+                  <CookieMascot state="happy" size={28} className="shrink-0" />
+                )}
                 <div
                   className={`max-w-[80%] p-3.5 text-sm rounded-3xl shadow-sm ${
                     isBot
@@ -631,7 +644,11 @@ export const UnitStepPage = () => {
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Діалог завершено! Чудова робота.</span>
               </div>
-              <Button onClick={handleStepCompletion} variant="primary" className="w-full">
+              <Button
+                onClick={handleStepCompletion}
+                variant="primary"
+                className="w-full"
+              >
                 Завершити крок
               </Button>
             </div>
@@ -770,7 +787,8 @@ export const UnitStepPage = () => {
             Юніт завершено! 🎉
           </h1>
           <p className="text-sm text-cookieText-muted max-w-xs">
-            Ви успішно пройшли всі кроки теми «{unit.title}». Наступний юніт розблоковано!
+            Ви успішно пройшли всі кроки теми «{unit.title}». Наступний юніт
+            розблоковано!
           </p>
         </div>
         <Button

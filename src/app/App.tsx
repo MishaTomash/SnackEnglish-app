@@ -27,7 +27,7 @@ const AppContent = () => {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Якщо рівень вже є, але користувач заходить на онбординг — ведемо на головну
+  // Якщо рівень уже є, але користувач заходить на онбординг — ведемо на головну
   if (level && isOnboarding) {
     return <Navigate to="/" replace />;
   }
@@ -50,7 +50,29 @@ const AppContent = () => {
 
 export const App = () => {
   useEffect(() => {
-    initTelegramApp();
+    // 1. Негайний виклик ready() та expand() для мобільного клієнта Telegram
+    const tg = (
+      window as unknown as {
+        Telegram?: {
+          WebApp?: {
+            ready: () => void;
+            expand: () => void;
+          };
+        };
+      }
+    ).Telegram?.WebApp;
+
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    // 2. Ініціалізація внутрішньої логіки та підписка на зміну теми
+    try {
+      initTelegramApp();
+    } catch (err: unknown) {
+      console.warn("Помилка ініціалізації Telegram App:", err);
+    }
 
     subscribeToTheme((isDark) => {
       if (isDark) {

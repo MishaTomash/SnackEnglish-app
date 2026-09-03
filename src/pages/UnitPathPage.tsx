@@ -12,6 +12,7 @@ import {
   FileText,
   Mic,
   CheckSquare,
+  MessageSquare,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -47,6 +48,11 @@ const STEP_METADATA: Record<
     title: "Читання",
     desc: "Короткий текст із запитаннями",
     icon: FileText,
+  },
+  roleplay: {
+    title: "Діалог",
+    desc: "Симуляція реальної життєвої ситуації",
+    icon: MessageSquare,
   },
   speaking: { title: "Говоріння", desc: "Тренування вимови фрази", icon: Mic },
   test: {
