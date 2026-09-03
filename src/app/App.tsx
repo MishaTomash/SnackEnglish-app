@@ -21,11 +21,11 @@ export const App = () => {
 
   return (
     <BrowserRouter>
-      {/* Головна обгортка для всього застосунку */}
       <div className="relative min-h-screen bg-[var(--tg-theme-bg-color,#ffffff)] text-[var(--tg-theme-text-color,#000000)]">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/path" element={<PathPage />} />
+          <Route path="/path/:unitId" element={<PathPage />} />
           <Route path="/practice" element={<PracticePage />} />
         </Routes>
 

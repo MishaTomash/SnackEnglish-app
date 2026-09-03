@@ -1,12 +1,31 @@
 import { create } from "zustand";
-import { TelegramUser } from "../shared/lib/telegram";
+import { persist } from "zustand/middleware";
+import type { EnglishLevel } from "../entities/word/types";
 
 interface UserState {
-  user: TelegramUser | null;
-  setUser: (user: TelegramUser | null) => void;
+  level: EnglishLevel;
+  streak: number;
+  wordsLearnedCount: number;
+  setLevel: (level: EnglishLevel) => void;
+  incrementStreak: () => void;
+  incrementWordsLearned: (count?: number) => void;
 }
 
-export const useUserStore = create<UserState>((set) => ({
-  user: null,
-  setUser: (user) => set({ user }),
-}));
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      level: "A1",
+      streak: 5,
+      wordsLearnedCount: 16,
+      setLevel: (level) => set({ level }),
+      incrementStreak: () => set((state) => ({ streak: state.streak + 1 })),
+      incrementWordsLearned: (count = 1) =>
+        set((state) => ({
+          wordsLearnedCount: state.wordsLearnedCount + count,
+        })),
+    }),
+    {
+      name: "snack_user_storage",
+    },
+  ),
+);
