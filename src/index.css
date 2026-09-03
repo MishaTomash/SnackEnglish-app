@@ -13,7 +13,70 @@
   --tg-theme-bg-color: #18222d;
   --tg-theme-text-color: #ffffff;
   --tg-theme-button-color: #2ea6ff;
-  --tg-theme-button-text-color: #ffffff;
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+
+  @layer base {
+    :root {
+      /* Фон: тепле топлене молоко / кремовий беж */
+      --bg-app: 45 40% 98%;
+      --bg-card: 40 45% 96%;
+      --bg-card-hover: 38 45% 93%;
+      --border-card: 35 30% 88%;
+
+      /* Текст: глибокий какао-боб */
+      --text-primary: 25 35% 15%;
+      --text-muted: 28 18% 45%;
+
+      /* Акцент: золотисто-карамельний */
+      --primary: 37 92% 50%;
+      --primary-hover: 35 92% 44%;
+      --primary-foreground: 45 100% 98%;
+
+      /* Вторинний акцент: бісквітний / пісочний */
+      --secondary: 35 45% 90%;
+      --secondary-hover: 35 40% 84%;
+      --secondary-foreground: 25 35% 20%;
+
+      /* Тіні */
+      --shadow-cookie:
+        0 10px 25px -5px rgba(217, 119, 6, 0.12),
+        0 8px 10px -6px rgba(180, 83, 9, 0.08);
+    }
+
+    .dark {
+      /* Фон: насичений еспресо / темний шоколад */
+      --bg-app: 24 22% 10%;
+      --bg-card: 24 20% 15%;
+      --bg-card-hover: 24 18% 18%;
+      --border-card: 24 15% 22%;
+
+      /* Текст: вершки */
+      --text-primary: 40 30% 95%;
+      --text-muted: 35 15% 65%;
+
+      /* Акцент: тепла карамель */
+      --primary: 38 90% 52%;
+      --primary-hover: 38 90% 46%;
+      --primary-foreground: 24 22% 10%;
+
+      /* Вторинний акцент: какао */
+      --secondary: 24 16% 22%;
+      --secondary-hover: 24 16% 26%;
+      --secondary-foreground: 40 25% 90%;
+
+      /* Тіні */
+      --shadow-cookie: 0 10px 25px -5px rgba(0, 0, 0, 0.45);
+    }
+
+    body {
+      background-color: hsl(var(--bg-app));
+      color: hsl(var(--text-primary));
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-tap-highlight-color: transparent;
+    }
+  }
   --tg-theme-secondary-bg-color: #232e3c;
   --tg-theme-hint-color: #7d8b99;
 }
