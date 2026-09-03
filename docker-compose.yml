@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: snackenglish-db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: snackenglish
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - snack-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: snackenglish-backend
+    restart: always
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongodb:27017/snackenglish
+      BOT_TOKEN: ${BOT_TOKEN}
+      CLIENT_URL: ${CLIENT_URL}
+      VITE_APP_URL: ${VITE_APP_URL}
+    depends_on:
+      - mongodb
+    ports:
+      - "3000:3000"
+    networks:
+      - snack-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: snackenglish-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - snack-network
+
+volumes:
+  mongo_data:
+
+networks:
+  snack-network:
+    driver: bridge
