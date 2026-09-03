@@ -1,19 +1,13 @@
-const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
+import axios, { InternalAxiosRequestConfig } from "axios";
 
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public statusText: string,
-    public data: unknown,
-  ) {
-    super(`API Error ${status}: ${statusText}`);
-    this.name = "ApiError";
-  }
-}
+const BASE_URL =
+  (import.meta.env.VITE_API_URL as string | undefined) ??
+  "http://localhost:3000/api";
 
-/**
- * Отримує сирий рядок initData з Telegram WebApp для автентифікації на бекенді.
- */
+// Мок initData для локальної розробки поза клієнтом Telegram
+const DEV_FALLBACK_INIT_DATA =
+  "query_id=AAHdF6IQAAAAAN0XohDhrPqM&user=%7B%22id%22%3A100000001%2C%22first_name%22%3A%22Developer%22%2C%22username%22%3A%22dev_user%22%2C%22language_code%22%3A%22en%22%7D&auth_date=1700000000&hash=mock_hash_for_dev_mode";
+
 function getTelegramInitData(): string {
   if (typeof window === "undefined") return "";
 
@@ -27,78 +21,34 @@ function getTelegramInitData(): string {
     }
   ).Telegram?.WebApp;
 
-  return tg?.initData ?? "";
+  const realInitData = tg?.initData?.trim();
+  if (realInitData) {
+    return realInitData;
+  }
+
+  // Якщо розробка ведеться у Chrome/Firefox без Telegram iframe
+  return import.meta.env.DEV ? DEV_FALLBACK_INIT_DATA : "";
 }
 
-interface RequestOptions extends Omit<RequestInit, "body"> {
-  body?: unknown;
-}
-
-async function request<T>(
-  endpoint: string,
-  options: RequestOptions = {},
-): Promise<T> {
-  const { body, headers, ...customConfig } = options;
-  const initData = getTelegramInitData();
-
-  const requestHeaders: Record<string, string> = {
+export const apiClient = axios.create({
+  baseURL: BASE_URL,
+  timeout: 10000,
+  headers: {
     "Content-Type": "application/json",
-    ...(headers as Record<string, string>),
-  };
+  },
+});
 
-  if (initData) {
-    requestHeaders.Authorization = `Bearer ${initData}`;
-  }
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const initData = getTelegramInitData();
 
-  const normalizedUrl = endpoint.startsWith("http")
-    ? endpoint
-    : `${BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
-
-  const response = await fetch(normalizedUrl, {
-    ...customConfig,
-    headers: requestHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) {
-    let errorData: unknown;
-    try {
-      errorData = await response.json();
-    } catch {
-      errorData = await response.text();
+    if (initData && config.headers) {
+      config.headers.Authorization = `Bearer ${initData}`;
     }
-    throw new ApiError(response.status, response.statusText, errorData);
-  }
 
-  return response.json() as Promise<T>;
-}
-
-export const apiClient = {
-  get: <T>(
-    endpoint: string,
-    options?: Omit<RequestOptions, "body" | "method">,
-  ) => request<T>(endpoint, { ...options, method: "GET" }),
-
-  post: <T>(
-    endpoint: string,
-    body?: unknown,
-    options?: Omit<RequestOptions, "body" | "method">,
-  ) => request<T>(endpoint, { ...options, method: "POST", body }),
-
-  put: <T>(
-    endpoint: string,
-    body?: unknown,
-    options?: Omit<RequestOptions, "body" | "method">,
-  ) => request<T>(endpoint, { ...options, method: "PUT", body }),
-
-  patch: <T>(
-    endpoint: string,
-    body?: unknown,
-    options?: Omit<RequestOptions, "body" | "method">,
-  ) => request<T>(endpoint, { ...options, method: "PATCH", body }),
-
-  delete: <T>(
-    endpoint: string,
-    options?: Omit<RequestOptions, "body" | "method">,
-  ) => request<T>(endpoint, { ...options, method: "DELETE" }),
-};
+    return config;
+  },
+  (error: unknown) => {
+    return Promise.reject(error);
+  },
+);

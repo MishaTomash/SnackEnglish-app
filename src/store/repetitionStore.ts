@@ -1,76 +1,59 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { calculateNextReview } from "../shared/lib/spaced-repetition";
-import type { ReviewQuality } from "../shared/lib/spaced-repetition";
+import type { Word } from "../entities/word/types";
+import { getPracticeWordsApi, reviewWordApi } from "../entities/word/api";
 
-export interface RepetitionItem {
-  wordId: string;
-  nextReviewDate: string;
-  interval: number;
-  easinessFactor: number;
-  repetitions: number;
+interface RepetitionState {
+  dailyQueue: Word[];
+  currentWordIndex: number;
+  isLoading: boolean;
+  isFinished: boolean;
+  loadDailyWords: () => Promise<void>;
+  submitReview: (quality: number) => Promise<void>;
+  resetQueue: () => void;
 }
 
-interface RepetitionStore {
-  items: Record<string, RepetitionItem>;
-  initWordsFromCompletedUnits: (wordIds: string[]) => void;
-  recordReview: (wordId: string, quality: ReviewQuality) => void;
-}
+export const useRepetitionStore = create<RepetitionState>((set, get) => ({
+  dailyQueue: [],
+  currentWordIndex: 0,
+  isLoading: false,
+  isFinished: false,
 
-export const useRepetitionStore = create<RepetitionStore>()(
-  persist(
-    (set) => ({
-      items: {},
+  loadDailyWords: async () => {
+    set({ isLoading: true, isFinished: false, currentWordIndex: 0 });
+    try {
+      const data = await getPracticeWordsApi();
+      set({
+        dailyQueue: data.words,
+        isLoading: false,
+        isFinished: data.words.length === 0,
+      });
+    } catch (err: unknown) {
+      console.error("Помилка завантаження слів на повторення:", err);
+      set({ isLoading: false });
+    }
+  },
 
-      initWordsFromCompletedUnits: (wordIds: string[]) => {
-        set((state) => {
-          const now = new Date().toISOString();
-          const updatedItems = { ...state.items };
-          let hasChanges = false;
+  submitReview: async (quality: number) => {
+    const { dailyQueue, currentWordIndex } = get();
+    const currentWord = dailyQueue[currentWordIndex];
 
-          wordIds.forEach((id) => {
-            if (!updatedItems[id]) {
-              hasChanges = true;
-              updatedItems[id] = {
-                wordId: id,
-                nextReviewDate: now,
-                interval: 1,
-                easinessFactor: 2.5,
-                repetitions: 0,
-              };
-            }
-          });
+    if (!currentWord) return;
 
-          return hasChanges ? { items: updatedItems } : state;
-        });
-      },
+    try {
+      await reviewWordApi(currentWord.id, quality);
 
-      recordReview: (wordId: string, quality: ReviewQuality) => {
-        set((state) => {
-          const currentItem = state.items[wordId] ?? {
-            wordId,
-            interval: 1,
-            easinessFactor: 2.5,
-            repetitions: 0,
-            nextReviewDate: new Date().toISOString(),
-          };
+      const nextIndex = currentWordIndex + 1;
+      if (nextIndex >= dailyQueue.length) {
+        set({ isFinished: true, currentWordIndex: nextIndex });
+      } else {
+        set({ currentWordIndex: nextIndex });
+      }
+    } catch (err: unknown) {
+      console.error("Помилка надсилання оцінки SM-2:", err);
+    }
+  },
 
-          const result = calculateNextReview(quality, currentItem);
-
-          return {
-            items: {
-              ...state.items,
-              [wordId]: {
-                wordId,
-                ...result,
-              },
-            },
-          };
-        });
-      },
-    }),
-    {
-      name: "snack_repetition_storage",
-    },
-  ),
-);
+  resetQueue: () => {
+    set({ currentWordIndex: 0, isFinished: false });
+  },
+}));
