@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -11,12 +11,14 @@ import {
   ChevronRight,
   Mic,
   AlertCircle,
+  MessageSquare,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { Badge } from "../shared/ui/Badge";
 import { ProgressBar } from "../shared/ui/ProgressBar";
+import { CookieMascot } from "../shared/ui/CookieMascot";
 import { useProgressStore } from "../store/progressStore";
 import { useUserStore } from "../store/userStore";
 import { getWordsByIds } from "../entities/word/api";
@@ -24,6 +26,12 @@ import type { Word } from "../entities/word/types";
 import type { UnitStepType } from "../entities/unit/types";
 import { useSpeechRecognition } from "../shared/lib/useSpeechRecognition";
 import { calculateSimilarity } from "../shared/lib/similarity";
+
+interface ChatMessage {
+  id: string;
+  speaker: "bot" | "user";
+  text: string;
+}
 
 export const UnitStepPage = () => {
   const { unitId, stepType } = useParams<{
@@ -60,8 +68,53 @@ export const UnitStepPage = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [isTestFinished, setIsTestFinished] = useState(false);
 
-  const targetSentence =
-    words[0]?.exampleSentence ?? "Hello, nice to meet you!";
+  // Стан для roleplay
+  const [dialogueStepIndex, setDialogueStepIndex] = useState(0);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [roleplayHint, setRoleplayHint] = useState<string | null>(null);
+  const [isRoleplayFinished, setIsRoleplayFinished] = useState(false);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  const scenario = unit?.roleplayScenario;
+
+  // Ініціалізація та просування діалогу бота
+  useEffect(() => {
+    if (stepType !== "roleplay" || !scenario) return;
+
+    const currentItem = scenario.dialogue[dialogueStepIndex];
+    if (!currentItem) {
+      setIsRoleplayFinished(true);
+      return;
+    }
+
+    if (currentItem.speaker === "bot") {
+      const timer = setTimeout(() => {
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            id: `msg-${dialogueStepIndex}-${Date.now()}`,
+            speaker: "bot",
+            text: currentItem.text,
+          },
+        ]);
+
+        if (dialogueStepIndex === scenario.dialogue.length - 1) {
+          setIsRoleplayFinished(true);
+        } else {
+          setDialogueStepIndex((prev) => prev + 1);
+        }
+      }, 400);
+
+      return () => clearTimeout(timer);
+    }
+  }, [stepType, dialogueStepIndex, scenario]);
+
+  // Автоскрол чату
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory, roleplayHint]);
+
+  const targetSentence = words[0]?.exampleSentence ?? "Hello, nice to meet you!";[cite: 1]
 
   const handleSpeechEnd = useCallback(
     (finalTranscript: string) => {
@@ -74,7 +127,7 @@ export const UnitStepPage = () => {
       setSimilarityScore(score);
       setHasEvaluated(true);
     },
-    [targetSentence],
+    [targetSentence]
   );
 
   const {
@@ -109,7 +162,6 @@ export const UnitStepPage = () => {
     );
   }
 
-  // Обробник завершення кроку
   const handleStepCompletion = () => {
     completeStep(unit.id, stepType);
     if (stepType === "vocabulary") {
@@ -229,17 +281,13 @@ export const UnitStepPage = () => {
           </span>
           <div className="p-3 bg-secondary rounded-2xl space-y-1 text-sm">
             <p>
-              • I <span className="font-bold underline text-primary">am</span>{" "}
-              from Ukraine.
+              • I <span className="font-bold underline text-primary">am</span> from Ukraine.
             </p>
             <p>
-              • She <span className="font-bold underline text-primary">is</span>{" "}
-              a great student.
+              • She <span className="font-bold underline text-primary">is</span> a great student.
             </p>
             <p>
-              • They{" "}
-              <span className="font-bold underline text-primary">are</span> our
-              best friends.
+              • They <span className="font-bold underline text-primary">are</span> our best friends.
             </p>
           </div>
         </div>
@@ -265,8 +313,7 @@ export const UnitStepPage = () => {
         />
       </div>
       <Card className="p-4 text-xs text-cookieText-muted">
-        Подивіться це короткохвилинне відео для закріплення правильної
-        артикуляції та темпу мови.
+        Подивіться це короткохвилинне відео для закріплення правильної артикуляції та темпу мови.
       </Card>
       <Button onClick={handleStepCompletion} variant="primary">
         Я подивився, продовжити
@@ -298,7 +345,6 @@ export const UnitStepPage = () => {
         </Button>
       </Card>
 
-      {/* Питання на розуміння */}
       <Card className="p-4 space-y-3">
         <span className="text-xs font-semibold text-cookieText-muted">
           Запитання на розуміння:
@@ -362,8 +408,8 @@ export const UnitStepPage = () => {
             <div className="space-y-1">
               <h3 className="font-bold text-lg">Розпізнавання недоступне</h3>
               <p className="text-xs text-cookieText-muted">
-                Ваш браузер або клієнт Telegram не підтримує Web Speech API. Ви
-                можете повторити фразу подумки та продовжити урок.
+                Ваш браузер або клієнт Telegram не підтримує Web Speech API.
+                Ви можете повторити фразу подумки та продовжити урок.
               </p>
             </div>
             <div className="p-4 bg-secondary rounded-2xl">
@@ -391,9 +437,7 @@ export const UnitStepPage = () => {
 
           {transcript && (
             <div className="p-3 bg-secondary rounded-2xl text-xs space-y-1">
-              <span className="text-cookieText-muted font-medium">
-                Ви сказали:
-              </span>
+              <span className="text-cookieText-muted font-medium">Ви сказали:</span>
               <p className="font-semibold text-cookieText-primary italic">
                 "{transcript}"
               </p>
@@ -471,7 +515,133 @@ export const UnitStepPage = () => {
     );
   };
 
-  // 7. КРОК: ТЕСТ (5 ПИТАНЬ З МОК-СЛІВ)
+  // 7. КРОК: РОЛЬОВА ГРА / СИМУЛЯЦІЯ ДІАЛОГУ (ROLEPLAY)
+  const renderRoleplay = () => {
+    if (!scenario) {
+      return (
+        <div className="space-y-4 my-auto">
+          <Card className="p-6 text-center space-y-2">
+            <p className="text-sm font-medium">Для цього уроку ще немає сценарію рольової гри.</p>
+          </Card>
+          <Button onClick={handleStepCompletion} variant="primary">
+            Пропустити крок
+          </Button>
+        </div>
+      );
+    }
+
+    const currentItem = scenario.dialogue[dialogueStepIndex];
+    const isUserTurn = currentItem?.speaker === "user";
+
+    const handleSelectOption = (chosenText: string) => {
+      if (!currentItem || currentItem.speaker !== "user") return;
+
+      if (chosenText === currentItem.text) {
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            id: `msg-${dialogueStepIndex}-${Date.now()}`,
+            speaker: "user",
+            text: chosenText,
+          },
+        ]);
+        setRoleplayHint(null);
+
+        if (dialogueStepIndex === scenario.dialogue.length - 1) {
+          setIsRoleplayFinished(true);
+        } else {
+          setDialogueStepIndex((prev) => prev + 1);
+        }
+      } else {
+        setRoleplayHint(
+          currentItem.hint ?? "Хм, це не зовсім природна фраза для цієї ситуації. Спробуй ще раз!"
+        );
+      }
+    };
+
+    return (
+      <div className="flex flex-col h-full max-h-[75vh] space-y-3 justify-between">
+        {/* Контекст ситуації */}
+        <div className="flex items-center gap-2 p-3 bg-amber-50/70 dark:bg-amber-950/20 border border-card-border rounded-2xl text-xs text-cookieText-muted shrink-0">
+          <MessageSquare className="w-4 h-4 text-primary shrink-0" />
+          <span>{scenario.context}</span>
+        </div>
+
+        {/* Вікно чату */}
+        <div className="flex-1 overflow-y-auto space-y-3 p-2 rounded-2xl">
+          {chatHistory.map((msg) => {
+            const isBot = msg.speaker === "bot";
+            return (
+              <div
+                key={msg.id}
+                className={`flex items-end gap-2 ${isBot ? "justify-start" : "justify-end"}`}
+              >
+                {isBot && <CookieMascot state="happy" size={28} className="shrink-0" />}
+                <div
+                  className={`max-w-[80%] p-3.5 text-sm rounded-3xl shadow-sm ${
+                    isBot
+                      ? "bg-card text-cookieText-primary border border-card-border rounded-bl-sm"
+                      : "bg-primary text-primary-foreground font-medium rounded-br-sm"
+                  }`}
+                >
+                  {msg.text}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Підказка маскота у разі помилки */}
+          {roleplayHint && (
+            <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in duration-200">
+              <CookieMascot state="thinking" size={32} className="shrink-0" />
+              <div>
+                <span className="font-bold">Підказка від Печива:</span>
+                <p className="mt-0.5">{roleplayHint}</p>
+              </div>
+            </div>
+          )}
+
+          <div ref={chatBottomRef} />
+        </div>
+
+        {/* Панель вибору реплік або кнопка завершення */}
+        <div className="pt-2 shrink-0">
+          {!isRoleplayFinished && isUserTurn && currentItem.options && (
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-cookieText-muted uppercase tracking-wider block text-center">
+                Оберіть вашу репліку
+              </span>
+              <div className="space-y-1.5">
+                {currentItem.options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleSelectOption(option)}
+                    className="w-full p-3 rounded-2xl text-left text-xs font-semibold border border-card-border bg-card text-cookieText-primary hover:bg-card-hover active:bg-primary active:text-primary-foreground shadow-cookie-sm transition-all"
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isRoleplayFinished && (
+            <div className="space-y-2">
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-2xl text-center text-xs font-bold flex items-center justify-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Діалог завершено! Чудова робота.</span>
+              </div>
+              <Button onClick={handleStepCompletion} variant="primary" className="w-full">
+                Завершити крок
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // 8. КРОК: ТЕСТ (5 ПИТАНЬ З МОК-СЛІВ)
   const testWords = words.slice(0, 5);
 
   const handleSelectTestOption = (optionIndex: number) => {
@@ -600,8 +770,7 @@ export const UnitStepPage = () => {
             Юніт завершено! 🎉
           </h1>
           <p className="text-sm text-cookieText-muted max-w-xs">
-            Ви успішно пройшли всі 7 кроків теми «{unit.title}». Наступний юніт
-            розблоковано!
+            Ви успішно пройшли всі кроки теми «{unit.title}». Наступний юніт розблоковано!
           </p>
         </div>
         <Button
@@ -635,6 +804,7 @@ export const UnitStepPage = () => {
       {stepType === "video" && renderVideo()}
       {stepType === "reading" && renderReading()}
       {stepType === "speaking" && renderSpeaking()}
+      {stepType === "roleplay" && renderRoleplay()}
       {stepType === "test" && renderTest()}
 
       <div />

@@ -7,13 +7,27 @@ export type UnitStepType =
   | "video"
   | "reading"
   | "speaking"
+  | "roleplay"
   | "test";
-export type UnitStepStatus = "locked" | "available" | "completed";
+
+export type StepStatus = "locked" | "available" | "completed";
 
 export interface UnitStep {
   id: string;
   type: UnitStepType;
-  status: UnitStepStatus;
+  status: StepStatus;
+}
+
+export interface RoleplayDialogueItem {
+  speaker: "bot" | "user";
+  text: string;
+  options?: string[];
+  hint?: string;
+}
+
+export interface RoleplayScenario {
+  context: string;
+  dialogue: RoleplayDialogueItem[];
 }
 
 export interface Unit {
@@ -28,5 +42,7 @@ export interface Unit {
   videoUrl: string;
   readingText: string;
   readingTranslation: string;
-  steps: UnitStep[]; // Додано для збереження структури кроків юніта
+  steps: UnitStep[];
+  status?: StepStatus;
+  roleplayScenario?: RoleplayScenario;
 }

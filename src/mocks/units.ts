@@ -58,10 +58,63 @@ export const mockUnits: Unit[] = [
       "I am at the airport now. My flight to Paris is at 5 PM. I have my passport and one small luggage.",
     readingTranslation:
       "Я зараз в аеропорту. Мій рейс до Парижа о 5 вечора. У мене є мій паспорт та один маленький багаж.",
+    roleplayScenario: {
+      context:
+        "Замовлення кави та перекусу в кав'ярні аеропорту перед посадкою на літак.",
+      dialogue: [
+        {
+          speaker: "bot",
+          text: "Hi! Welcome to Airport Coffee Spot. What can I get for you today?",
+        },
+        {
+          speaker: "user",
+          text: "Hello! I would like a large cappuccino to go, please.",
+          options: [
+            "Hello! I would like a large cappuccino to go, please.",
+            "Bring me water immediately, fast!",
+            "I want to board the aircraft right now.",
+          ],
+          hint: "Ввічливо замов напій із собою за допомогою звороту 'I would like... to go, please'.",
+        },
+        {
+          speaker: "bot",
+          text: "Sure thing. Would you like oat milk, regular milk, or soy milk?",
+        },
+        {
+          speaker: "user",
+          text: "Oat milk, please. And could I get a chocolate cookie as well?",
+          options: [
+            "Oat milk, please. And could I get a chocolate cookie as well?",
+            "No milk, I only eat coffee beans directly.",
+            "My flight is at gate 12B.",
+          ],
+          hint: "Обери вівсяне молоко ('Oat milk') та додай смачне печиво до свого замовлення.",
+        },
+        {
+          speaker: "bot",
+          text: "Great choice! That will be $6.50. Will you pay with cash or card?",
+        },
+        {
+          speaker: "user",
+          text: "Card, please. Contactless.",
+          options: [
+            "Card, please. Contactless.",
+            "I will pay with my passport.",
+            "I do not have luggage today.",
+          ],
+          hint: "Скажи, що оплачуєш карткою безконтактно: 'Card, please. Contactless'.",
+        },
+        {
+          speaker: "bot",
+          text: "Payment approved! Here is your hot cappuccino and cookie. Have a pleasant flight! ✈️",
+        },
+      ],
+    },
     steps: [
       { id: "s7", type: "video", status: "locked" },
       { id: "s8", type: "speaking", status: "locked" },
-      { id: "s9", type: "test", status: "locked" },
+      { id: "s9", type: "roleplay", status: "locked" },
+      { id: "s10", type: "test", status: "locked" },
     ],
   },
 ];
