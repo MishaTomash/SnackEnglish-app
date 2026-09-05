@@ -1,4 +1,3 @@
-// src/pages/path/PathMapPage.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Screen } from "../../shared/ui/Screen";
@@ -32,7 +31,7 @@ export const PathMapPage = () => {
   if (isLoading && units.length === 0) {
     return (
       <Screen className="justify-center items-center">
-        <p className="text-[var(--tg-theme-hint-color)] animate-pulse">
+        <p className="text-[var(--text-muted)] animate-pulse">
           Завантаження карти уроків...
         </p>
       </Screen>
@@ -42,12 +41,13 @@ export const PathMapPage = () => {
   if (error && units.length === 0) {
     return (
       <Screen className="justify-center items-center gap-3">
-        <p className="text-[var(--tg-theme-hint-color)]">{error}</p>
-        {/* ВИПРАВЛЕНО: Додано disabled */}
+        <p className="text-[var(--text-muted)]">{error}</p>
         <button
           onClick={() => void loadUnits("A1")}
           disabled={isLoading}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--tg-theme-button-color)] text-[var(--tg-theme-button-text-color)] transition-active ${isLoading ? "opacity-50 pointer-events-none" : "active:scale-95"}`}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--accent-cta)] text-[var(--text-accent)] transition-all ${
+            isLoading ? "opacity-50 pointer-events-none" : "active:scale-95"
+          }`}
         >
           Спробувати ще раз
         </button>
@@ -56,21 +56,24 @@ export const PathMapPage = () => {
   }
 
   return (
-    <Screen className="!px-0 !pt-0 !pb-[calc(96px+env(safe-area-inset-bottom))]">
+    <Screen
+      fullBleed
+      className="!pt-0 !pb-[calc(96px+env(safe-area-inset-bottom))] bg-[var(--bg-app)]"
+    >
       {/* Хедер Карти */}
-      <div className="sticky top-0 z-20 bg-[var(--tg-theme-bg-color)]/95 backdrop-blur px-4 pt-4 pb-3 space-y-3 border-b border-[var(--tg-theme-hint-color)]/20">
+      <div className="sticky top-0 z-20 bg-[var(--bg-app)]/95 backdrop-blur px-4 pt-4 pb-3 space-y-3 border-b border-[var(--border-color)]">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-[var(--tg-theme-text-color)]">
+          <h1 className="text-lg font-bold text-[var(--text-main)]">
             Твій шлях до рівня
           </h1>
-          <span className="text-xs font-semibold text-[var(--tg-theme-hint-color)]">
+          <span className="text-xs font-semibold text-[var(--text-muted)]">
             {progressPercent}%
           </span>
         </div>
         {/* Прогрес-бар */}
-        <div className="h-1.5 w-full rounded-full bg-[var(--tg-theme-secondary-bg-color)] overflow-hidden">
+        <div className="h-1.5 w-full rounded-full bg-[var(--locked)] overflow-hidden">
           <div
-            className="h-full rounded-full bg-[var(--tg-theme-button-color)] transition-all duration-500"
+            className="h-full rounded-full bg-[var(--accent-cta)] transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
