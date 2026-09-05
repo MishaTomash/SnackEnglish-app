@@ -57,10 +57,10 @@ export const PathMapPage = () => {
   }
 
   return (
-    <Screen className="!p-0 pb-24">
-      <div className="sticky top-0 z-20 bg-[var(--tg-theme-bg-color,#ffffff)]/95 backdrop-blur px-4 pt-4 pb-3 space-y-3 border-b border-[var(--tg-theme-hint-color,#d1d5db)]/20">
+    <Screen className="!px-0 !pt-0 !pb-[calc(96px+env(safe-area-inset-bottom))]">
+      <div className="sticky top-0 z-20 bg-[var(--tg-theme-bg-color)]/95 backdrop-blur px-4 pt-4 pb-3 space-y-3 border-b border-[var(--tg-theme-hint-color)]/20">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-[var(--tg-theme-text-color,#000000)]">
+          <h1 className="text-lg font-bold text-[var(--tg-theme-text-color)]">
             Твій шлях до рівня
           </h1>
           <span className="text-xs font-semibold text-[var(--tg-theme-hint-color,#8e8e93)]">

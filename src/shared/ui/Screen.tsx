@@ -8,7 +8,7 @@ interface ScreenProps {
 export const Screen = ({ children, className = "" }: ScreenProps) => {
   return (
     <div
-      className={`min-h-screen pb-[80px] px-4 pt-4 flex flex-col bg-[#241812] text-[#F5E9DD] ${className}`}
+      className={`min-h-screen px-4 pt-4 pb-[calc(85px+env(safe-area-inset-bottom))] flex flex-col bg-[var(--tg-theme-bg-color)] text-[var(--tg-theme-text-color)] ${className}`}
     >
       {children}
     </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
+import { Sparkles, ChevronRight, RefreshCw } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
