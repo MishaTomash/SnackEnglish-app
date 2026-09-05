@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { EnglishLevel } from "../entities/word/types";
 
-// Helper для API запитів
 const getAuthHeaders = () => {
   const initData =
     window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
@@ -21,11 +20,13 @@ interface UserState {
   wordsLearnedCount: number;
   isLoading: boolean;
   error: string | null;
-  hasLoadedProfile: boolean; // Вказує, чи дані вже завантажено в поточній сесії
+  hasLoadedProfile: boolean;
+  lastActiveUnitId: string | null; // Додано поле для збереження прогресу
 
   setLevel: (level: EnglishLevel) => void;
   incrementStreak: () => void;
   incrementWordsLearned: (count?: number) => void;
+  setLastActiveUnitId: (id: string | null) => void; // Сеттер
 
   updateLevel: (level: EnglishLevel) => Promise<boolean>;
   fetchUser: (force?: boolean) => Promise<void>;
@@ -42,6 +43,7 @@ export const useUserStore = create<UserState>()(
       isLoading: false,
       error: null,
       hasLoadedProfile: false,
+      lastActiveUnitId: null,
 
       setLevel: (level) => set({ level }),
       incrementStreak: () => set((state) => ({ streak: state.streak + 1 })),
@@ -49,6 +51,7 @@ export const useUserStore = create<UserState>()(
         set((state) => ({
           wordsLearnedCount: state.wordsLearnedCount + count,
         })),
+      setLastActiveUnitId: (id) => set({ lastActiveUnitId: id }),
 
       updateLevel: async (level: EnglishLevel) => {
         set({ isLoading: true, error: null });
@@ -61,7 +64,7 @@ export const useUserStore = create<UserState>()(
 
           if (!res.ok) throw new Error("Помилка оновлення рівня");
 
-          set({ level, isLoading: false });
+          set({ level, isLoading: false, lastActiveUnitId: null }); // Скидаємо прогрес при зміні рівня
           return true;
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
@@ -70,7 +73,6 @@ export const useUserStore = create<UserState>()(
       },
 
       fetchUser: async (force = false) => {
-        // Кеш-хіт: не робимо запит, якщо профіль вже завантажено в цій сесії
         if (get().hasLoadedProfile && !force) return;
 
         set({ isLoading: true, error: null });
@@ -85,7 +87,7 @@ export const useUserStore = create<UserState>()(
             level: data.level,
             onboardingCompleted: data.onboardingCompleted,
             streak: data.streak,
-            hasLoadedProfile: true, // Позначаємо як завантажене
+            hasLoadedProfile: true,
             isLoading: false,
           });
         } catch (error: any) {
@@ -114,12 +116,12 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: "snack_user_storage",
-      // Зберігаємо лише важливі дані (не кешуємо стани завантаження)
       partialize: (state) => ({
         level: state.level,
         onboardingCompleted: state.onboardingCompleted,
         streak: state.streak,
         wordsLearnedCount: state.wordsLearnedCount,
+        lastActiveUnitId: state.lastActiveUnitId, // Додано до збереження
       }),
     },
   ),

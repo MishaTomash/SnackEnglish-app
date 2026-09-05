@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { EnglishLevel } from "../entities/word/types";
 import type { Unit, UnitStepType } from "../entities/unit/types";
 import { getUnits, completeUnitStepApi } from "../entities/unit/api";
+import { useUserStore } from "./userStore";
 
 interface ProgressState {
   units: Unit[];
@@ -9,10 +10,11 @@ interface ProgressState {
   progressPercent: number;
   isLoading: boolean;
   error: string | null;
-  lastFetchedLevel: EnglishLevel | null; // Для кешування
+  lastFetchedLevel: EnglishLevel | null;
 
   loadUnits: (level?: EnglishLevel, force?: boolean) => Promise<void>;
   completeStep: (unitId: string, stepType: UnitStepType) => Promise<void>;
+  setCurrentUnitId: (unitId: string) => void;
 }
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
@@ -23,8 +25,12 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   error: null,
   lastFetchedLevel: null,
 
+  setCurrentUnitId: (unitId: string) => {
+    set({ currentUnitId: unitId });
+    useUserStore.getState().setLastActiveUnitId(unitId);
+  },
+
   loadUnits: async (level: EnglishLevel = "A1", force = false) => {
-    // Кеш-хіт: якщо ми вже завантажили цей рівень, пропускаємо мережевий запит
     if (!force && get().lastFetchedLevel === level && get().units.length > 0) {
       return;
     }
@@ -40,11 +46,6 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         completedSteps: raw.completedSteps || [],
       }));
 
-      const activeUnit =
-        normalizedUnits.find((u) => u.status === "available") ??
-        normalizedUnits[0];
-
-      // Рахуємо загальний прогрес курсу (пройдено / всього)
       const completedCount = normalizedUnits.filter(
         (u) => u.status === "completed",
       ).length;
@@ -53,11 +54,25 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
           ? Math.round((completedCount / normalizedUnits.length) * 100)
           : 0;
 
+      // Визначаємо активний юніт: пріоритет на збереженому ID, якщо він доступний
+      const savedUnitId = useUserStore.getState().lastActiveUnitId;
+      let activeUnit = normalizedUnits.find((u) => u.id === savedUnitId);
+
+      if (!activeUnit || activeUnit.status === "locked") {
+        activeUnit =
+          normalizedUnits.find((u) => u.status === "available") ??
+          normalizedUnits[0];
+
+        if (activeUnit) {
+          useUserStore.getState().setLastActiveUnitId(activeUnit.id);
+        }
+      }
+
       set({
         units: normalizedUnits,
         currentUnitId: activeUnit ? activeUnit.id : null,
         progressPercent,
-        lastFetchedLevel: level, // Зберігаємо індикатор кешу
+        lastFetchedLevel: level,
         isLoading: false,
       });
     } catch (err: unknown) {
@@ -68,8 +83,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   completeStep: async (unitId: string, stepType: UnitStepType) => {
     try {
       await completeUnitStepApi(unitId, stepType);
-
-      // Інвалідація кешу: примусово перезавантажуємо юніти з бекенду (force = true)
+      useUserStore.getState().setLastActiveUnitId(unitId);
       await get().loadUnits(get().lastFetchedLevel || "A1", true);
     } catch (err: unknown) {
       console.error("Помилка фіксації кроку:", err);

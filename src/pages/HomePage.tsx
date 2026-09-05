@@ -10,6 +10,7 @@ import { CookieMascot } from "../shared/ui/CookieMascot";
 import { StreakBadge } from "../entities/user/ui/StreakBadge";
 import { useUserStore } from "../store/userStore";
 import { useProgressStore } from "../store/progressStore";
+
 export const HomePage = () => {
   const { level, streak, wordsLearnedCount } = useUserStore();
   const { units, currentUnitId, loadUnits, isLoading } = useProgressStore();
@@ -25,16 +26,14 @@ export const HomePage = () => {
   const progressPercent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const activeUnit =
-    units.find((u) => u.id === currentUnitId) ??
-    units.find((u) => u.status === "available") ??
-    units[0];
+  // Логіка визначення юніту тепер повністю спирається на store
+  const activeUnit = units.find((u) => u.id === currentUnitId) ?? units[0];
 
-  const reviewWordsCount = 7; // Mock-число для слів на повторення сьогодні
+  const reviewWordsCount = 7;
 
   return (
     <Screen className="space-y-4">
-      {/* Верхній блок: Привітання з маскотом, StreakBadge та Налаштування */}
+      {/* ... [Весь інший UI залишається без змін] ... */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-3">
           <CookieMascot state="happy" size={50} />
@@ -64,7 +63,6 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Прогрес по рівню */}
       <Card className="space-y-2.5">
         <div className="flex justify-between items-center text-sm font-semibold">
           <span className="text-[var(--text-main)]">Прогрес рівня {level}</span>
@@ -81,7 +79,6 @@ export const HomePage = () => {
         </div>
       </Card>
 
-      {/* Картка "Поточна тема" */}
       <Card className="space-y-4 border-[var(--accent-cta)]/20">
         <div className="flex items-start justify-between">
           <div>
@@ -120,7 +117,6 @@ export const HomePage = () => {
         )}
       </Card>
 
-      {/* Статистичний грід */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="flex flex-col items-start gap-2 p-3.5">
           <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">
