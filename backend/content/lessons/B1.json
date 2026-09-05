@@ -2,145 +2,287 @@
   "level": "B1",
   "units": [
     {
-      "id": "u1",
-      "title": "Web Development & E-commerce",
-      "description": "Опануй лексику для розмов про ІТ-проєкти, створення додатків та роботу з клієнтами.",
+      "id": "b1-u1",
+      "title": "Tech Interviews & Career",
+      "icon": "MessageCircle",
+      "description": "Як проходити співбесіди, обговорювати свій досвід розробки та відповідати на питання рекрутерів.",
       "order": 1,
       "steps": {
         "warmup": {},
         "vocabulary": [
           {
-            "text": "develop",
-            "transcription": "[dɪˈveləp]",
-            "translation": "розробляти",
-            "exampleSentence": "I develop full-stack web applications.",
-            "exampleTranslation": "Я розробляю full-stack веб-додатки."
+            "text": "developer",
+            "transcription": "[dɪˈveləpər]",
+            "translation": "розробник",
+            "exampleSentence": "I work as a Junior JavaScript developer.",
+            "exampleTranslation": "Я працюю молодшим JavaScript розробником."
           },
           {
-            "text": "deploy",
-            "transcription": "[dɪˈplɔɪ]",
-            "translation": "розгортати / запускати",
-            "exampleSentence": "We need to deploy the website to the server.",
-            "exampleTranslation": "Нам потрібно розгорнути вебсайт на сервері."
+            "text": "experience",
+            "transcription": "[ɪkˈspɪəriəns]",
+            "translation": "досвід",
+            "exampleSentence": "I have experience in building web applications.",
+            "exampleTranslation": "У мене є досвід створення вебдодатків."
           },
           {
-            "text": "database",
-            "transcription": "[ˈdeɪtəbeɪs]",
-            "translation": "база даних",
-            "exampleSentence": "The user progress is saved in the database.",
-            "exampleTranslation": "Прогрес користувача зберігається в базі даних."
+            "text": "hire",
+            "transcription": "[haɪər]",
+            "translation": "наймати на роботу",
+            "exampleSentence": "The company wants to hire a new full-stack engineer.",
+            "exampleTranslation": "Компанія хоче найняти нового full-stack інженера."
           },
           {
-            "text": "fix a bug",
-            "transcription": "[fɪks ə bʌɡ]",
-            "translation": "виправити помилку",
-            "exampleSentence": "I spent two hours fixing a bug in the code.",
-            "exampleTranslation": "Я витратив дві години на виправлення помилки в коді."
+            "text": "skill",
+            "transcription": "[skɪl]",
+            "translation": "навичка",
+            "exampleSentence": "Problem-solving is a very important skill.",
+            "exampleTranslation": "Вміння вирішувати проблеми — це дуже важлива навичка."
           },
           {
-            "text": "schedule",
-            "transcription": "[ˈʃedjuːl]",
-            "translation": "розклад / призначати",
-            "exampleSentence": "The bot helps clients schedule appointments.",
-            "exampleTranslation": "Бот допомагає клієнтам призначати зустрічі."
+            "text": "apply",
+            "transcription": "[əˈplaɪ]",
+            "translation": "подавати заявку (на роботу)",
+            "exampleSentence": "I decided to apply for this IT position.",
+            "exampleTranslation": "Я вирішив подати заявку на цю ІТ-посаду."
           },
           {
-            "text": "customer",
-            "transcription": "[ˈkʌstəmə]",
-            "translation": "клієнт / покупець",
-            "exampleSentence": "I have to arrange shipping with the customer.",
-            "exampleTranslation": "Я маю домовитися про доставку з клієнтом."
+            "text": "challenge",
+            "transcription": "[ˈtʃælɪndʒ]",
+            "translation": "виклик / складне завдання",
+            "exampleSentence": "Fixing this bug was a real challenge.",
+            "exampleTranslation": "Виправлення цього багу було справжнім викликом."
           },
           {
-            "text": "feature",
-            "transcription": "[ˈfiːtʃə]",
-            "translation": "функція / особливість",
-            "exampleSentence": "We are adding a new feature to the app.",
-            "exampleTranslation": "Ми додаємо нову функцію в додаток."
+            "text": "resume",
+            "transcription": "[ˈrezjuːmeɪ]",
+            "translation": "резюме",
+            "exampleSentence": "Please send your resume to our HR department.",
+            "exampleTranslation": "Будь ласка, надішліть ваше резюме до нашого HR-відділу."
           },
           {
-            "text": "manage",
-            "transcription": "[ˈmænɪdʒ]",
-            "translation": "керувати",
-            "exampleSentence": "He manages an online e-commerce store.",
-            "exampleTranslation": "Він керує онлайн-магазином."
+            "text": "achieve",
+            "transcription": "[əˈtʃiːv]",
+            "translation": "досягати",
+            "exampleSentence": "What do you want to achieve in five years?",
+            "exampleTranslation": "Чого ви хочете досягти через п'ять років?"
           }
         ],
         "grammar": {
-          "title": "Present Perfect",
-          "explanation": "Використовується для дій, які відбулися в минулому, але їхній результат важливий зараз (або для життєвого досвіду). Утворюється за допомогою допоміжного дієслова have/has та третьої форми дієслова (V3/ed).",
+          "title": "Present Perfect vs Past Simple",
+          "explanation": "Past Simple використовується для дій, які закінчилися в минулому і ми знаємо точний час (I built an app last year). Present Perfect використовується для життєвого досвіду або дій, результат яких важливий зараз, без вказівки точного часу (I have built three web applications).",
           "examples": [
             {
-              "en": "I have already deployed the new Telegram bot.",
-              "ua": "Я вже розгорнув новий телеграм-бот."
+              "en": "I have learned React and Node.js.",
+              "ua": "Я вивчив React та Node.js (це мій досвід, важливий зараз)."
             },
             {
-              "en": "He has fixed all the bugs in the application.",
-              "ua": "Він виправив усі баги в додатку."
+              "en": "I started learning JavaScript in 2024.",
+              "ua": "Я почав вивчати JavaScript у 2024 році (точний час у минулому)."
             },
             {
-              "en": "Have you ever worked with TypeScript?",
-              "ua": "Ти коли-небудь працював з TypeScript?"
+              "en": "Have you ever failed a technical interview?",
+              "ua": "Ти коли-небудь провалював технічну співбесіду?"
             }
           ]
         },
         "video": {
-          "url": "https://www.youtube.com/watch?v=z8ccv80wR4w"
+          "url": "https://www.youtube.com/watch?v=HG68YmazONk"
         },
         "reading": {
-          "title": "My Tech Journey",
-          "text": "I am actively learning full-stack web development, focusing on technologies like React, Node.js, and TypeScript. Recently, I have built a Telegram bot that helps clients schedule appointments for a beauty master. I also manage a small e-commerce store online where I sell electronics and plants. Sometimes it is challenging to fix bugs, refactor code, and manage customers at the same time, but I really enjoy developing new features with my brother.",
+          "title": "A Junior Developer's Interview",
+          "text": "Mike is preparing for a technical interview. He has applied for a Junior Web Developer position. The recruiter asked for his resume last week. Mike has built several personal projects, including a Telegram bot and an e-commerce store. During the interview, the senior developer asks: 'What is the biggest challenge you have faced?' Mike answers confidently because he has solved many complex routing and API integration problems. He hopes the company will hire him.",
           "questions": [
             {
-              "question": "What is the main purpose of the Telegram bot mentioned in the text?",
+              "question": "What position has Mike applied for?",
               "options": [
-                "Selling electronics",
-                "Scheduling appointments",
-                "Teaching English",
-                "Learning TypeScript"
+                "Senior Designer",
+                "Junior Web Developer",
+                "Project Manager"
               ],
               "correctAnswer": 1
             },
             {
-              "question": "Who does the author develop new features with?",
+              "question": "Why does Mike answer confidently during the interview?",
               "options": [
-                "A customer",
-                "A beauty master",
-                "His brother",
-                "A teacher"
+                "Because he has solved many complex problems in his projects",
+                "Because he has worked in this company before",
+                "Because the questions are very easy"
               ],
-              "correctAnswer": 2
+              "correctAnswer": 0
             }
           ]
         },
         "speaking": {
-          "title": "Discussing the Project",
-          "scenario": "Розмова з братом про поточний стан веб-проєкту.",
+          "title": "Interview Question",
+          "scenario": "Рекрутер запитує тебе про твій досвід під час співбесіди.",
           "lines": [
             {
-              "speaker": "Brother",
-              "text": "Have you deployed the new feature to the server yet?",
-              "translation": "Ти вже розгорнув нову функцію на сервері?"
+              "speaker": "Recruiter",
+              "text": "Can you tell me about a recent project you have built?",
+              "translation": "Чи можете ви розповісти про нещодавній проєкт, який ви створили?"
             },
             {
               "speaker": "You",
-              "text": "Not yet. I have found a small bug in the database, so I need to fix it first.",
-              "translation": "Ще ні. Я знайшов невеликий баг у базі даних, тому спочатку маю його виправити."
+              "text": "I have recently developed a Telegram bot using TypeScript and MongoDB.",
+              "translation": "Нещодавно я розробив Telegram-бота, використовуючи TypeScript та MongoDB."
             }
           ]
         },
         "test": [
           {
-            "question": "We ___ just finished setting up the new server.",
-            "options": ["has", "have", "are", "did"],
-            "correctAnswer": 1,
-            "explanation": "З займенником 'we' у Present Perfect використовується допоміжне дієслово 'have'."
+            "question": "I ___ a new application last month.",
+            "options": ["have built", "build", "built"],
+            "correctAnswer": 2,
+            "explanation": "Оскільки вказано точний час у минулому (last month), використовується Past Simple (built)."
           },
           {
-            "question": "It is important to test the app before you ___ it.",
-            "options": ["develop", "fix", "schedule", "deploy"],
-            "correctAnswer": 3,
-            "explanation": "Deploy означає 'розгортати' або 'запускати' додаток у робоче середовище."
+            "question": "I ___ applied for three IT positions so far.",
+            "options": ["have", "did", "was"],
+            "correctAnswer": 0,
+            "explanation": "Тут акцент на результаті до цього моменту (so far), тому використовується Present Perfect (have applied)."
+          }
+        ]
+      }
+    },
+    {
+      "id": "b1-u2",
+      "title": "Finance & E-commerce",
+      "icon": "Handshake",
+      "description": "Як говорити про продажі, податки, управління фінансами та складати бюджет.",
+      "order": 2,
+      "steps": {
+        "warmup": {},
+        "vocabulary": [
+          {
+            "text": "budget",
+            "transcription": "[ˈbʌdʒɪt]",
+            "translation": "бюджет",
+            "exampleSentence": "We need to manage our monthly budget carefully.",
+            "exampleTranslation": "Нам потрібно ретельно управляти нашим місячним бюджетом."
+          },
+          {
+            "text": "income",
+            "transcription": "[ˈɪnkʌm]",
+            "translation": "дохід",
+            "exampleSentence": "My income from online sales has increased.",
+            "exampleTranslation": "Мій дохід від онлайн-продажів зріс."
+          },
+          {
+            "text": "expense",
+            "transcription": "[ɪkˈspens]",
+            "translation": "витрата",
+            "exampleSentence": "Shipping is a big expense for my store.",
+            "exampleTranslation": "Доставка — це велика витрата для мого магазину."
+          },
+          {
+            "text": "profit",
+            "transcription": "[ˈprɒfɪt]",
+            "translation": "прибуток",
+            "exampleSentence": "The company made a huge profit this quarter.",
+            "exampleTranslation": "Компанія отримала величезний прибуток у цьому кварталі."
+          },
+          {
+            "text": "tax",
+            "transcription": "[tæks]",
+            "translation": "податок",
+            "exampleSentence": "You must pay taxes on your business income.",
+            "exampleTranslation": "Ви повинні платити податки з доходу вашого бізнесу."
+          },
+          {
+            "text": "discount",
+            "transcription": "[ˈdɪskaʊnt]",
+            "translation": "знижка",
+            "exampleSentence": "I offered the buyer a 10% discount.",
+            "exampleTranslation": "Я запропонував покупцеві знижку 10%."
+          },
+          {
+            "text": "save",
+            "transcription": "[seɪv]",
+            "translation": "зберігати / заощаджувати",
+            "exampleSentence": "He saves money to invest in new products.",
+            "exampleTranslation": "Він заощаджує гроші, щоб інвестувати в нові товари."
+          },
+          {
+            "text": "negotiate",
+            "transcription": "[nɪˈɡəʊʃieɪt]",
+            "translation": "вести переговори / домовлятися",
+            "exampleSentence": "We need to negotiate a better price with the supplier.",
+            "exampleTranslation": "Нам потрібно домовитися з постачальником про кращу ціну."
+          }
+        ],
+        "grammar": {
+          "title": "First Conditional (Перший тип умовних речень)",
+          "explanation": "First Conditional використовується для реальних і можливих подій у майбутньому. Будується так: If + Present Simple (в умовній частині), will + verb (в частині результату).",
+          "examples": [
+            {
+              "en": "If you give me a discount, I will buy this phone.",
+              "ua": "Якщо ви зробите мені знижку, я куплю цей телефон."
+            },
+            {
+              "en": "If we reduce our expenses, our profit will grow.",
+              "ua": "Якщо ми зменшимо наші витрати, наш прибуток зросте."
+            },
+            {
+              "en": "She will not pay taxes if her income is too low.",
+              "ua": "Вона не платитиме податки, якщо її дохід буде занадто низьким."
+            }
+          ]
+        },
+        "video": {
+          "url": "https://www.youtube.com/watch?v=HQzoZfc3GwQ"
+        },
+        "reading": {
+          "title": "Managing an Online Store",
+          "text": "Alex is a student who runs a small online store. He sells electronics and accessories on platforms like OLX. Managing finances is crucial for his success. Every month, Alex calculates his total income and subtracts his business expenses, such as shipping and packaging. The money left is his net profit. Sometimes, customers try to negotiate the price. If Alex offers a discount, he usually makes less profit but gets a faster sale. He is saving money to upgrade his store's website and buy better inventory.",
+          "questions": [
+            {
+              "question": "How does Alex calculate his net profit?",
+              "options": [
+                "By adding taxes to his income",
+                "By subtracting business expenses from his total income",
+                "By asking the customers"
+              ],
+              "correctAnswer": 1
+            },
+            {
+              "question": "What happens if Alex offers a discount to a customer?",
+              "options": [
+                "He pays more taxes",
+                "He makes less profit but sells the item faster",
+                "He loses the item"
+              ],
+              "correctAnswer": 1
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Negotiating a Price",
+          "scenario": "Ти обговорюєш ціну товару з покупцем в інтернеті.",
+          "lines": [
+            {
+              "speaker": "Buyer",
+              "text": "I really like this item, but it is a bit expensive. Can you give me a discount?",
+              "translation": "Мені дуже подобається цей товар, але він трохи дорогий. Можете зробити знижку?"
+            },
+            {
+              "speaker": "You",
+              "text": "If you buy two items right now, I will give you a ten percent discount.",
+              "translation": "Якщо ви купите дві речі прямо зараз, я зроблю вам знижку в десять відсотків."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "If we increase our sales, our ___ will be much higher this month.",
+            "options": ["expense", "tax", "profit"],
+            "correctAnswer": 2,
+            "explanation": "Збільшення продажів призводить до вищого прибутку (profit)."
+          },
+          {
+            "question": "If you save your money, you ___ enough to buy a new laptop next year.",
+            "options": ["have", "will have", "had"],
+            "correctAnswer": 1,
+            "explanation": "У частині результату First Conditional використовується майбутній час (will + дієслово)."
           }
         ]
       }

@@ -14,7 +14,7 @@ export type UnitProgressStatus = "locked" | "available" | "completed";
 
 export interface IUserUnitProgress extends Document {
   userId: Types.ObjectId;
-  unitId: Types.ObjectId;
+  unitId: string; // ЗМІНЕНО: тепер це рядок (string)
   status: UnitProgressStatus;
   completedSteps: UnitStepType[];
   createdAt: Date;
@@ -30,8 +30,7 @@ const userUnitProgressSchema = new Schema<IUserUnitProgress>(
       index: true,
     },
     unitId: {
-      type: Schema.Types.ObjectId,
-      ref: "Unit",
+      type: String, // ЗМІНЕНО: String замість ObjectId
       required: true,
       index: true,
     },
@@ -61,7 +60,6 @@ const userUnitProgressSchema = new Schema<IUserUnitProgress>(
   },
 );
 
-// Унікальна пара: статус користувача для кожного конкретного юніта
 userUnitProgressSchema.index({ userId: 1, unitId: 1 }, { unique: true });
 
 export const UserUnitProgress = model<IUserUnitProgress>(

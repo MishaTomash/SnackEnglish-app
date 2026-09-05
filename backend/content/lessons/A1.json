@@ -2,9 +2,10 @@
   "level": "A1",
   "units": [
     {
-      "id": "u1",
-      "title": "Basic Greetings",
-      "description": "Learn basic greetings and the verb to be.",
+      "id": "a1-u1",
+      "title": "First Meet & Greetings",
+      "icon": "Handshake",
+      "description": "Юніт знайомить із базовими фразами вітання та знайомства англійською.",
       "order": 1,
       "steps": {
         "warmup": {},
@@ -13,681 +14,490 @@
             "text": "hello",
             "transcription": "[həˈləʊ]",
             "translation": "привіт",
-            "exampleSentence": "Hello, how are you?",
-            "exampleTranslation": "Привіт, як справи?"
-          },
-          {
-            "text": "name",
-            "transcription": "[neɪm]",
-            "translation": "ім'я",
-            "exampleSentence": "My name is Alex.",
-            "exampleTranslation": "Моє ім'я Алекс."
-          },
-          {
-            "text": "friend",
-            "transcription": "[frend]",
-            "translation": "друг",
-            "exampleSentence": "He is my best friend.",
-            "exampleTranslation": "Він мій найкращий друг."
-          },
-          {
-            "text": "meet",
-            "transcription": "[miːt]",
-            "translation": "знайомитися",
-            "exampleSentence": "Nice to meet you.",
-            "exampleTranslation": "Приємно познайомитись."
-          },
-          {
-            "text": "morning",
-            "transcription": "[ˈmɔːnɪŋ]",
-            "translation": "ранок",
-            "exampleSentence": "Good morning!",
-            "exampleTranslation": "Доброго ранку!"
-          },
-          {
-            "text": "evening",
-            "transcription": "[ˈiːvnɪŋ]",
-            "translation": "вечір",
-            "exampleSentence": "Good evening, everyone.",
-            "exampleTranslation": "Добрий вечір усім."
+            "exampleSentence": "Hello, my name is Alex.",
+            "exampleTranslation": "Привіт, мене звати Алекс."
           },
           {
             "text": "goodbye",
             "transcription": "[ˌɡʊdˈbaɪ]",
             "translation": "до побачення",
-            "exampleSentence": "Goodbye, see you tomorrow.",
-            "exampleTranslation": "До побачення, побачимось завтра."
+            "exampleSentence": "Goodbye, see you tomorrow!",
+            "exampleTranslation": "До побачення, побачимось завтра!"
+          },
+          {
+            "text": "name",
+            "transcription": "[neɪm]",
+            "translation": "ім'я",
+            "exampleSentence": "My name is Anna.",
+            "exampleTranslation": "Мене звати Анна."
+          },
+          {
+            "text": "nice",
+            "transcription": "[naɪs]",
+            "translation": "приємно",
+            "exampleSentence": "It is nice to meet you.",
+            "exampleTranslation": "Приємно познайомитися."
+          },
+          {
+            "text": "meet",
+            "transcription": "[miːt]",
+            "translation": "зустрічати, знайомитися",
+            "exampleSentence": "I meet my friend at school.",
+            "exampleTranslation": "Я зустрічаю свого друга в школі."
+          },
+          {
+            "text": "please",
+            "transcription": "[pliːz]",
+            "translation": "будь ласка",
+            "exampleSentence": "Please, sit down.",
+            "exampleTranslation": "Будь ласка, сідайте."
           },
           {
             "text": "thanks",
             "transcription": "[θæŋks]",
             "translation": "дякую",
             "exampleSentence": "Thanks for your help.",
-            "exampleTranslation": "Дякую за твою допомогу."
+            "exampleTranslation": "Дякую за допомогу."
+          },
+          {
+            "text": "sorry",
+            "transcription": "[ˈsɒri]",
+            "translation": "вибачте",
+            "exampleSentence": "Sorry, I am late.",
+            "exampleTranslation": "Вибачте, я запізнився."
           }
         ],
         "grammar": {
-          "title": "Verb \"To Be\"",
-          "explanation": "Дієслово \"to be\" (бути) змінюється залежно від займенника: I am, You are, He/She/It is, We/They are.",
+          "title": "Дієслово to be (am/is/are)",
+          "explanation": "Дієслово to be має три форми в теперішньому часі: am, is, are. Ми використовуємо am з I, is з he/she/it, і are з you/we/they. Це дієслово допомагає розповісти, хто ти або який ти.",
           "examples": [
-            { "en": "I am a student.", "ua": "Я студент." },
-            { "en": "She is from Ukraine.", "ua": "Вона з України." },
-            { "en": "They are very friendly.", "ua": "Вони дуже привітні." }
+            { "en": "I am Anna.", "ua": "Я Анна." },
+            { "en": "She is my friend.", "ua": "Вона моя подруга." },
+            { "en": "They are nice.", "ua": "Вони приємні." }
           ]
         },
-        "video": { "url": "https://www.youtube.com/watch?v=R0R0yE4K-0c" },
+        "video": { "url": "" },
         "reading": {
-          "title": "About Anna",
-          "text": "Hi, my name is Anna. I am from Ukraine. I am a student. Nice to meet you!",
+          "title": "New Friend",
+          "text": "Hello! My name is Tom. Sorry, I am late! I am from London. Nice to meet you! This is my friend, Kate. She is from Paris. We meet at school every day. Goodbye!",
           "questions": [
             {
-              "question": "Where is Anna from?",
-              "options": ["London", "Ukraine", "USA", "Poland"],
+              "question": "What is the boy's name?",
+              "options": ["Tom", "Kate", "Alex"],
+              "correctAnswer": 0
+            },
+            {
+              "question": "Where is Kate from?",
+              "options": ["London", "Paris", "Kyiv"],
               "correctAnswer": 1
             }
           ]
         },
         "speaking": {
-          "title": "Meeting at a Campus Cafe",
-          "scenario": "Знайомство з новим одногрупником.",
+          "title": "Meeting a New Classmate",
+          "scenario": "Ти зустрічаєш нового однокласника в перший день школи.",
           "lines": [
             {
-              "speaker": "Emma",
-              "text": "Hello! Excuse me, is this seat free?",
-              "translation": "Привіт! Перепрошую, це місце вільне?"
+              "speaker": "Stranger",
+              "text": "Hello! My name is Max.",
+              "translation": "Привіт! Мене звати Макс."
             },
             {
-              "speaker": "Alex",
-              "text": "Hi! Yes, it is. I'm Alex, nice to meet you.",
-              "translation": "Привіт! Так, вільне. Я Алекс, приємно познайомитися."
+              "speaker": "You",
+              "text": "Hi, Max! Nice to meet you.",
+              "translation": "Привіт, Максе! Приємно познайомитися."
+            },
+            {
+              "speaker": "Stranger",
+              "text": "Nice to meet you too. What is your name?",
+              "translation": "Приємно познайомитися і мені. Як тебе звати?"
+            },
+            {
+              "speaker": "You",
+              "text": "My name is Olena.",
+              "translation": "Мене звати Олена."
+            },
+            {
+              "speaker": "Stranger",
+              "text": "Sorry, I am late for class!",
+              "translation": "Вибач, я запізнююся на урок!"
+            },
+            {
+              "speaker": "You",
+              "text": "It's okay. See you at lunch, please.",
+              "translation": "Все гаразд. Побачимось на обіді, будь ласка."
+            },
+            {
+              "speaker": "Stranger",
+              "text": "Thanks! Goodbye for now.",
+              "translation": "Дякую! Бувай поки що."
+            },
+            {
+              "speaker": "You",
+              "text": "Goodbye, Max!",
+              "translation": "До побачення, Максе!"
             }
           ]
         },
         "test": [
           {
-            "question": "He ___ from Ukraine.",
-            "options": ["am", "is", "are", "be"],
+            "question": "My name ___ Anna.",
+            "options": ["am", "is", "are"],
             "correctAnswer": 1,
-            "explanation": "Для займенника 'he' використовується 'is'."
+            "explanation": "Із 'my name' (третя особа однини) використовуємо is."
           },
           {
-            "question": "Nice to ___ you!",
-            "options": ["see", "meet", "speak", "call"],
+            "question": "They ___ from Kyiv.",
+            "options": ["is", "am", "are"],
+            "correctAnswer": 2,
+            "explanation": "З 'they' використовуємо are."
+          },
+          {
+            "question": "Як українською 'goodbye'?",
+            "options": ["до побачення", "привіт", "дякую"],
+            "correctAnswer": 0,
+            "explanation": "'Goodbye' перекладається як 'до побачення'."
+          },
+          {
+            "question": "I ___ sorry for being late.",
+            "options": ["is", "am", "are"],
             "correctAnswer": 1,
-            "explanation": "Стандартна ідіома знайомства — 'Nice to meet you'."
+            "explanation": "З 'I' завжди використовується am."
           }
         ]
       }
     },
     {
-      "id": "u2",
-      "title": "My Daily Routine",
-      "description": "Навчися розповідати про свій розклад дня та щоденні ритуали.",
+      "id": "a1-u2",
+      "title": "My Family",
+      "icon": "Users",
+      "description": "Юніт знайомить зі словами для опису родини та дієсловом have/has.",
       "order": 2,
       "steps": {
         "warmup": {},
         "vocabulary": [
           {
-            "text": "wake up",
-            "transcription": "[weɪk ʌp]",
-            "translation": "прокидатися",
-            "exampleSentence": "I wake up at 7 AM.",
-            "exampleTranslation": "Я прокидаюся о 7 ранку."
+            "text": "family",
+            "transcription": "[ˈfæməli]",
+            "translation": "родина",
+            "exampleSentence": "I love my family.",
+            "exampleTranslation": "Я люблю свою родину."
           },
+          {
+            "text": "mother",
+            "transcription": "[ˈmʌðə]",
+            "translation": "мама",
+            "exampleSentence": "My mother is a teacher.",
+            "exampleTranslation": "Моя мама вчителька."
+          },
+          {
+            "text": "father",
+            "transcription": "[ˈfɑːðə]",
+            "translation": "тато",
+            "exampleSentence": "My father works in a shop.",
+            "exampleTranslation": "Мій тато працює в магазині."
+          },
+          {
+            "text": "sister",
+            "transcription": "[ˈsɪstə]",
+            "translation": "сестра",
+            "exampleSentence": "I have one sister.",
+            "exampleTranslation": "У мене є одна сестра."
+          },
+          {
+            "text": "brother",
+            "transcription": "[ˈbrʌðə]",
+            "translation": "брат",
+            "exampleSentence": "My brother is ten years old.",
+            "exampleTranslation": "Моєму брату десять років."
+          },
+          {
+            "text": "parents",
+            "transcription": "[ˈpeərənts]",
+            "translation": "батьки",
+            "exampleSentence": "My parents live in Lviv.",
+            "exampleTranslation": "Мої батьки живуть у Львові."
+          },
+          {
+            "text": "children",
+            "transcription": "[ˈtʃɪldrən]",
+            "translation": "діти",
+            "exampleSentence": "They have three children.",
+            "exampleTranslation": "У них троє дітей."
+          },
+          {
+            "text": "have",
+            "transcription": "[hæv]",
+            "translation": "мати",
+            "exampleSentence": "I have a big family.",
+            "exampleTranslation": "У мене велика родина."
+          }
+        ],
+        "grammar": {
+          "title": "Дієслово have/has (I have, she has)",
+          "explanation": "Дієслово have означає 'мати'. З I, you, we, they використовуємо have. З he, she, it використовуємо has. Це дієслово часто вживають, коли говорять про родину.",
+          "examples": [
+            { "en": "I have two brothers.", "ua": "У мене є два брати." },
+            { "en": "She has a small family.", "ua": "У неї маленька родина." },
+            { "en": "They have one daughter.", "ua": "У них є одна донька." }
+          ]
+        },
+        "video": { "url": "" },
+        "reading": {
+          "title": "My Big Family",
+          "text": "Hello! I have a big family. My mother and father live in Kyiv. I have one sister and one brother. My sister has two children. My parents love their family very much. We are happy together!",
+          "questions": [
+            {
+              "question": "How many sisters does the writer have?",
+              "options": ["one", "two", "three"],
+              "correctAnswer": 0
+            },
+            {
+              "question": "Who has two children?",
+              "options": ["the writer", "the sister", "the mother"],
+              "correctAnswer": 1
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Talking About Family",
+          "scenario": "Ти розповідаєш новому другу про свою родину.",
+          "lines": [
+            {
+              "speaker": "Friend",
+              "text": "Do you have a big family?",
+              "translation": "У тебе велика родина?"
+            },
+            {
+              "speaker": "You",
+              "text": "Yes, I have a big family.",
+              "translation": "Так, у мене велика родина."
+            },
+            {
+              "speaker": "Friend",
+              "text": "Do you have a sister or a brother?",
+              "translation": "У тебе є сестра чи брат?"
+            },
+            {
+              "speaker": "You",
+              "text": "I have one brother and one sister.",
+              "translation": "У мене є один брат і одна сестра."
+            },
+            {
+              "speaker": "Friend",
+              "text": "What do your parents do?",
+              "translation": "Чим займаються твої батьки?"
+            },
+            {
+              "speaker": "You",
+              "text": "My mother is a doctor. My father has a small shop.",
+              "translation": "Моя мама лікарка. У мого батька є маленький магазин."
+            },
+            {
+              "speaker": "Friend",
+              "text": "Do your parents have any other children?",
+              "translation": "У твоїх батьків є ще діти?"
+            },
+            {
+              "speaker": "You",
+              "text": "No, we are three children in the family.",
+              "translation": "Ні, нас троє дітей у родині."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "My sister ___ two children.",
+            "options": ["have", "am", "has"],
+            "correctAnswer": 2,
+            "explanation": "З 'my sister' (вона) використовуємо has."
+          },
+          {
+            "question": "I ___ one brother.",
+            "options": ["have", "has", "am"],
+            "correctAnswer": 0,
+            "explanation": "З 'I' використовуємо have."
+          },
+          {
+            "question": "Як українською 'parents'?",
+            "options": ["діти", "родина", "батьки"],
+            "correctAnswer": 2,
+            "explanation": "'Parents' перекладається як 'батьки'."
+          },
+          {
+            "question": "They ___ a big family.",
+            "options": ["has", "have", "is"],
+            "correctAnswer": 1,
+            "explanation": "З 'they' використовуємо have."
+          }
+        ]
+      }
+    },
+    {
+      "id": "a1-u3",
+      "title": "Breakfast Time",
+      "icon": "Utensils",
+      "description": "Юніт про їжу та напої на сніданок, а також базовий Present Simple.",
+      "order": 3,
+      "steps": {
+        "warmup": {},
+        "vocabulary": [
           {
             "text": "breakfast",
             "transcription": "[ˈbrekfəst]",
             "translation": "сніданок",
-            "exampleSentence": "I eat eggs for breakfast.",
-            "exampleTranslation": "Я їм яйця на сніданок."
+            "exampleSentence": "I eat breakfast at seven.",
+            "exampleTranslation": "Я снідаю о сьомій."
           },
           {
-            "text": "work",
-            "transcription": "[wɜːk]",
-            "translation": "працювати",
-            "exampleSentence": "She goes to work by bus.",
-            "exampleTranslation": "Вона їде на роботу автобусом."
+            "text": "eat",
+            "transcription": "[iːt]",
+            "translation": "їсти",
+            "exampleSentence": "I eat bread every morning.",
+            "exampleTranslation": "Я їм хліб щоранку."
           },
           {
-            "text": "sleep",
-            "transcription": "[sliːp]",
-            "translation": "спати",
-            "exampleSentence": "I need to sleep.",
-            "exampleTranslation": "Мені потрібно поспати."
+            "text": "drink",
+            "transcription": "[drɪŋk]",
+            "translation": "пити",
+            "exampleSentence": "I drink tea in the morning.",
+            "exampleTranslation": "Я п'ю чай зранку."
+          },
+          {
+            "text": "water",
+            "transcription": "[ˈwɔːtə]",
+            "translation": "вода",
+            "exampleSentence": "I drink water every day.",
+            "exampleTranslation": "Я п'ю воду щодня."
+          },
+          {
+            "text": "tea",
+            "transcription": "[tiː]",
+            "translation": "чай",
+            "exampleSentence": "My father drinks tea.",
+            "exampleTranslation": "Мій тато п'є чай."
           },
           {
             "text": "coffee",
             "transcription": "[ˈkɒfi]",
             "translation": "кава",
-            "exampleSentence": "He drinks black coffee.",
-            "exampleTranslation": "Він п'є чорну каву."
+            "exampleSentence": "My mother likes coffee.",
+            "exampleTranslation": "Моя мама любить каву."
           },
           {
-            "text": "brush",
-            "transcription": "[brʌʃ]",
-            "translation": "чистити",
-            "exampleSentence": "Brush your teeth twice a day.",
-            "exampleTranslation": "Чисть зуби двічі на день."
+            "text": "bread",
+            "transcription": "[bred]",
+            "translation": "хліб",
+            "exampleSentence": "We eat bread with butter.",
+            "exampleTranslation": "Ми їмо хліб з маслом."
           },
           {
-            "text": "shower",
-            "transcription": "[ˈʃaʊə]",
-            "translation": "душ",
-            "exampleSentence": "I take a shower in the evening.",
-            "exampleTranslation": "Я приймаю душ ввечері."
-          },
-          {
-            "text": "dinner",
-            "transcription": "[ˈdɪnə]",
-            "translation": "вечеря",
-            "exampleSentence": "We have dinner at 8 PM.",
-            "exampleTranslation": "Ми вечеряємо о 8 вечора."
+            "text": "egg",
+            "transcription": "[eɡ]",
+            "translation": "яйце",
+            "exampleSentence": "I eat an egg for breakfast.",
+            "exampleTranslation": "Я їм яйце на сніданок."
           }
         ],
         "grammar": {
-          "title": "Present Simple",
-          "explanation": "Present Simple використовується для регулярних дій. Для He/She/It до дієслова додається закінчення -s або -es.",
+          "title": "Present Simple (I eat, she drinks)",
+          "explanation": "Present Simple використовуємо для звичних дій. З I, you, we, they дієслово залишається без змін (eat, drink). З he, she, it додаємо -s (eats, drinks). Цей час часто вживають, коли говорять про сніданок чи звички.",
           "examples": [
+            { "en": "I eat breakfast at eight.", "ua": "Я снідаю о восьмій." },
             {
-              "en": "I drink coffee every morning.",
-              "ua": "Я п'ю каву щоранку."
+              "en": "She drinks tea every morning.",
+              "ua": "Вона п'є чай щоранку."
             },
-            {
-              "en": "He starts work at nine.",
-              "ua": "Він починає роботу о дев'ятій."
-            }
+            { "en": "We eat bread and eggs.", "ua": "Ми їмо хліб та яйця." }
           ]
         },
-        "video": { "url": "https://www.youtube.com/watch?v=M99_p6O0lP0" },
+        "video": { "url": "" },
         "reading": {
-          "title": "David's Productive Morning",
-          "text": "I wake up at 7 AM every day. I take a shower and brush my teeth. Then I drink coffee and go to work.",
+          "title": "Our Morning Breakfast",
+          "text": "Every morning, my family eats breakfast together. I eat bread and an egg. My mother drinks coffee, but my father drinks tea. We all drink water too. Breakfast is my favorite meal!",
           "questions": [
             {
-              "question": "What time does he wake up?",
-              "options": ["6 AM", "7 AM", "8 AM", "9 AM"],
+              "question": "What does the father drink?",
+              "options": ["coffee", "tea", "water"],
               "correctAnswer": 1
+            },
+            {
+              "question": "What does the writer eat for breakfast?",
+              "options": ["egg and bread", "only tea", "only coffee"],
+              "correctAnswer": 0
             }
           ]
         },
         "speaking": {
-          "title": "Office Coffee Break",
-          "scenario": "Коротка розмова з колегою на кухні.",
+          "title": "Ordering Breakfast at a Café",
+          "scenario": "Ти в кафе і замовляєш сніданок.",
           "lines": [
             {
-              "speaker": "Olena",
-              "text": "Hey! Do you want some coffee or tea?",
-              "translation": "Привіт! Хочеш трохи кави чи чаю?"
+              "speaker": "Waiter",
+              "text": "Good morning! What do you eat for breakfast?",
+              "translation": "Доброго ранку! Що ви їсте на сніданок?"
             },
             {
-              "speaker": "Mark",
-              "text": "Coffee with milk, please.",
-              "translation": "Каву з молоком, будь ласка."
+              "speaker": "You",
+              "text": "I eat bread and an egg, please.",
+              "translation": "Я їм хліб та яйце, будь ласка."
+            },
+            {
+              "speaker": "Waiter",
+              "text": "Do you drink tea or coffee?",
+              "translation": "Ви п'єте чай чи каву?"
+            },
+            {
+              "speaker": "You",
+              "text": "I drink coffee, please.",
+              "translation": "Я п'ю каву, будь ласка."
+            },
+            {
+              "speaker": "Waiter",
+              "text": "Do you want water too?",
+              "translation": "Хочете також води?"
+            },
+            {
+              "speaker": "You",
+              "text": "Yes, I drink water every morning.",
+              "translation": "Так, я п'ю воду щоранку."
+            },
+            {
+              "speaker": "Waiter",
+              "text": "Great! Your breakfast is ready in five minutes.",
+              "translation": "Чудово! Ваш сніданок готовий за п'ять хвилин."
+            },
+            {
+              "speaker": "You",
+              "text": "Thank you very much!",
+              "translation": "Дуже дякую!"
             }
           ]
         },
         "test": [
           {
-            "question": "She ___ black coffee every morning.",
-            "options": ["drink", "drinks", "drinking", "drank"],
+            "question": "She ___ tea every morning.",
+            "options": ["drinks", "eat", "drink"],
+            "correctAnswer": 0,
+            "explanation": "З 'she' (третя особа) додаємо -s: drinks."
+          },
+          {
+            "question": "I ___ bread for breakfast.",
+            "options": ["drinks", "eats", "eat"],
+            "correctAnswer": 2,
+            "explanation": "З 'I' дієслово без -s: eat."
+          },
+          {
+            "question": "Як українською 'water'?",
+            "options": ["чай", "вода", "кава"],
             "correctAnswer": 1,
-            "explanation": "З 'she' дієслово отримує закінчення -s: 'drinks'."
-          }
-        ]
-      }
-    },
-    {
-      "id": "u3",
-      "title": "First Meet & Small Talk",
-      "description": "Опануй фрази для знайомства та легку невимушену розмову.",
-      "order": 3,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "please",
-            "transcription": "/pliːz/",
-            "translation": "будь ласка",
-            "exampleSentence": "Please call me.",
-            "exampleTranslation": "Будь ласка, зателефонуй мені."
+            "explanation": "'Water' перекладається як 'вода'."
           },
           {
-            "text": "welcome",
-            "transcription": "/ˈwelkəm/",
-            "translation": "ласкаво просимо",
-            "exampleSentence": "You are welcome here.",
-            "exampleTranslation": "Тобі тут раді."
-          },
-          {
-            "text": "speak",
-            "transcription": "/spiːk/",
-            "translation": "розмовляти",
-            "exampleSentence": "I speak English.",
-            "exampleTranslation": "Я розмовляю англійською."
-          },
-          {
-            "text": "lunch",
-            "transcription": "/lʌntʃ/",
-            "translation": "обід",
-            "exampleSentence": "Let's have lunch.",
-            "exampleTranslation": "Давай пообідаємо."
-          },
-          {
-            "text": "walk",
-            "transcription": "/wɔːk/",
-            "translation": "гуляти",
-            "exampleSentence": "We walk in the park.",
-            "exampleTranslation": "Ми гуляємо в парку."
-          },
-          {
-            "text": "always",
-            "transcription": "/ˈɔːlweɪz/",
-            "translation": "завжди",
-            "exampleSentence": "She always reads.",
-            "exampleTranslation": "Вона завжди читає."
-          },
-          {
-            "text": "call",
-            "transcription": "/kɔːl/",
-            "translation": "дзвінок",
-            "exampleSentence": "Let's hop on a call.",
-            "exampleTranslation": "Давай зідзвонимося."
-          },
-          {
-            "text": "meeting",
-            "transcription": "/ˈmiːtɪŋ/",
-            "translation": "зустріч",
-            "exampleSentence": "The meeting starts at ten.",
-            "exampleTranslation": "Зустріч починається о десятій."
-          }
-        ],
-        "grammar": {
-          "title": "Present Simple - Questions",
-          "explanation": "Для утворення питань у Present Simple ми використовуємо Do або Does.",
-          "examples": [
-            {
-              "en": "Do you speak English?",
-              "ua": "Ти розмовляєш англійською?"
-            },
-            { "en": "Does she like coffee?", "ua": "Вій подобається кава?" }
-          ]
-        },
-        "video": { "url": "https://www.youtube.com/watch?v=dtp6bXBcbvE" },
-        "reading": {
-          "title": "Meeting Emma",
-          "text": "Alex meets Emma at the cafe. They introduce themselves.",
-          "questions": [
-            {
-              "question": "Where do they meet?",
-              "options": ["Park", "Cafe", "Office", "Home"],
-              "correctAnswer": 1
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Small Talk",
-          "scenario": "Легка розмова про погоду.",
-          "lines": [
-            {
-              "speaker": "Alex",
-              "text": "Nice weather today, isn't it?",
-              "translation": "Гарна погода сьогодні, чи не так?"
-            },
-            {
-              "speaker": "Emma",
-              "text": "Yes, absolutely! I love this weather.",
-              "translation": "Так, абсолютно! Обожнюю таку погоду."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "___ you ready for the lesson?",
-            "options": ["Are", "Is", "Am", "Do"],
+            "question": "We ___ eggs for breakfast.",
+            "options": ["eat", "drinks", "eats"],
             "correctAnswer": 0,
-            "explanation": "З займенником 'you' використовується дієслово 'Are'."
-          }
-        ]
-      }
-    },
-    {
-      "id": "u3",
-      "title": "First Meet & Small Talk",
-      "description": "Опануй фрази для знайомства та легку невимушену розмову.",
-      "order": 3,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "please",
-            "transcription": "/pliːz/",
-            "translation": "будь ласка",
-            "exampleSentence": "Please call me.",
-            "exampleTranslation": "Будь ласка, зателефонуй мені."
-          },
-          {
-            "text": "welcome",
-            "transcription": "/ˈwelkəm/",
-            "translation": "ласкаво просимо",
-            "exampleSentence": "You are welcome here.",
-            "exampleTranslation": "Тобі тут раді."
-          },
-          {
-            "text": "speak",
-            "transcription": "/spiːk/",
-            "translation": "розмовляти",
-            "exampleSentence": "I speak English.",
-            "exampleTranslation": "Я розмовляю англійською."
-          },
-          {
-            "text": "lunch",
-            "transcription": "/lʌntʃ/",
-            "translation": "обід",
-            "exampleSentence": "Let's have lunch.",
-            "exampleTranslation": "Давай пообідаємо."
-          },
-          {
-            "text": "walk",
-            "transcription": "/wɔːk/",
-            "translation": "гуляти",
-            "exampleSentence": "We walk in the park.",
-            "exampleTranslation": "Ми гуляємо в парку."
-          },
-          {
-            "text": "always",
-            "transcription": "/ˈɔːlweɪz/",
-            "translation": "завжди",
-            "exampleSentence": "She always reads.",
-            "exampleTranslation": "Вона завжди читає."
-          },
-          {
-            "text": "call",
-            "transcription": "/kɔːl/",
-            "translation": "дзвінок",
-            "exampleSentence": "Let's hop on a call.",
-            "exampleTranslation": "Давай зідзвонимося."
-          },
-          {
-            "text": "meeting",
-            "transcription": "/ˈmiːtɪŋ/",
-            "translation": "зустріч",
-            "exampleSentence": "The meeting starts at ten.",
-            "exampleTranslation": "Зустріч починається о десятій."
-          }
-        ],
-        "grammar": {
-          "title": "Present Simple - Questions",
-          "explanation": "Для утворення питань у Present Simple ми використовуємо Do або Does.",
-          "examples": [
-            {
-              "en": "Do you speak English?",
-              "ua": "Ти розмовляєш англійською?"
-            },
-            { "en": "Does she like coffee?", "ua": "Вій подобається кава?" }
-          ]
-        },
-        "video": { "url": "https://www.youtube.com/watch?v=dtp6bXBcbvE" },
-        "reading": {
-          "title": "Meeting Emma",
-          "text": "Alex meets Emma at the cafe. They introduce themselves.",
-          "questions": [
-            {
-              "question": "Where do they meet?",
-              "options": ["Park", "Cafe", "Office", "Home"],
-              "correctAnswer": 1
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Small Talk",
-          "scenario": "Легка розмова про погоду.",
-          "lines": [
-            {
-              "speaker": "Alex",
-              "text": "Nice weather today, isn't it?",
-              "translation": "Гарна погода сьогодні, чи не так?"
-            },
-            {
-              "speaker": "Emma",
-              "text": "Yes, absolutely! I love this weather.",
-              "translation": "Так, абсолютно! Обожнюю таку погоду."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "___ you ready for the lesson?",
-            "options": ["Are", "Is", "Am", "Do"],
-            "correctAnswer": 0,
-            "explanation": "З займенником 'you' використовується дієслово 'Are'."
-          }
-        ]
-      }
-    },
-    {
-      "id": "u3",
-      "title": "First Meet & Small Talk",
-      "description": "Опануй фрази для знайомства та легку невимушену розмову.",
-      "order": 3,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "please",
-            "transcription": "/pliːz/",
-            "translation": "будь ласка",
-            "exampleSentence": "Please call me.",
-            "exampleTranslation": "Будь ласка, зателефонуй мені."
-          },
-          {
-            "text": "welcome",
-            "transcription": "/ˈwelkəm/",
-            "translation": "ласкаво просимо",
-            "exampleSentence": "You are welcome here.",
-            "exampleTranslation": "Тобі тут раді."
-          },
-          {
-            "text": "speak",
-            "transcription": "/spiːk/",
-            "translation": "розмовляти",
-            "exampleSentence": "I speak English.",
-            "exampleTranslation": "Я розмовляю англійською."
-          },
-          {
-            "text": "lunch",
-            "transcription": "/lʌntʃ/",
-            "translation": "обід",
-            "exampleSentence": "Let's have lunch.",
-            "exampleTranslation": "Давай пообідаємо."
-          },
-          {
-            "text": "walk",
-            "transcription": "/wɔːk/",
-            "translation": "гуляти",
-            "exampleSentence": "We walk in the park.",
-            "exampleTranslation": "Ми гуляємо в парку."
-          },
-          {
-            "text": "always",
-            "transcription": "/ˈɔːlweɪz/",
-            "translation": "завжди",
-            "exampleSentence": "She always reads.",
-            "exampleTranslation": "Вона завжди читає."
-          },
-          {
-            "text": "call",
-            "transcription": "/kɔːl/",
-            "translation": "дзвінок",
-            "exampleSentence": "Let's hop on a call.",
-            "exampleTranslation": "Давай зідзвонимося."
-          },
-          {
-            "text": "meeting",
-            "transcription": "/ˈmiːtɪŋ/",
-            "translation": "зустріч",
-            "exampleSentence": "The meeting starts at ten.",
-            "exampleTranslation": "Зустріч починається о десятій."
-          }
-        ],
-        "grammar": {
-          "title": "Present Simple - Questions",
-          "explanation": "Для утворення питань у Present Simple ми використовуємо Do або Does.",
-          "examples": [
-            {
-              "en": "Do you speak English?",
-              "ua": "Ти розмовляєш англійською?"
-            },
-            { "en": "Does she like coffee?", "ua": "Вій подобається кава?" }
-          ]
-        },
-        "video": { "url": "https://www.youtube.com/watch?v=dtp6bXBcbvE" },
-        "reading": {
-          "title": "Meeting Emma",
-          "text": "Alex meets Emma at the cafe. They introduce themselves.",
-          "questions": [
-            {
-              "question": "Where do they meet?",
-              "options": ["Park", "Cafe", "Office", "Home"],
-              "correctAnswer": 1
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Small Talk",
-          "scenario": "Легка розмова про погоду.",
-          "lines": [
-            {
-              "speaker": "Alex",
-              "text": "Nice weather today, isn't it?",
-              "translation": "Гарна погода сьогодні, чи не так?"
-            },
-            {
-              "speaker": "Emma",
-              "text": "Yes, absolutely! I love this weather.",
-              "translation": "Так, абсолютно! Обожнюю таку погоду."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "___ you ready for the lesson?",
-            "options": ["Are", "Is", "Am", "Do"],
-            "correctAnswer": 0,
-            "explanation": "З займенником 'you' використовується дієслово 'Are'."
-          }
-        ]
-      }
-    },
-    {
-      "id": "u3",
-      "title": "First Meet & Small Talk",
-      "description": "Опануй фрази для знайомства та легку невимушену розмову.",
-      "order": 3,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "please",
-            "transcription": "/pliːz/",
-            "translation": "будь ласка",
-            "exampleSentence": "Please call me.",
-            "exampleTranslation": "Будь ласка, зателефонуй мені."
-          },
-          {
-            "text": "welcome",
-            "transcription": "/ˈwelkəm/",
-            "translation": "ласкаво просимо",
-            "exampleSentence": "You are welcome here.",
-            "exampleTranslation": "Тобі тут раді."
-          },
-          {
-            "text": "speak",
-            "transcription": "/spiːk/",
-            "translation": "розмовляти",
-            "exampleSentence": "I speak English.",
-            "exampleTranslation": "Я розмовляю англійською."
-          },
-          {
-            "text": "lunch",
-            "transcription": "/lʌntʃ/",
-            "translation": "обід",
-            "exampleSentence": "Let's have lunch.",
-            "exampleTranslation": "Давай пообідаємо."
-          },
-          {
-            "text": "walk",
-            "transcription": "/wɔːk/",
-            "translation": "гуляти",
-            "exampleSentence": "We walk in the park.",
-            "exampleTranslation": "Ми гуляємо в парку."
-          },
-          {
-            "text": "always",
-            "transcription": "/ˈɔːlweɪz/",
-            "translation": "завжди",
-            "exampleSentence": "She always reads.",
-            "exampleTranslation": "Вона завжди читає."
-          },
-          {
-            "text": "call",
-            "transcription": "/kɔːl/",
-            "translation": "дзвінок",
-            "exampleSentence": "Let's hop on a call.",
-            "exampleTranslation": "Давай зідзвонимося."
-          },
-          {
-            "text": "meeting",
-            "transcription": "/ˈmiːtɪŋ/",
-            "translation": "зустріч",
-            "exampleSentence": "The meeting starts at ten.",
-            "exampleTranslation": "Зустріч починається о десятій."
-          }
-        ],
-        "grammar": {
-          "title": "Present Simple - Questions",
-          "explanation": "Для утворення питань у Present Simple ми використовуємо Do або Does.",
-          "examples": [
-            {
-              "en": "Do you speak English?",
-              "ua": "Ти розмовляєш англійською?"
-            },
-            { "en": "Does she like coffee?", "ua": "Вій подобається кава?" }
-          ]
-        },
-        "video": { "url": "https://www.youtube.com/watch?v=dtp6bXBcbvE" },
-        "reading": {
-          "title": "Meeting Emma",
-          "text": "Alex meets Emma at the cafe. They introduce themselves.",
-          "questions": [
-            {
-              "question": "Where do they meet?",
-              "options": ["Park", "Cafe", "Office", "Home"],
-              "correctAnswer": 1
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Small Talk",
-          "scenario": "Легка розмова про погоду.",
-          "lines": [
-            {
-              "speaker": "Alex",
-              "text": "Nice weather today, isn't it?",
-              "translation": "Гарна погода сьогодні, чи не так?"
-            },
-            {
-              "speaker": "Emma",
-              "text": "Yes, absolutely! I love this weather.",
-              "translation": "Так, абсолютно! Обожнюю таку погоду."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "___ you ready for the lesson?",
-            "options": ["Are", "Is", "Am", "Do"],
-            "correctAnswer": 0,
-            "explanation": "З займенником 'you' використовується дієслово 'Are'."
+            "explanation": "З 'we' дієслово без -s: eat."
           }
         ]
       }

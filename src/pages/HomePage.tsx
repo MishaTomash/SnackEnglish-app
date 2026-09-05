@@ -10,6 +10,7 @@ import { CookieMascot } from "../shared/ui/CookieMascot";
 import { StreakBadge } from "../entities/user/ui/StreakBadge";
 import { useUserStore } from "../store/userStore";
 import { useProgressStore } from "../store/progressStore";
+import { useRepetitionStore } from "../store/repetitionStore";
 
 export const HomePage = () => {
   const { level, streak, wordsLearnedCount } = useUserStore();
@@ -19,18 +20,29 @@ export const HomePage = () => {
     loadUnits,
     isLoading,
     progressPercent,
-    completedStepsCount,
-    totalStepsCount,
+    lastFetchedLevel, // Залишили тільки потрібні змінні
   } = useProgressStore();
+  const { dailyQueue, loadDailyWords, status } = useRepetitionStore();
 
   useEffect(() => {
-    if (units.length === 0) {
+    if (status === "idle") {
+      loadDailyWords();
+    }
+  }, [status, loadDailyWords]);
+
+  useEffect(() => {
+    if (units.length === 0 || lastFetchedLevel !== level) {
       loadUnits(level || "A1");
     }
-  }, [units.length, loadUnits, level]);
+  }, [units.length, loadUnits, level, lastFetchedLevel]);
 
   const activeUnit = units.find((u) => u.id === currentUnitId) ?? units[0];
-  const reviewWordsCount = 7;
+  const reviewWordsCount = dailyQueue.length;
+
+  const completedUnitsCount = units.filter(
+    (u) => u.status === "completed",
+  ).length;
+  const totalUnitsCount = units.length;
 
   return (
     <Screen className="space-y-4">
@@ -73,9 +85,9 @@ export const HomePage = () => {
         <ProgressBar progress={progressPercent} />
         <div className="flex justify-between text-xs text-[var(--text-muted)]">
           <span>
-            Пройдено кроків: {completedStepsCount} з {totalStepsCount}
+            Пройдено тем: {completedUnitsCount} з {totalUnitsCount}
           </span>
-          <span>{totalStepsCount - completedStepsCount} залишилось</span>
+          <span>{totalUnitsCount - completedUnitsCount} залишилось</span>
         </div>
       </Card>
 
@@ -141,7 +153,7 @@ export const HomePage = () => {
               {reviewWordsCount}
             </div>
             <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
-              на повторення
+              на сьогодні
             </div>
           </div>
         </Card>

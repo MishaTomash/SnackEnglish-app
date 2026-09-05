@@ -19,12 +19,11 @@ interface ProgressState {
   setCurrentUnitId: (unitId: string) => void;
 }
 
-// Допоміжна функція для динамічного підрахунку кількості кроків у юніті
 const getUnitTotalSteps = (unit: any): number => {
   if (unit.steps && unit.steps.length > 0) return unit.steps.length;
 
-  let count = 1; // warmup
-  if (unit.wordIds?.length > 0) count += 2; // vocabulary + speaking
+  let count = 1;
+  if (unit.wordIds?.length > 0) count += 2;
   if (
     (unit.grammarTopic && unit.grammarExplanation) ||
     (unit.grammar?.title && unit.grammar?.explanation)
@@ -32,7 +31,7 @@ const getUnitTotalSteps = (unit: any): number => {
     count += 1;
   if (unit.videoUrl) count += 1;
   if (unit.readingText) count += 1;
-  count += 1; // test
+  count += 1;
 
   return count;
 };
@@ -63,6 +62,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
       let globalCompletedSteps = 0;
       let globalTotalSteps = 0;
+      let isNextUnitAvailable = false;
 
       const normalizedUnits: Unit[] = (rawData || []).map((raw: any) => {
         const completedSteps = raw.completedSteps || [];
@@ -71,10 +71,22 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         globalCompletedSteps += completedSteps.length;
         globalTotalSteps += totalSteps;
 
+        const isFullyCompleted = completedSteps.includes("test");
+        let finalStatus: "completed" | "available" | "locked";
+
+        if (raw.status === "completed" || isFullyCompleted) {
+          finalStatus = "completed";
+        } else if (!isNextUnitAvailable) {
+          finalStatus = "available";
+          isNextUnitAvailable = true;
+        } else {
+          finalStatus = "locked";
+        }
+
         return {
           ...raw,
           id: raw.id || raw._id,
-          status: raw.status || "locked",
+          status: finalStatus,
           completedSteps,
         };
       });
@@ -84,18 +96,20 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
           ? Math.round((globalCompletedSteps / globalTotalSteps) * 100)
           : 0;
 
-      // Визначаємо активний юніт
-      const savedUnitId = useUserStore.getState().lastActiveUnitId;
-      let activeUnit = normalizedUnits.find((u) => u.id === savedUnitId);
+      // ВИПРАВЛЕНО: Фокус завжди автоматично націлюється на "фронтир" (available)
+      let activeUnit = normalizedUnits.find((u) => u.status === "available");
 
-      if (!activeUnit || activeUnit.status === "locked") {
+      // Якщо немає доступних (усе пройдено) — фокусуємось на останньому
+      if (!activeUnit) {
         activeUnit =
-          normalizedUnits.find((u) => u.status === "available") ??
-          normalizedUnits[0];
+          normalizedUnits
+            .slice()
+            .reverse()
+            .find((u) => u.status === "completed") ?? normalizedUnits[0];
+      }
 
-        if (activeUnit) {
-          useUserStore.getState().setLastActiveUnitId(activeUnit.id);
-        }
+      if (activeUnit) {
+        useUserStore.getState().setLastActiveUnitId(activeUnit.id);
       }
 
       set({
@@ -116,7 +130,6 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     try {
       await completeUnitStepApi(unitId, stepType);
       useUserStore.getState().setLastActiveUnitId(unitId);
-      // force=true змушує стор завантажити свіжі дані з бекенду і перерахувати відсоток
       await get().loadUnits(get().lastFetchedLevel || "A1", true);
     } catch (err: unknown) {
       console.error("Помилка фіксації кроку:", err);

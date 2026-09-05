@@ -25,7 +25,6 @@ export const getUserUnits = async (
 
     const level = (req.query.level as string) || (user as any).level || "A1";
 
-    // ОНОВЛЕНО: Читаємо юніти з in-memory сервісу замість DB
     const units = contentService.getUnitsByLevel(level);
     const userProgressList = await UserUnitProgress.find({ userId: user._id });
 
@@ -34,19 +33,20 @@ export const getUserUnits = async (
       { status: UnitProgressStatus; completedSteps: UnitStepType[] }
     >();
     userProgressList.forEach((prog) => {
-      progressMap.set(prog.unitId.toString(), {
+      progressMap.set(prog.unitId, {
+        // ВИПРАВЛЕНО: prog.unitId вже рядок
         status: prog.status,
         completedSteps: prog.completedSteps,
       });
     });
 
     const result = units.map((unit, index) => {
-      const prog = progressMap.get(unit._id);
+      const prog = progressMap.get(unit.id); // ВИПРАВЛЕНО: unit.id замість unit._id
       const defaultStatus: UnitProgressStatus =
         index === 0 ? "available" : "locked";
 
       return {
-        ...unit, // Розгортаємо весь підготовлений JSON контракт (id, _id, title, wordIds, grammar тощо)
+        ...unit,
         status: prog?.status ?? defaultStatus,
         completedSteps: prog?.completedSteps ?? [],
       };
@@ -83,19 +83,19 @@ export const completeStep = async (
     const user = await User.findOne({ telegramId });
     if (!user) return void res.status(404).json({ error: "User not found" });
 
-    // ОНОВЛЕНО: Отримуємо юніт з пам'яті
     const unit = contentService.getUnitById(unitId);
     if (!unit) return void res.status(404).json({ error: "Unit not found" });
 
+    // ВИПРАВЛЕНО: unit.id замість unit._id
     let progress = await UserUnitProgress.findOne({
       userId: user._id,
-      unitId: unit._id,
+      unitId: unit.id,
     });
 
     if (!progress) {
       progress = new UserUnitProgress({
         userId: user._id,
-        unitId: unit._id,
+        unitId: unit.id, // ВИПРАВЛЕНО
         status: "available",
         completedSteps: [],
       });
@@ -109,21 +109,21 @@ export const completeStep = async (
     if (isFinished) {
       progress.status = "completed";
 
-      // ОНОВЛЕНО: Отримуємо наступний юніт з пам'яті
       const nextUnit = contentService.getUnitByOrder(
         unit.level,
         unit.order + 1,
       );
       if (nextUnit) {
+        // ВИПРАВЛЕНО: nextUnit.id замість nextUnit._id
         const nextProgress = await UserUnitProgress.findOne({
           userId: user._id,
-          unitId: nextUnit._id,
+          unitId: nextUnit.id,
         });
 
         if (!nextProgress) {
           await UserUnitProgress.create({
             userId: user._id,
-            unitId: nextUnit._id,
+            unitId: nextUnit.id, // ВИПРАВЛЕНО
             status: "available",
             completedSteps: [],
           });

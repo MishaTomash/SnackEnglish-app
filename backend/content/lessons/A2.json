@@ -2,41 +2,27 @@
   "level": "A2",
   "units": [
     {
-      "id": "u1",
-      "title": "Healthy Habits & Routine",
+      "id": "a2-u1",
+      "title": "Healthy Habits & Fitness",
       "icon": "Dumbbell",
-      "description": "Навчися розповідати про свій розклад, тренування та порівнювати речі.",
+      "description": "Навчися розповідати про свої тренування, харчування та порівнювати різні речі.",
       "order": 1,
       "steps": {
         "warmup": {},
         "vocabulary": [
           {
             "text": "workout",
-            "transcription": "[ˈwɜːkaʊт]",
+            "transcription": "[ˈwɜːkaʊt]",
             "translation": "тренування",
-            "exampleSentence": "I had a great workout today.",
-            "exampleTranslation": "Сьогодні у мене було чудове тренування."
+            "exampleSentence": "I had a great workout at the gym today.",
+            "exampleTranslation": "Сьогодні у мене було чудове тренування в залі."
           },
           {
             "text": "muscle",
             "transcription": "[ˈmʌsl]",
             "translation": "м'яз",
-            "exampleSentence": "Muscles need protein to grow.",
-            "exampleTranslation": "М'язам потрібен білок для росту."
-          },
-          {
-            "text": "buckwheat",
-            "transcription": "[ˈbʌkwiːt]",
-            "translation": "гречка",
-            "exampleSentence": "I often eat buckwheat for lunch.",
-            "exampleTranslation": "Я часто їм гречку на обід."
-          },
-          {
-            "text": "protein",
-            "transcription": "[ˈprəʊtiːn]",
-            "translation": "білок / протеїн",
-            "exampleSentence": "I drink a whey protein shake.",
-            "exampleTranslation": "Я п'ю сироватковий протеїновий коктейль."
+            "exampleSentence": "Muscles need protein to grow faster.",
+            "exampleTranslation": "М'язам потрібен білок, щоб рости швидше."
           },
           {
             "text": "heavy",
@@ -46,25 +32,39 @@
             "exampleTranslation": "Ці гирі занадто важкі для мене."
           },
           {
-            "text": "routine",
-            "transcription": "[ruːˈtiːn]",
-            "translation": "режим / рутина",
-            "exampleSentence": "My daily routine is quite simple.",
-            "exampleTranslation": "Мій розпорядок дня досить простий."
+            "text": "energy",
+            "transcription": "[ˈenədʒi]",
+            "translation": "енергія",
+            "exampleSentence": "I need more energy for my training.",
+            "exampleTranslation": "Мені потрібно більше енергії для тренування."
+          },
+          {
+            "text": "diet",
+            "transcription": "[ˈdaɪət]",
+            "translation": "харчування / дієта",
+            "exampleSentence": "A healthy diet includes vegetables and meat.",
+            "exampleTranslation": "Здорове харчування включає овочі та м'ясо."
+          },
+          {
+            "text": "strong",
+            "transcription": "[strɒŋ]",
+            "translation": "сильний",
+            "exampleSentence": "He is very strong because he exercises every day.",
+            "exampleTranslation": "Він дуже сильний, бо тренується щодня."
+          },
+          {
+            "text": "supplement",
+            "transcription": "[ˈsʌplɪmənt]",
+            "translation": "добавка",
+            "exampleSentence": "I take a protein supplement after my workout.",
+            "exampleTranslation": "Я приймаю протеїнову добавку після тренування."
           },
           {
             "text": "rest",
             "transcription": "[rest]",
-            "translation": "відпочинок",
-            "exampleSentence": "You must rest every other day.",
-            "exampleTranslation": "Ти повинен відпочивати через день."
-          },
-          {
-            "text": "energy",
-            "transcription": "[ˈenədʒi]",
-            "translation": "енергія",
-            "exampleSentence": "Creatine gives me more energy.",
-            "exampleTranslation": "Креатин дає мені більше енергії."
+            "translation": "відпочинок / відпочивати",
+            "exampleSentence": "You must rest to recover your muscles.",
+            "exampleTranslation": "Ти повинен відпочивати, щоб відновити м'язи."
           }
         ],
         "grammar": {
@@ -132,6 +132,149 @@
             "options": ["protein", "workout", "muscle"],
             "correctAnswer": 0,
             "explanation": "Whey protein — сироватковий протеїн."
+          }
+        ]
+      }
+    },
+    {
+      "id": "a2-u2",
+      "title": "Tech & Online Shopping",
+      "icon": "ShoppingCart",
+      "description": "Як купувати гаджети онлайн, обговорювати характеристики телефонів та оформлювати замовлення.",
+      "order": 2,
+      "steps": {
+        "warmup": {},
+        "vocabulary": [
+          {
+            "text": "gadget",
+            "transcription": "[ˈɡædʒɪt]",
+            "translation": "гаджет / пристрій",
+            "exampleSentence": "This store sells the best gadgets.",
+            "exampleTranslation": "Цей магазин продає найкращі гаджети."
+          },
+          {
+            "text": "screen",
+            "transcription": "[skriːn]",
+            "translation": "екран",
+            "exampleSentence": "My new phone has a large screen.",
+            "exampleTranslation": "Мій новий телефон має великий екран."
+          },
+          {
+            "text": "price",
+            "transcription": "[praɪs]",
+            "translation": "ціна",
+            "exampleSentence": "What is the price of this laptop?",
+            "exampleTranslation": "Яка ціна цього ноутбука?"
+          },
+          {
+            "text": "cheap",
+            "transcription": "[tʃiːp]",
+            "translation": "дешевий",
+            "exampleSentence": "This charger is very cheap.",
+            "exampleTranslation": "Цей зарядний пристрій дуже дешевий."
+          },
+          {
+            "text": "expensive",
+            "transcription": "[ɪkˈspensɪv]",
+            "translation": "дорогий",
+            "exampleSentence": "Smartphones are usually expensive.",
+            "exampleTranslation": "Смартфони зазвичай дорогі."
+          },
+          {
+            "text": "order",
+            "transcription": "[ˈɔːdə(r)]",
+            "translation": "замовлення / замовляти",
+            "exampleSentence": "I want to order a new phone case online.",
+            "exampleTranslation": "Я хочу замовити новий чохол для телефону онлайн."
+          },
+          {
+            "text": "customer",
+            "transcription": "[ˈkʌstəmə(r)]",
+            "translation": "клієнт / покупець",
+            "exampleSentence": "The customer wants to pay by card.",
+            "exampleTranslation": "Клієнт хоче розрахуватися карткою."
+          },
+          {
+            "text": "delivery",
+            "transcription": "[dɪˈlɪvəri]",
+            "translation": "доставка",
+            "exampleSentence": "We offer fast delivery for all products.",
+            "exampleTranslation": "Ми пропонуємо швидку доставку для всіх товарів."
+          }
+        ],
+        "grammar": {
+          "title": "Superlative Adjectives",
+          "explanation": "Щоб сказати, що щось є «най-най», ми використовуємо найвищий ступінь. До коротких прикметників додаємо -est (the fastest), а перед довгими ставимо the most (the most expensive). Обов'язково використовуємо артикль 'the'.",
+          "examples": [
+            {
+              "en": "This is the fastest smartphone in the store.",
+              "ua": "Це найшвидший смартфон у магазині."
+            },
+            {
+              "en": "It is the most expensive gadget here.",
+              "ua": "Це найдорожчий гаджет тут."
+            },
+            {
+              "en": "He is the best customer.",
+              "ua": "Він найкращий клієнт."
+            }
+          ]
+        },
+        "video": {
+          "url": "https://www.youtube.com/watch?v=wX-y0E-zR0Q"
+        },
+        "reading": {
+          "title": "Buying a Phone Online",
+          "text": "Mark wants to buy a new mobile phone. He visits an online e-commerce store because the prices are usually better there. He compares two phones. The first phone has a great camera, but it is the most expensive one. The second phone has a bigger screen and is cheaper. Mark decides to buy the second phone. He adds the item to his cart, enters his delivery address, and completes the order.",
+          "questions": [
+            {
+              "question": "Why does Mark visit an online store?",
+              "options": [
+                "Because he wants to sell a phone",
+                "Because the prices are usually better",
+                "Because he works there"
+              ],
+              "correctAnswer": 1
+            },
+            {
+              "question": "Which phone does Mark decide to buy?",
+              "options": [
+                "The most expensive one",
+                "The one with the worst camera",
+                "The cheaper one with a bigger screen"
+              ],
+              "correctAnswer": 2
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Customer Service",
+          "scenario": "Ти спілкуєшся з клієнтом, який хоче замовити телефон.",
+          "lines": [
+            {
+              "speaker": "Customer",
+              "text": "Hello, I want to order this phone. How long does delivery take?",
+              "translation": "Добрий день, я хочу замовити цей телефон. Скільки часу займає доставка?"
+            },
+            {
+              "speaker": "You",
+              "text": "Hello! The delivery takes two days. It is the fastest option we have.",
+              "translation": "Добрий день! Доставка займає два дні. Це найшвидший варіант, який у нас є."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "This laptop is the ___ in our shop.",
+            "options": ["cheap", "cheaper", "cheapest"],
+            "correctAnswer": 2,
+            "explanation": "Для слова cheap (короткий прикметник) найвищий ступінь утворюється закінченням -est."
+          },
+          {
+            "question": "Thank you for your ___. Your package is on the way.",
+            "options": ["customer", "order", "screen"],
+            "correctAnswer": 1,
+            "explanation": "Слово 'order' означає замовлення."
           }
         ]
       }

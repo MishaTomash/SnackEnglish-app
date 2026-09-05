@@ -88,19 +88,40 @@ export const UnitPathPage = () => {
   const processedSteps = useMemo(() => {
     if (!unit) return [];
 
-    const defaultSteps: Array<{ id: string; type: UnitStepType }> = [
-      { id: "1", type: "vocabulary" },
-      { id: "2", type: "grammar" },
-      { id: "3", type: "video" },
-      { id: "4", type: "reading" },
-      { id: "5", type: "roleplay" },
-      { id: "6", type: "test" },
-    ];
+    let rawSteps: Array<{ id: string; type: UnitStepType }> = [];
 
-    const rawSteps =
-      unit.steps && unit.steps.length > 0 ? unit.steps : defaultSteps;
+    // 1. Якщо кроки прийшли як правильний масив
+    if (Array.isArray(unit.steps) && unit.steps.length > 0) {
+      rawSteps = unit.steps;
+    }
+    // 2. Якщо бекенд віддав JSON-об'єкт (наприклад, "steps": { "warmup": {}, "vocabulary": [] })
+    else if (
+      unit.steps &&
+      typeof unit.steps === "object" &&
+      Object.keys(unit.steps).length > 0
+    ) {
+      rawSteps = Object.keys(unit.steps).map((key, index) => ({
+        id: String(index + 1),
+        type: key as UnitStepType,
+      }));
+    }
+    // 3. Динамічний фоллбек
+    else {
+      const dynamicSteps: UnitStepType[] = ["warmup"];
+      if (unit.wordIds?.length > 0) dynamicSteps.push("vocabulary", "speaking");
+      if (unit.grammarTopic || unit.grammar?.title)
+        dynamicSteps.push("grammar");
+      if (unit.videoUrl) dynamicSteps.push("video");
+      if (unit.readingText) dynamicSteps.push("reading");
+      dynamicSteps.push("test");
+
+      rawSteps = dynamicSteps.map((type, index) => ({
+        id: String(index + 1),
+        type,
+      }));
+    }
+
     const completedSteps = unit.completedSteps || [];
-
     let isNextAvailableFound = false;
 
     return rawSteps.map((step) => {
@@ -111,15 +132,12 @@ export const UnitPathPage = () => {
         status = "completed";
       } else if (!isNextAvailableFound) {
         status = "available";
-        isNextAvailableFound = true; // Перший непройдений крок стає доступним
+        isNextAvailableFound = true; // Перший непройдений крок
       } else {
-        status = "locked"; // Всі інші непройдені кроки - заблоковані
+        status = "locked"; // Наступні кроки
       }
 
-      return {
-        ...step,
-        status,
-      };
+      return { ...step, status };
     });
   }, [unit]);
 

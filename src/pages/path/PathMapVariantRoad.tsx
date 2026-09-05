@@ -1,4 +1,3 @@
-// src/pages/PathMapPage/PathMapVariantRoad.tsx
 import { useMemo, useState, useEffect } from "react";
 import {
   CheckIcon,
@@ -52,14 +51,13 @@ const buildTrailPath = (points: { x: number; y: number }[]) => {
 const DECORATIONS = [Cloud, TreePine, Cloud, TreePine, TreePine, Cloud];
 const CHAPTER_SIZE = 5;
 
-// Словник іконок для тем
 const ICON_MAP: Record<string, React.ElementType> = {
   Handshake,
   Coffee,
   MessageCircle,
   Dumbbell,
   Apple,
-  Star, // фоллбек за замовчуванням
+  Star,
 };
 
 export const PathMapVariantRoad = ({
@@ -88,6 +86,7 @@ export const PathMapVariantRoad = ({
     ROW_HEIGHT + TOP_PADDING,
   );
 
+  // Автоскрол екрана до актуального фокус-юніту
   useEffect(() => {
     if (currentUnitId && units.length > 0) {
       const timer = setTimeout(() => {
@@ -149,8 +148,8 @@ export const PathMapVariantRoad = ({
           }
           
           @keyframes pm-bounce-subtle {
-            0%, 100% { transform: translateY(0) scale(1.1); }
-            50% { transform: translateY(-4px) scale(1.1); }
+            0%, 100% { transform: translateY(0) scale(1.15); }
+            50% { transform: translateY(-4px) scale(1.15); }
           }
         `}</style>
 
@@ -175,7 +174,10 @@ export const PathMapVariantRoad = ({
         {units.map((_, i) => {
           if (i % CHAPTER_SIZE !== 0) return null;
           const chapterNumber = Math.floor(i / CHAPTER_SIZE) + 1;
-          const py = points[i] ? points[i].y - 62 : 0;
+
+          // ВІДСТУП ЗБІЛЬШЕНО: -90 замість -62, щоб текст був чітко між квадратиками
+          const py = points[i] ? points[i].y - 90 : 0;
+
           return (
             <div
               key={`chapter-${i}`}
@@ -226,10 +228,11 @@ export const PathMapVariantRoad = ({
           const isCompleted = status === "completed";
           const isAvailable = status === "available";
           const isLocked = status === "locked";
-          const isCurrent = unitId === currentUnitId && isAvailable;
-          const { x, y } = points[i];
 
-          // Визначаємо тематичну іконку
+          // ТІЛЬКИ доступний юніт є поточним (відповідає за жовтий колір)
+          const isCurrent = isAvailable;
+
+          const { x, y } = points[i];
           const ThemeIcon =
             unit.icon && ICON_MAP[unit.icon] ? ICON_MAP[unit.icon] : Star;
 
@@ -263,7 +266,7 @@ export const PathMapVariantRoad = ({
                   shakeId === unitId ? "pm-shake" : ""
                 } ${
                   isCurrent
-                    ? "pm-bounce-subtle z-10"
+                    ? "pm-bounce-subtle z-10" // Цей клас робить його збільшеним (scale 1.15)
                     : "hover:scale-105 active:scale-95"
                 }`}
               >
@@ -289,27 +292,33 @@ export const PathMapVariantRoad = ({
 
                 <div
                   className={`relative w-full h-full rounded-2xl flex items-center justify-center transition-all ${
-                    isCompleted || isCurrent
+                    isCurrent
                       ? "bg-[var(--accent-cta)] border-b-[6px] border-[var(--accent-cta-active)] text-[var(--text-accent)] shadow-lg"
-                      : "bg-[var(--bg-card-hover)] border-[1px] border-[var(--border-color)] text-[var(--text-muted)] shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)]"
+                      : "bg-[var(--bg-card-hover)] border-[1px] border-[var(--border-color)] shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)]"
                   }`}
                 >
                   <ThemeIcon
-                    className={`w-7 h-7 transition-all ${isLocked ? "opacity-30" : "opacity-100 drop-shadow-md"}`}
+                    className={`w-7 h-7 transition-all ${
+                      isLocked
+                        ? "opacity-30 text-[var(--text-muted)]"
+                        : isCompleted
+                          ? "opacity-100 text-[var(--text-main)] drop-shadow-sm" // Яскрава іконка для пройденого
+                          : "opacity-100 text-[var(--text-accent)] drop-shadow-md"
+                    }`}
                     strokeWidth={isCurrent ? 2.5 : 2}
                   />
 
-                  {/* Оверлей замка для заблокованих юнітів */}
                   {isLocked && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Lock
-                        className="w-5 h-5 text-[var(--text-main)] drop-shadow-md"
+                        className="w-5 h-5 text-[var(--text-main)] opacity-70 drop-shadow-md"
                         strokeWidth={2.5}
                       />
                     </div>
                   )}
                 </div>
 
+                {/* Галочка тільки для пройдених */}
                 {isCompleted && (
                   <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[var(--bg-card-elevated)] shadow-md border-2 border-[var(--border-color)] flex items-center justify-center z-10">
                     <CheckIcon
