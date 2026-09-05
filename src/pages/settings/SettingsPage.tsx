@@ -1,11 +1,20 @@
+// SettingsPage.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BarChart2, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  BarChart2,
+  AlertCircle,
+  Sparkles,
+} from "lucide-react";
 import { Screen } from "../../shared/ui/Screen";
 import { Card } from "../../shared/ui/Card";
+import { Button } from "../../shared/ui/Button"; // <-- Переконайся, що Button імпортовано
 import { useUserStore } from "../../store/userStore";
 import { useProgressStore } from "../../store/progressStore";
 import type { EnglishLevel } from "../../entities/word/types";
+import { LevelPlacementTest } from "../../shared/ui/LevelPlacementTest"; // <-- Вкажи правильний шлях!
 
 const LEVELS: { id: EnglishLevel; desc: string }[] = [
   { id: "A1", desc: "Початківець (Beginner)" },
@@ -16,64 +25,167 @@ const LEVELS: { id: EnglishLevel; desc: string }[] = [
   { id: "C2", desc: "Просунутий+ (Proficiency)" },
 ];
 
+type SettingsStep = "list" | "choice" | "test" | "result";
+
 export const SettingsPage = () => {
   const navigate = useNavigate();
   const { level, streak, updateLevel, isLoading } = useUserStore();
   const { units, loadUnits } = useProgressStore();
 
+  const [step, setStep] = useState<SettingsStep>("list");
+  const [pendingLevel, setPendingLevel] = useState<EnglishLevel | null>(null);
   const [localLoading, setLocalLoading] = useState<EnglishLevel | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const completedCount = units.filter((u) => u.status === "completed").length;
 
-  const handleLevelChange = (newLevel: EnglishLevel) => {
-    if (newLevel === level) return;
+  const handleLevelClick = (clickedLevel: EnglishLevel) => {
+    if (clickedLevel === level) return;
+    setPendingLevel(clickedLevel);
+    setStep("choice");
+  };
 
-    const message =
-      "Зміна рівня оновить список уроків. Твій попередній прогрес збережеться в базі, але на карті з'являться нові теми. Продовжити?";
+  const processChange = async (newLevel: EnglishLevel) => {
+    setStep("list"); // Повертаємось на головний екран налаштувань для показу лоадера
+    setError(null);
+    setLocalLoading(newLevel);
 
-    const processChange = async () => {
-      console.log("🔄 Початок зміни рівня на:", newLevel);
-      setError(null);
-      setLocalLoading(newLevel);
-
-      try {
-        console.log("📡 Відправка PATCH-запиту до API...");
-        const success = await updateLevel(newLevel);
-        console.log("✅ Результат зміни рівня:", success);
-
-        if (success) {
-          console.log("📦 Завантаження нових юнітів...");
-          await loadUnits(newLevel);
-          console.log("🚀 Перехід на Головну сторінку...");
-          navigate("/");
-        } else {
-          setError("Не вдалося оновити рівень. Спробуй ще раз.");
-        }
-      } catch (err) {
-        console.error("❌ Помилка з'єднання:", err);
-        setError("Помилка з'єднання. Перевір інтернет і спробуй ще раз.");
-      } finally {
-        setLocalLoading(null);
+    try {
+      const success = await updateLevel(newLevel);
+      if (success) {
+        await loadUnits(newLevel);
+        navigate("/");
+      } else {
+        setError("Не вдалося оновити рівень. Спробуй ще раз.");
       }
-    };
-
-    // Використовуємо нативний Telegram Confirm замість браузерного (який викликає зависання)
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg?.showConfirm) {
-      tg.showConfirm(message, (confirmed: boolean) => {
-        if (confirmed) {
-          void processChange();
-        }
-      });
-    } else {
-      // Фолбек для локальної розробки у звичайному браузері
-      if (window.confirm(message)) {
-        void processChange();
-      }
+    } catch (err) {
+      setError("Помилка з'єднання. Перевір інтернет і спробуй ще раз.");
+    } finally {
+      setLocalLoading(null);
     }
   };
 
+  const handleManualConfirm = () => {
+    const message =
+      "Зміна рівня оновить список уроків. Твій попередній прогрес збережеться, але на карті з'являться нові теми. Продовжити?";
+
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg?.showConfirm) {
+      tg.showConfirm(message, (confirmed: boolean) => {
+        if (confirmed && pendingLevel) void processChange(pendingLevel);
+      });
+    } else {
+      if (window.confirm(message) && pendingLevel)
+        void processChange(pendingLevel);
+    }
+  };
+
+  // --- RENDERS ---
+
+  if (step === "test") {
+    return (
+      <LevelPlacementTest
+        onFinish={(testedLevel) => {
+          setPendingLevel(testedLevel);
+          setStep("result");
+        }}
+        onCancel={() => setStep("list")}
+      />
+    );
+  }
+
+  if (step === "result") {
+    const levelName = LEVELS.find((l) => l.id === pendingLevel)?.desc;
+
+    return (
+      <Screen className="justify-center items-center p-6 space-y-8 bg-[var(--bg-app)]">
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 mx-auto bg-[var(--accent-success)]/10 text-[var(--accent-success)] rounded-full flex items-center justify-center mb-6">
+            <Sparkles className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-black text-[var(--text-main)]">
+            Тест завершено!
+          </h2>
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+            За результатами твоїх відповідей ми визначили твій рівень:
+          </p>
+          <div className="py-2">
+            <div className="text-4xl font-black text-[var(--accent-cta)]">
+              {pendingLevel}
+            </div>
+            <div className="text-sm font-medium text-[var(--text-muted)] mt-1">
+              {levelName}
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full space-y-3">
+          <Button
+            onClick={() => pendingLevel && void processChange(pendingLevel)}
+            variant="primary"
+            size="lg"
+            className="w-full font-bold"
+          >
+            Зберегти і на Головну
+          </Button>
+
+          <Button
+            onClick={() => setStep("list")}
+            variant="ghost"
+            className="w-full"
+          >
+            Скасувати
+          </Button>
+        </div>
+      </Screen>
+    );
+  }
+
+  if (step === "choice") {
+    return (
+      <Screen className="justify-center items-center p-6 space-y-8 bg-[var(--bg-app)]">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-black text-[var(--text-main)]">
+            Підтвердити рівень
+          </h1>
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+            Ми рекомендуємо пройти короткий тест, щоб точно підібрати матеріали
+            для тебе. Але ти можеш змінити рівень і без нього.
+          </p>
+        </div>
+
+        <div className="w-full space-y-3">
+          <Button
+            onClick={() => setStep("test")}
+            variant="primary"
+            size="lg"
+            className="w-full font-bold relative overflow-hidden"
+          >
+            <Sparkles className="w-4 h-4 mr-2" /> Пройти тест (Рекомендовано)
+          </Button>
+
+          <Button
+            onClick={handleManualConfirm}
+            variant="secondary"
+            size="lg"
+            className="w-full font-bold"
+          >
+            Встановити напряму
+          </Button>
+
+          <Button
+            onClick={() => setStep("list")}
+            variant="ghost"
+            className="w-full mt-2"
+          >
+            Скасувати
+          </Button>
+        </div>
+      </Screen>
+    );
+  }
+
+  // Головний екран налаштувань (step === "list")
   return (
     <Screen className="justify-start p-4 space-y-6 bg-[var(--bg-app)]">
       <div className="flex items-center gap-3">
@@ -130,7 +242,7 @@ export const SettingsPage = () => {
           return (
             <button
               key={lvl.id}
-              onClick={() => handleLevelChange(lvl.id)}
+              onClick={() => handleLevelClick(lvl.id)}
               disabled={isLoading || localLoading !== null}
               className={`w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between shadow-sm disabled:opacity-50 ${
                 isActive

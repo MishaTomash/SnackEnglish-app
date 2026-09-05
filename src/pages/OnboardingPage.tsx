@@ -1,16 +1,15 @@
+// OnboardingPage.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, ChevronRight, RefreshCw } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
-import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { Badge } from "../shared/ui/Badge";
-import { ProgressBar } from "../shared/ui/ProgressBar";
 import { CookieMascot } from "../shared/ui/CookieMascot";
 import { useUserStore } from "../store/userStore";
 import { useProgressStore } from "../store/progressStore";
 import type { EnglishLevel } from "../entities/word/types";
-import testQuestions from "../mocks/placement-test.json";
+import { LevelPlacementTest } from "../shared/ui/LevelPlacementTest"; // <-- Вкажи правильний шлях!
 
 type OnboardingStep = "choice" | "manual" | "test" | "saving";
 
@@ -24,13 +23,6 @@ export const OnboardingPage = () => {
     null,
   );
 
-  // Test State
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
-
-  const totalQuestions = testQuestions.length;
-  const currentQuestion = testQuestions[currentIndex];
-
   const handleFinish = async (level: EnglishLevel) => {
     setDeterminedLevel(level);
     setStep("saving");
@@ -40,36 +32,17 @@ export const OnboardingPage = () => {
       await loadUnits(level);
       navigate("/");
     }
-    // Якщо success === false, залишаємось на кроці 'saving' де покажеться error
   };
-
-  const handleSelectTestOption = (optionIndex: number) => {
-    const updatedAnswers = [...selectedAnswers, optionIndex];
-    setSelectedAnswers(updatedAnswers);
-
-    if (currentIndex < totalQuestions - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      const correctCount = updatedAnswers.reduce((acc, answerIdx, idx) => {
-        return answerIdx === testQuestions[idx].correctIndex ? acc + 1 : acc;
-      }, 0);
-      const level: EnglishLevel = correctCount >= 6 ? "A2" : "A1";
-      handleFinish(level);
-    }
-  };
-
-  // --- RENDERS PER STEP ---
 
   if (step === "saving") {
+    // ... (залишаємо як було)
     return (
       <Screen className="justify-center items-center text-center p-6 space-y-6">
         <CookieMascot state={error ? "thinking" : "celebrating"} size={96} />
-
         {error ? (
           <div className="space-y-4 w-full">
             <Badge className="bg-red-500/20 text-red-400">Помилка</Badge>
             <p className="text-sm text-cookieText-primary">{error}</p>
-            {/* ВИПРАВЛЕНО: Додано disabled */}
             <Button
               onClick={() => handleFinish(determinedLevel!)}
               variant="primary"
@@ -102,6 +75,7 @@ export const OnboardingPage = () => {
   }
 
   if (step === "choice") {
+    // ... (залишаємо як було)
     return (
       <Screen className="justify-center items-center p-6 space-y-8">
         <div className="text-center space-y-4">
@@ -114,7 +88,6 @@ export const OnboardingPage = () => {
             рівень англійської.
           </p>
         </div>
-
         <div className="w-full space-y-3">
           <Button
             onClick={() => setStep("test")}
@@ -122,10 +95,8 @@ export const OnboardingPage = () => {
             size="lg"
             className="w-full font-bold relative overflow-hidden"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Пройти короткий тест
+            <Sparkles className="w-4 h-4 mr-2" /> Пройти короткий тест
           </Button>
-
           <Button
             onClick={() => setStep("manual")}
             variant="secondary"
@@ -140,6 +111,7 @@ export const OnboardingPage = () => {
   }
 
   if (step === "manual") {
+    // ... (залишаємо як було)
     const levels: { id: EnglishLevel; desc: string }[] = [
       { id: "A1", desc: "Початківець (Beginner)" },
       { id: "A2", desc: "Базовий (Elementary)" },
@@ -148,7 +120,6 @@ export const OnboardingPage = () => {
       { id: "C1", desc: "Просунутий (Advanced)" },
       { id: "C2", desc: "Просунутий+ (Proficiency)" },
     ];
-
     return (
       <Screen className="justify-start p-6 space-y-6">
         <div className="text-center space-y-2">
@@ -159,7 +130,6 @@ export const OnboardingPage = () => {
             Не хвилюйся, ти зможеш змінити його пізніше у налаштуваннях.
           </p>
         </div>
-
         <div className="space-y-3">
           {levels.map((lvl) => (
             <button
@@ -176,7 +146,6 @@ export const OnboardingPage = () => {
             </button>
           ))}
         </div>
-
         <Button
           onClick={() => setStep("choice")}
           variant="ghost"
@@ -188,63 +157,14 @@ export const OnboardingPage = () => {
     );
   }
 
-  // Стейт "test"
-  const progressPercent = Math.round(
-    ((currentIndex + 1) / totalQuestions) * 100,
-  );
+  if (step === "test") {
+    return (
+      <LevelPlacementTest
+        onFinish={handleFinish}
+        onCancel={() => setStep("choice")}
+      />
+    );
+  }
 
-  return (
-    <Screen className="justify-between space-y-4">
-      <div className="space-y-2.5">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <CookieMascot state="thinking" size={28} />
-            <span className="text-xs font-bold text-cookieText-primary">
-              Вхідний тест
-            </span>
-          </div>
-          <span className="text-xs font-semibold text-cookieText-muted">
-            {currentIndex + 1} / {totalQuestions}
-          </span>
-        </div>
-        <ProgressBar progress={progressPercent} />
-      </div>
-
-      <div className="my-auto space-y-4">
-        <Card className="p-6 text-center space-y-2.5 border-primary/20">
-          <Badge className="text-[10px] uppercase font-bold tracking-wider">
-            {currentQuestion.type}
-          </Badge>
-          <h2 className="text-xl font-bold leading-snug text-cookieText-primary">
-            {currentQuestion.question}
-          </h2>
-        </Card>
-
-        <div className="space-y-2.5">
-          {currentQuestion.options.map((option, idx) => (
-            <button
-              key={option}
-              onClick={() => handleSelectTestOption(idx)}
-              className="w-full p-4 rounded-2xl font-semibold text-left border border-card-border bg-card text-cookieText-primary hover:bg-card-hover active:bg-primary active:text-primary-foreground transition-all flex items-center justify-between shadow-cookie-sm"
-            >
-              <span>{option}</span>
-              <ChevronRight className="w-4 h-4 opacity-40" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="text-center flex flex-col gap-3">
-        <div className="text-[11px] text-cookieText-muted font-medium">
-          Обери одну відповідь, щоб перейти далі
-        </div>
-        <button
-          onClick={() => setStep("choice")}
-          className="text-xs text-primary underline underline-offset-2 opacity-80"
-        >
-          Зупинити тест
-        </button>
-      </div>
-    </Screen>
-  );
+  return null;
 };
