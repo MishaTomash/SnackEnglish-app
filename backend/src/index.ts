@@ -13,6 +13,8 @@ import { initCronJobs } from "./services/cronService.js";
 import wordRoutes from "./routes/wordRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import compression from "compression";
+import gamesRoutes from "./routes/gamesRoutes.js";
+import { seedGames } from "./services/gameService.js";
 // ДОДАНО: Імпорт нового сервісу контенту
 import { contentService } from "./services/contentService.js";
 
@@ -33,6 +35,8 @@ app.use("/api/progress", authMiddleware, progressRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/words", wordRoutes);
 
+app.use("/api/games", authMiddleware, gamesRoutes);
+
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 const frontendDist = path.resolve(process.cwd(), "../dist");
@@ -49,6 +53,9 @@ async function bootstrap(): Promise<void> {
 
     // ДОДАНО: Ініціалізація статичного контенту з JSON-файлів
     await contentService.init();
+
+    // ДОДАНО: Сідінг ігор (виклик функції)
+    await seedGames();
 
     initCronJobs();
 
