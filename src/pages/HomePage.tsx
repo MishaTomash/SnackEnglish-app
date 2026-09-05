@@ -20,7 +20,7 @@ export const HomePage = () => {
     loadUnits,
     isLoading,
     progressPercent,
-    lastFetchedLevel, // Залишили тільки потрібні змінні
+    lastFetchedLevel,
   } = useProgressStore();
   const { dailyQueue, loadDailyWords, status } = useRepetitionStore();
 
@@ -50,14 +50,18 @@ export const HomePage = () => {
         <div className="flex items-center gap-3">
           <CookieMascot state="happy" size={50} />
           <div>
-            <div className="flex items-center gap-1.5">
-              <Badge className="px-2 py-0.5 font-bold text-[10px] tracking-wide">
+            {/* БЛОК 3: Швидкий доступ до зміни рівня */}
+            <Link
+              to="/settings"
+              className="flex items-center gap-2 group active:opacity-70 transition-opacity"
+            >
+              <Badge className="px-2 py-0.5 font-bold text-[10px] tracking-wide border border-[var(--accent-cta)]/30 group-hover:border-[var(--accent-cta)] transition-colors">
                 {level}
               </Badge>
-              <span className="text-[11px] text-[var(--text-muted)] font-medium">
-                Початковий курс
+              <span className="text-[11px] text-[var(--accent-cta)] font-semibold underline underline-offset-2">
+                Змінити рівень
               </span>
-            </div>
+            </Link>
             <h1 className="text-lg font-black text-[var(--text-main)] leading-tight mt-0.5">
               Привіт, друже! 🍪
             </h1>
@@ -130,7 +134,7 @@ export const HomePage = () => {
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
-        <Card className="flex flex-col items-start gap-2 p-3.5">
+        <Card className="flex flex-col items-start gap-2 p-3.5 h-full">
           <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
           </div>
@@ -144,19 +148,40 @@ export const HomePage = () => {
           </div>
         </Card>
 
-        <Card className="flex flex-col items-start gap-2 p-3.5">
-          <div className="w-8 h-8 rounded-xl bg-[var(--accent-success)]/15 text-[var(--accent-success)] flex items-center justify-center">
-            <BrainCircuit className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-[var(--text-main)] leading-none">
-              {reviewWordsCount}
+        {/* БЛОК 2: Швидкий перехід у Практику */}
+        <Link to="/practice" className="block h-full">
+          <Card
+            className={`flex flex-col items-start gap-2 p-3.5 h-full transition-all active:scale-[0.98] ${
+              reviewWordsCount > 0
+                ? "border-[var(--accent-success)] bg-[var(--accent-success)]/5 shadow-sm"
+                : "border-[var(--border-color)]"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                reviewWordsCount > 0
+                  ? "bg-[var(--accent-success)]/20 text-[var(--accent-success)]"
+                  : "bg-[var(--text-muted)]/15 text-[var(--text-muted)]"
+              }`}
+            >
+              <BrainCircuit className="w-4 h-4" />
             </div>
-            <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
-              на сьогодні
+            <div>
+              <div className="text-2xl font-black text-[var(--text-main)] leading-none">
+                {reviewWordsCount}
+              </div>
+              <div
+                className={`text-xs mt-1 font-medium ${
+                  reviewWordsCount > 0
+                    ? "text-[var(--accent-success)] font-bold"
+                    : "text-[var(--text-muted)]"
+                }`}
+              >
+                {reviewWordsCount > 0 ? "до Практики ➔" : "на сьогодні"}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </Link>
       </div>
     </Screen>
   );
