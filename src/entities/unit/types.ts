@@ -44,5 +44,6 @@ export interface Unit {
   readingTranslation: string;
   steps: UnitStep[];
   status?: StepStatus;
+  completedSteps?: UnitStepType[];
   roleplayScenario?: RoleplayScenario;
 }

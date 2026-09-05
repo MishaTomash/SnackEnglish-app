@@ -29,6 +29,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         ...raw,
         id: raw.id || raw._id,
         status: raw.status || "locked", // Жорстко довіряємо бекенду
+        completedSteps: raw.completedSteps || [], // ДОДАНО: зберігаємо пройдені кроки
       }));
 
       const activeUnit =
