@@ -1,19 +1,20 @@
 import { Router } from "express";
-import { Word } from "../models/Word.js";
+import { contentService } from "../services/contentService.js";
 
 const router = Router();
 
-router.post("/batch", async (req, res) => {
+router.post("/batch", (req, res) => {
   try {
     const { ids } = req.body;
 
     if (!ids || !Array.isArray(ids)) {
-      res.status(400).json({ error: "Invalid or missing 'ids' array" });
-      return;
+      return void res
+        .status(400)
+        .json({ error: "Invalid or missing 'ids' array" });
     }
 
-    // Знаходимо всі слова, які належать цьому юніту
-    const words = await Word.find({ _id: { $in: ids } });
+    // ОНОВЛЕНО: Отримуємо всі слова безпосередньо з in-memory сховища
+    const words = contentService.getWordsByIds(ids);
 
     res.status(200).json({ words });
   } catch (error) {

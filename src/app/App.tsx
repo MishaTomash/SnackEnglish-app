@@ -19,16 +19,27 @@ import { SettingsPage } from "../pages/settings/SettingsPage";
 import { BottomNav } from "../widgets/BottomNav";
 import { Screen } from "../shared/ui/Screen";
 import { CookieMascot } from "../shared/ui/CookieMascot";
+import { useProgressStore } from "../store/progressStore";
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
   const location = useLocation();
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Синхронізація з бекендом при старті
   useEffect(() => {
     const initApp = async () => {
-      await fetchUser();
+      // Усунення Waterfall: якщо рівень відомий з кешу persist, вантажимо дані паралельно
+      const cachedLevel = useUserStore.getState().level;
+
+      if (cachedLevel) {
+        await Promise.all([
+          fetchUser(),
+          useProgressStore.getState().loadUnits(cachedLevel),
+        ]);
+      } else {
+        await fetchUser();
+      }
+
       setIsInitializing(false);
     };
     void initApp();

@@ -9,7 +9,9 @@ interface ProgressState {
   progressPercent: number;
   isLoading: boolean;
   error: string | null;
-  loadUnits: (level?: EnglishLevel) => Promise<void>;
+  lastFetchedLevel: EnglishLevel | null; // Для кешування
+
+  loadUnits: (level?: EnglishLevel, force?: boolean) => Promise<void>;
   completeStep: (unitId: string, stepType: UnitStepType) => Promise<void>;
 }
 
@@ -19,8 +21,14 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   progressPercent: 0,
   isLoading: false,
   error: null,
+  lastFetchedLevel: null,
 
-  loadUnits: async (level: EnglishLevel = "A1") => {
+  loadUnits: async (level: EnglishLevel = "A1", force = false) => {
+    // Кеш-хіт: якщо ми вже завантажили цей рівень, пропускаємо мережевий запит
+    if (!force && get().lastFetchedLevel === level && get().units.length > 0) {
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const rawData = await getUnits(level);
@@ -28,8 +36,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       const normalizedUnits: Unit[] = (rawData || []).map((raw: any) => ({
         ...raw,
         id: raw.id || raw._id,
-        status: raw.status || "locked", // Жорстко довіряємо бекенду
-        completedSteps: raw.completedSteps || [], // ДОДАНО: зберігаємо пройдені кроки
+        status: raw.status || "locked",
+        completedSteps: raw.completedSteps || [],
       }));
 
       const activeUnit =
@@ -49,6 +57,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         units: normalizedUnits,
         currentUnitId: activeUnit ? activeUnit.id : null,
         progressPercent,
+        lastFetchedLevel: level, // Зберігаємо індикатор кешу
         isLoading: false,
       });
     } catch (err: unknown) {
@@ -59,7 +68,9 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   completeStep: async (unitId: string, stepType: UnitStepType) => {
     try {
       await completeUnitStepApi(unitId, stepType);
-      await get().loadUnits(); // Перезавантажить статуси з бази (відкриє наступний юніт)
+
+      // Інвалідація кешу: примусово перезавантажуємо юніти з бекенду (force = true)
+      await get().loadUnits(get().lastFetchedLevel || "A1", true);
     } catch (err: unknown) {
       console.error("Помилка фіксації кроку:", err);
     }

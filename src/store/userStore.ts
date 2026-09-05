@@ -21,25 +21,27 @@ interface UserState {
   wordsLearnedCount: number;
   isLoading: boolean;
   error: string | null;
+  hasLoadedProfile: boolean; // Вказує, чи дані вже завантажено в поточній сесії
 
   setLevel: (level: EnglishLevel) => void;
   incrementStreak: () => void;
   incrementWordsLearned: (count?: number) => void;
 
   updateLevel: (level: EnglishLevel) => Promise<boolean>;
-  fetchUser: () => Promise<void>;
+  fetchUser: (force?: boolean) => Promise<void>;
   completeOnboarding: (level: EnglishLevel) => Promise<boolean>;
 }
 
 export const useUserStore = create<UserState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       level: null,
       onboardingCompleted: false,
       streak: 1,
       wordsLearnedCount: 0,
       isLoading: false,
       error: null,
+      hasLoadedProfile: false,
 
       setLevel: (level) => set({ level }),
       incrementStreak: () => set((state) => ({ streak: state.streak + 1 })),
@@ -67,7 +69,10 @@ export const useUserStore = create<UserState>()(
         }
       },
 
-      fetchUser: async () => {
+      fetchUser: async (force = false) => {
+        // Кеш-хіт: не робимо запит, якщо профіль вже завантажено в цій сесії
+        if (get().hasLoadedProfile && !force) return;
+
         set({ isLoading: true, error: null });
         try {
           const res = await fetch(`${API_URL}/user/me`, {
@@ -80,6 +85,7 @@ export const useUserStore = create<UserState>()(
             level: data.level,
             onboardingCompleted: data.onboardingCompleted,
             streak: data.streak,
+            hasLoadedProfile: true, // Позначаємо як завантажене
             isLoading: false,
           });
         } catch (error: any) {
@@ -108,6 +114,7 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: "snack_user_storage",
+      // Зберігаємо лише важливі дані (не кешуємо стани завантаження)
       partialize: (state) => ({
         level: state.level,
         onboardingCompleted: state.onboardingCompleted,

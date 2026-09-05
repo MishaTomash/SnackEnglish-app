@@ -1,3 +1,9 @@
+/**
+ * @deprecated
+ * MongoDB більше не використовується для зберігання контенту.
+ * Усі юніти та слова завантажуються зі статичних JSON (див. contentService.ts).
+ */
+
 import fs from "fs/promises";
 import path from "path";
 import dotenv from "dotenv";

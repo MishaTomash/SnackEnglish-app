@@ -1,3 +1,9 @@
+/**
+ * @deprecated
+ * MongoDB більше не використовується для зберігання контенту.
+ * Усі юніти та слова завантажуються зі статичних JSON (див. contentService.ts).
+ */
+
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IUnit extends Document {

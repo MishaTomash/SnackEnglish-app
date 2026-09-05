@@ -2,53 +2,36 @@ import { Request, Response } from "express";
 import { Types } from "mongoose";
 import {
   User,
-  Unit,
-  Word,
   UserProgress,
   UserUnitProgress,
   UnitStepType,
   UnitProgressStatus,
 } from "../models/index.js";
 import { calculateSM2 } from "../utils/spacedRepetition.js";
+import { contentService } from "../services/contentService.js";
 
-/**
- * Отримує всі юніти користувача разом із його персональним прогресом.
- * GET /api/progress/units?level=A1
- */
 export const getUserUnits = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const telegramId = req.user?.id;
-    if (!telegramId) {
-      res
-        .status(401)
-        .json({ error: "Unauthorized: User not found in session" });
-      return;
-    }
+    if (!telegramId)
+      return void res.status(401).json({ error: "Unauthorized" });
 
     const user = await User.findOne({ telegramId });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+    if (!user) return void res.status(404).json({ error: "User not found" });
 
-    // ДОДАНО: рівень береться з query (?level=A1), інакше з профілю юзера, інакше "A1".
-    // Раніше юніти тягнулись усі підряд без фільтра по рівню.
-    const level =
-      (req.query.level as string) ||
-      (user as unknown as { level?: string }).level ||
-      "A1";
+    const level = (req.query.level as string) || (user as any).level || "A1";
 
-    const units = await Unit.find({ level }).sort({ order: 1 });
+    // ОНОВЛЕНО: Читаємо юніти з in-memory сервісу замість DB
+    const units = contentService.getUnitsByLevel(level);
     const userProgressList = await UserUnitProgress.find({ userId: user._id });
 
     const progressMap = new Map<
       string,
       { status: UnitProgressStatus; completedSteps: UnitStepType[] }
     >();
-
     userProgressList.forEach((prog) => {
       progressMap.set(prog.unitId.toString(), {
         status: prog.status,
@@ -57,24 +40,12 @@ export const getUserUnits = async (
     });
 
     const result = units.map((unit, index) => {
-      const prog = progressMap.get(unit._id.toString());
-      // Якщо запису прогресу ще немає, перший юніт відкритий ('available'), інші — заблоковані ('locked')
+      const prog = progressMap.get(unit._id);
       const defaultStatus: UnitProgressStatus =
         index === 0 ? "available" : "locked";
 
       return {
-        id: unit.unitId,
-        _id: unit._id,
-        title: unit.title,
-        level: unit.level,
-        topic: unit.topic,
-        order: unit.order,
-        grammarTopic: unit.grammarTopic,
-        grammarExplanation: unit.grammarExplanation,
-        videoUrl: unit.videoUrl,
-        readingText: unit.readingText,
-        readingTranslation: unit.readingTranslation,
-        wordIds: unit.wordIds,
+        ...unit, // Розгортаємо весь підготовлений JSON контракт (id, _id, title, wordIds, grammar тощо)
         status: prog?.status ?? defaultStatus,
         completedSteps: prog?.completedSteps ?? [],
       };
@@ -83,7 +54,7 @@ export const getUserUnits = async (
     res.status(200).json({
       units: result,
       level,
-      streak: (user as unknown as { streak?: number }).streak ?? 0,
+      streak: (user as any).streak ?? 0,
     });
   } catch (error: unknown) {
     res
@@ -92,52 +63,28 @@ export const getUserUnits = async (
   }
 };
 
-/**
- * Відзначає крок юніта як пройдений та відкриває наступний юніт у разі завершення.
- * POST /api/progress/step
- */
 export const completeStep = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const telegramId = req.user?.id;
-    if (!telegramId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+    if (!telegramId)
+      return void res.status(401).json({ error: "Unauthorized" });
 
     const { unitId, stepType } = req.body as {
       unitId?: string;
       stepType?: UnitStepType;
     };
-
-    if (!unitId || !stepType) {
-      res
-        .status(400)
-        .json({ error: "Bad Request: unitId and stepType are required" });
-      return;
-    }
+    if (!unitId || !stepType)
+      return void res.status(400).json({ error: "Bad Request" });
 
     const user = await User.findOne({ telegramId });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+    if (!user) return void res.status(404).json({ error: "User not found" });
 
-    const unit = await Unit.findOne({
-      $or: [
-        { unitId },
-        ...(Types.ObjectId.isValid(unitId)
-          ? [{ _id: new Types.ObjectId(unitId) }]
-          : []),
-      ],
-    });
-
-    if (!unit) {
-      res.status(404).json({ error: "Unit not found" });
-      return;
-    }
+    // ОНОВЛЕНО: Отримуємо юніт з пам'яті
+    const unit = contentService.getUnitById(unitId);
+    if (!unit) return void res.status(404).json({ error: "Unit not found" });
 
     let progress = await UserUnitProgress.findOne({
       userId: user._id,
@@ -157,13 +104,15 @@ export const completeStep = async (
       progress.completedSteps.push(stepType);
     }
 
-    // Якщо здано фінальний тест — юніт вважається повністю завершеним
     const isFinished = stepType === "test";
     if (isFinished) {
       progress.status = "completed";
 
-      // Розблоковуємо наступний юніт за порядковим номером
-      const nextUnit = await Unit.findOne({ order: unit.order + 1 });
+      // ОНОВЛЕНО: Отримуємо наступний юніт з пам'яті
+      const nextUnit = contentService.getUnitByOrder(
+        unit.level,
+        unit.order + 1,
+      );
       if (nextUnit) {
         const nextProgress = await UserUnitProgress.findOne({
           userId: user._id,
@@ -185,52 +134,43 @@ export const completeStep = async (
     }
 
     await progress.save();
-
-    res.status(200).json({
-      success: true,
-      status: progress.status,
-      completedSteps: progress.completedSteps,
-    });
+    res
+      .status(200)
+      .json({
+        success: true,
+        status: progress.status,
+        completedSteps: progress.completedSteps,
+      });
   } catch (error: unknown) {
     res.status(500).json({ error: "Failed to complete step", details: error });
   }
 };
 
-/**
- * Отримує слова для сьогоднішньої щоденної практики інтервального повторення.
- * GET /api/progress/practice
- */
 export const getPracticeWords = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const telegramId = req.user?.id;
-    if (!telegramId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+    if (!telegramId)
+      return void res.status(401).json({ error: "Unauthorized" });
 
     const user = await User.findOne({ telegramId });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+    if (!user) return void res.status(404).json({ error: "User not found" });
 
     const now = new Date();
+    // ОНОВЛЕНО: Видалено .populate("wordId"), оскільки колекції Word більше не існує
     const records = await UserProgress.find({
       userId: user._id,
       nextReviewDate: { $lte: now },
-    }).populate("wordId");
-
-    const words = records
-      .map((record) => record.wordId)
-      .filter((word) => Boolean(word));
-
-    res.status(200).json({
-      count: words.length,
-      words,
     });
+
+    // ОНОВЛЕНО: Ручний мапінг слів з пам'яті
+    const words = records
+      .map((record) => contentService.getWordById(record.wordId.toString()))
+      .filter(Boolean);
+
+    res.status(200).json({ count: words.length, words });
   } catch (error: unknown) {
     res
       .status(500)
@@ -238,58 +178,29 @@ export const getPracticeWords = async (
   }
 };
 
-/**
- * Фіксує оцінку відповіді користувача (0-5) та оновлює графік SM-2.
- * POST /api/progress/review
- */
 export const reviewWord = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const telegramId = req.user?.id;
-    if (!telegramId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+    if (!telegramId)
+      return void res.status(401).json({ error: "Unauthorized" });
 
     const { wordId, quality } = req.body as {
       wordId?: string;
       quality?: number;
     };
-
-    if (
-      !wordId ||
-      quality === undefined ||
-      typeof quality !== "number" ||
-      quality < 0 ||
-      quality > 5
-    ) {
-      res.status(400).json({
-        error: "Bad Request: wordId and quality (integer 0-5) are required",
-      });
-      return;
+    if (!wordId || quality === undefined || quality < 0 || quality > 5) {
+      return void res.status(400).json({ error: "Bad Request" });
     }
 
     const user = await User.findOne({ telegramId });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+    if (!user) return void res.status(404).json({ error: "User not found" });
 
-    const word = await Word.findOne({
-      $or: [
-        { wordId },
-        ...(Types.ObjectId.isValid(wordId)
-          ? [{ _id: new Types.ObjectId(wordId) }]
-          : []),
-      ],
-    });
-
-    if (!word) {
-      res.status(404).json({ error: "Word not found" });
-      return;
-    }
+    // ОНОВЛЕНО: Отримуємо слово з пам'яті
+    const word = contentService.getWordById(wordId);
+    if (!word) return void res.status(404).json({ error: "Word not found" });
 
     let progress = await UserProgress.findOne({
       userId: user._id,
@@ -320,12 +231,7 @@ export const reviewWord = async (
     progress.nextReviewDate = sm2Result.nextReviewDate;
 
     await progress.save();
-
-    res.status(200).json({
-      success: true,
-      wordId: word.wordId,
-      ...sm2Result,
-    });
+    res.status(200).json({ success: true, wordId: word.id, ...sm2Result });
   } catch (error: unknown) {
     res
       .status(500)
