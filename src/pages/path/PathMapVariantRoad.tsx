@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { CheckIcon, Cloud, Lock, TreePine, Sparkles } from "lucide-react";
 import type { Unit } from "../../entities/unit/types";
 import { hapticLockedNode } from "../../shared/lib/telegramHaptics";
@@ -66,6 +66,19 @@ export const PathMapVariantRoad = ({
     ROW_HEIGHT + TOP_PADDING,
   );
 
+  // Автоскрол до поточного активного юніту після рендеру
+  useEffect(() => {
+    if (currentUnitId && units.length > 0) {
+      const timer = setTimeout(() => {
+        const activeNode = document.getElementById(`unit-${currentUnitId}`);
+        if (activeNode) {
+          activeNode.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 300); // 300мс дають браузеру час на малювання SVG та позиціонування
+      return () => clearTimeout(timer);
+    }
+  }, [currentUnitId, units.length]);
+
   const handleLockedTap = (unitId: string) => {
     hapticLockedNode();
     setShakeId(unitId);
@@ -77,7 +90,6 @@ export const PathMapVariantRoad = ({
       className="relative w-full overflow-hidden"
       style={{
         backgroundColor: "var(--bg-app)",
-        // Глибокий фон з радіальним градієнтом + патерн "крихт"
         backgroundImage: `
           radial-gradient(120% 50% at 50% 0%, rgba(232, 163, 61, 0.12) 0%, transparent 60%),
           radial-gradient(rgba(201, 184, 168, 0.06) 1.5px, transparent 1.5px)
@@ -106,25 +118,21 @@ export const PathMapVariantRoad = ({
           }
           .pm-float { animation: pm-float 2.4s ease-in-out infinite; }
           
-          /* Анімація біжучої стежки */
           @keyframes pm-dash-flow {
             to { stroke-dashoffset: -24; }
           }
           
-          /* Пульсуючі хвилі для поточного юніту */
           @keyframes pm-ripple {
             0% { transform: scale(0.8); opacity: 0.8; }
             100% { transform: scale(1.8); opacity: 0; }
           }
           
-          /* Легка левітація для поточного юніту */
           @keyframes pm-bounce-subtle {
             0%, 100% { transform: translateY(0) scale(1.1); }
             50% { transform: translateY(-4px) scale(1.1); }
           }
         `}</style>
 
-        {/* Декорації */}
         {units.map((_, i) => {
           if (i % 2 !== 0) return null;
           const Deco = DECORATIONS[i % DECORATIONS.length];
@@ -143,7 +151,6 @@ export const PathMapVariantRoad = ({
           );
         })}
 
-        {/* Банери розділів */}
         {units.map((_, i) => {
           if (i % CHAPTER_SIZE !== 0) return null;
           const chapterNumber = Math.floor(i / CHAPTER_SIZE) + 1;
@@ -159,14 +166,12 @@ export const PathMapVariantRoad = ({
           );
         })}
 
-        {/* Тришарова стежка */}
         <svg
           className="absolute inset-0"
           width={CANVAS_WIDTH}
           height={canvasHeight}
           viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
         >
-          {/* 1. Широка напівпрозора тінь/основа */}
           <path
             d={pathD}
             fill="none"
@@ -175,7 +180,6 @@ export const PathMapVariantRoad = ({
             strokeLinecap="round"
             transform="translate(0, 6)"
           />
-          {/* 2. Темна шоколадна підложка */}
           <path
             d={pathD}
             fill="none"
@@ -183,7 +187,6 @@ export const PathMapVariantRoad = ({
             strokeWidth={18}
             strokeLinecap="round"
           />
-          {/* 3. Анімована карамельна лінія (біжучі пунктири) */}
           <path
             d={pathD}
             fill="none"
@@ -196,7 +199,6 @@ export const PathMapVariantRoad = ({
           />
         </svg>
 
-        {/* Юніти */}
         {units.map((unit, i) => {
           const unitId = getUnitId(unit);
           const status = getStatus(unit);
@@ -209,7 +211,8 @@ export const PathMapVariantRoad = ({
           return (
             <div
               key={unitId || i}
-              className="absolute flex flex-col items-center z-10"
+              id={`unit-${unitId}`} // Додано унікальний ID для навігації
+              className="absolute flex flex-col items-center z-10 scroll-m-24" // Додано scroll-m-24, щоб хедер не перекривав юніт
               style={{
                 left: x - NODE_SIZE / 2,
                 top: y - NODE_SIZE / 2,
@@ -239,7 +242,6 @@ export const PathMapVariantRoad = ({
                     : "hover:scale-105 active:scale-95"
                 }`}
               >
-                {/* Пульсуючі кільця для активного юніту */}
                 {isCurrent && (
                   <>
                     <div
