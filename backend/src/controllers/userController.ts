@@ -1,9 +1,13 @@
 import { Request, Response } from "express";
 import { User } from "../models/User.js";
-import type { TelegramUser } from "../types/express.js";
 
-// first_name вже є в TelegramUser (як string), тому додаємо лише photo_url
-interface ExtendedTelegramUser extends TelegramUser {
+// Повністю описуємо структуру користувача, яку віддає Telegram
+export interface ExtendedTelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  language_code?: string;
   photo_url?: string;
 }
 
@@ -69,11 +73,8 @@ export const completeOnboarding = async (
 
     const user = await User.findOneAndUpdate(
       { telegramId },
-      {
-        level,
-        onboardingCompleted: true,
-      },
-      { new: true },
+      { level, onboardingCompleted: true },
+      { returnDocument: "after" }, // ВИПРАВЛЕНО
     );
 
     if (!user) {
@@ -109,7 +110,7 @@ export const updateLevel = async (
     const user = await User.findOneAndUpdate(
       { telegramId },
       { level },
-      { new: true },
+      { returnDocument: "after" }, // ВИПРАВЛЕНО
     );
 
     if (!user) {
@@ -135,12 +136,26 @@ export const updateProfile = async (
     }
 
     const telegramId = req.user.id;
-    const { customDisplayName, customAvatarUrl } = req.body;
+    const { customDisplayName } = req.body;
+    const updateData: any = {};
+
+    if (customDisplayName !== undefined) {
+      updateData.customDisplayName = customDisplayName;
+    }
+
+    // Якщо multer успішно зберіг файл, записуємо шлях у БД
+    if (req.file) {
+      updateData.customAvatarUrl = `/uploads/avatars/${req.file.filename}`;
+      console.log(
+        "[Profile] Файл успішно збережено:",
+        updateData.customAvatarUrl,
+      ); // ЛОГ ДОДАНО
+    }
 
     const user = await User.findOneAndUpdate(
       { telegramId },
-      { customDisplayName, customAvatarUrl },
-      { new: true },
+      updateData,
+      { returnDocument: "after" }, // ВИПРАВЛЕНО
     );
 
     if (!user) {
@@ -190,7 +205,7 @@ export const updateNickname = async (
     const user = await User.findOneAndUpdate(
       { telegramId },
       { nickname },
-      { new: true },
+      { returnDocument: "after" }, // ВИПРАВЛЕНО
     );
 
     if (!user) {

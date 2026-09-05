@@ -33,6 +33,8 @@ app.use("/api/progress", authMiddleware, progressRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/words", wordRoutes);
 
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 const frontendDist = path.resolve(process.cwd(), "../dist");
 app.use(express.static(frontendDist));
 
