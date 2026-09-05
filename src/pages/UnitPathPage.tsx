@@ -158,7 +158,7 @@ export const UnitPathPage = () => {
   };
 
   return (
-    <Screen className="!p-0 pb-8 bg-[var(--bg-app)]">
+    <Screen className="!px-0 !pt-0 bg-[var(--bg-app)]">
       {/* Хедер юніта */}
       <div className="relative overflow-hidden bg-[var(--bg-card)] px-4 pt-4 pb-6 rounded-b-3xl shadow-lg border-b border-[var(--border-color)]">
         <div className="relative flex items-center justify-between z-10">

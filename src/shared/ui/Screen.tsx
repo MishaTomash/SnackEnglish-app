@@ -1,3 +1,4 @@
+// src/shared/ui/Screen.tsx
 import type { ReactNode } from "react";
 
 interface ScreenProps {
@@ -13,9 +14,9 @@ export const Screen = ({
 }: ScreenProps) => {
   return (
     <div
-      className={`min-h-screen ${
+      className={`min-h-[var(--tg-viewport-stable-height,100dvh)] w-full ${
         fullBleed ? "" : "px-4"
-      } pt-4 pb-[calc(85px+env(safe-area-inset-bottom))] flex flex-col bg-[var(--tg-theme-bg-color)] text-[var(--tg-theme-text-color)] ${className}`}
+      } pt-4 pb-[calc(85px+env(safe-area-inset-bottom))] flex flex-col bg-[var(--tg-theme-bg-color)] text-[var(--tg-theme-text-color)] overflow-x-hidden ${className}`}
     >
       {children}
     </div>
