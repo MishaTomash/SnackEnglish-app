@@ -11,6 +11,7 @@ import {
   Info,
   Camera,
   CheckCircle2,
+  Receipt,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -38,11 +39,21 @@ interface BackendGame {
   isPurchased: boolean;
 }
 
+interface PaymentHistoryItem {
+  id: string;
+  gameTitle: string;
+  method: string;
+  status: "pending" | "approved" | "rejected";
+  date: string;
+}
+
 export const GamesPage = () => {
   const [games, setGames] = useState<BackendGame[]>([]);
+  const [payments, setPayments] = useState<PaymentHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [manualModal, setManualModal] = useState<{
     gameId: string;
     uniqueCode: string;
@@ -56,24 +67,23 @@ export const GamesPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchGames = async () => {
+  const fetchGamesAndPayments = async () => {
     try {
-      const res = await fetch(`${API_URL}/games`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setGames(data);
-      }
+      const [gamesRes, payRes] = await Promise.all([
+        fetch(`${API_URL}/games`, { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/games/payments`, { headers: getAuthHeaders() }),
+      ]);
+      if (gamesRes.ok) setGames(await gamesRes.json());
+      if (payRes.ok) setPayments(await payRes.json());
     } catch (error) {
-      console.error("Failed to fetch games", error);
+      console.error("Failed to fetch data", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchGames();
+    fetchGamesAndPayments();
   }, []);
 
   const handleStarsPayment = async (gameId: string) => {
@@ -91,18 +101,12 @@ export const GamesPage = () => {
         if (tg?.openInvoice) {
           tg.openInvoice(data.invoiceLink, (status: string) => {
             if (status === "paid") {
-              setGames((prev) =>
-                prev.map((g) =>
-                  g.gameId === gameId ? { ...g, isPurchased: true } : g,
-                ),
-              );
+              fetchGamesAndPayments();
             }
             setProcessingId(null);
           });
         } else {
-          alert(
-            "Оплата Зірками підтримується лише у мобільному клієнті Telegram.",
-          );
+          alert("Оплата Зірками підтримується лише у мобільному клієнті.");
           setProcessingId(null);
         }
       } else {
@@ -173,6 +177,7 @@ export const GamesPage = () => {
 
       if (res.ok) {
         setManualModal({ ...manualModal, step: "success" });
+        fetchGamesAndPayments();
       } else {
         alert("Помилка відправки квитанції. Спробуйте ще раз.");
       }
@@ -183,13 +188,26 @@ export const GamesPage = () => {
     }
   };
 
+  const hasPendingPayments = payments.some((p) => p.status === "pending");
+
   return (
     <Screen className="justify-start p-4 space-y-6 bg-[var(--bg-app)] pb-24 relative">
-      <div className="flex items-center gap-2">
-        <div className="w-10 h-10 bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] rounded-2xl flex items-center justify-center">
-          <Gamepad2 className="w-6 h-6" />
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] rounded-2xl flex items-center justify-center">
+            <Gamepad2 className="w-6 h-6" />
+          </div>
+          <h1 className="text-2xl font-black text-[var(--text-main)]">Ігри</h1>
         </div>
-        <h1 className="text-2xl font-black text-[var(--text-main)]">Ігри</h1>
+        <button
+          onClick={() => setShowHistoryModal(true)}
+          className="relative p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] active:scale-95 transition-transform"
+        >
+          <Receipt className="w-5 h-5" />
+          {hasPendingPayments && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-[var(--bg-app)]"></span>
+          )}
+        </button>
       </div>
 
       {isLoading ? (
@@ -282,8 +300,75 @@ export const GamesPage = () => {
         </div>
       )}
 
+      {/* Модалка Історії Платежів */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-[110] flex flex-col bg-[var(--bg-app)] animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center justify-between p-4 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
+            <h2 className="text-xl font-bold text-[var(--text-main)] flex items-center gap-2">
+              <Receipt className="w-6 h-6 text-[var(--accent-cta)]" /> Мої
+              платежі
+            </h2>
+            <button
+              onClick={() => setShowHistoryModal(false)}
+              className="p-2 rounded-xl bg-[var(--bg-app)] text-[var(--text-muted)] border border-[var(--border-color)]"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {payments.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-70 mt-20">
+                <Receipt className="w-16 h-16 text-[var(--text-muted)]" />
+                <p className="text-[var(--text-muted)] text-sm max-w-[240px]">
+                  Тут з'являться твої платежі, коли розблокуєш платну гру
+                </p>
+              </div>
+            ) : (
+              payments.map((payment) => (
+                <Card key={payment.id} className="p-4 flex flex-col gap-2">
+                  <div className="flex items-start justify-between">
+                    <span className="font-bold text-[var(--text-main)]">
+                      {payment.gameTitle}
+                    </span>
+                    {payment.status === "pending" && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-lg">
+                        Очікує підтвердження
+                      </span>
+                    )}
+                    {payment.status === "approved" && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-success)]/10 text-[var(--accent-success)] border border-[var(--accent-success)]/20 rounded-lg">
+                        Успішно
+                      </span>
+                    )}
+                    {payment.status === "rejected" && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg">
+                        Відхилено
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-[var(--text-muted)] font-medium">
+                    <span>{payment.method}</span>
+                    <span>
+                      {new Date(payment.date).toLocaleString("uk-UA", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Модалка Ручної Оплати */}
       {manualModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <Card className="w-full max-w-sm p-5 space-y-5 animate-in fade-in zoom-in duration-200">
             {manualModal.step !== "success" && (
               <div className="flex items-center justify-between">

@@ -156,3 +156,60 @@ export const uploadPaymentReceipt = async (
     res.status(500).json({ error: "Failed to upload receipt" });
   }
 };
+
+export const getPaymentHistory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const telegramId = req.user?.id;
+    if (!telegramId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const games = await Game.find().lean();
+    const gameMap = new Map(games.map((g) => [g.gameId, g.title]));
+
+    const manualRequests = await ManualPaymentRequest.find({
+      telegramId,
+    }).lean();
+    const purchases = await UserGamePurchase.find({ telegramId }).lean();
+
+    const history = [];
+
+    // Додаємо всі ручні заявки
+    for (const request of manualRequests) {
+      history.push({
+        id: request._id.toString(),
+        gameTitle: gameMap.get(request.gameId) || "Невідома гра",
+        method: "Ручний переказ",
+        status: request.status, // "pending", "approved", "rejected"
+        date: request.createdAt,
+      });
+    }
+
+    // Додаємо тільки покупки через Stars (де є telegramPaymentChargeId)
+    for (const pur of purchases) {
+      if (pur.telegramPaymentChargeId) {
+        history.push({
+          id: pur._id.toString(),
+          gameTitle: gameMap.get(pur.gameId) || "Невідома гра",
+          method: "Telegram Stars",
+          status: "approved",
+          date: pur.purchasedAt,
+        });
+      }
+    }
+
+    // Сортуємо від найновіших до найстаріших
+    history.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+
+    res.status(200).json(history);
+  } catch (error) {
+    console.error("Payment history error:", error);
+    res.status(500).json({ error: "Failed to fetch history" });
+  }
+};

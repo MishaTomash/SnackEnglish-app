@@ -7,6 +7,7 @@ import {
   createGameInvoice,
   createManualPaymentRequest,
   uploadPaymentReceipt,
+  getPaymentHistory,
 } from "../controllers/gamesController.js";
 
 const storage = multer.diskStorage({
@@ -27,6 +28,7 @@ const upload = multer({ storage });
 const router = Router();
 
 router.get("/", getGamesList);
+router.get("/payments", getPaymentHistory); // ДОДАНО РОУТ
 router.post("/invoice", createGameInvoice);
 router.post("/manual-payment", createManualPaymentRequest);
 router.post("/receipt", upload.single("receipt"), uploadPaymentReceipt);
