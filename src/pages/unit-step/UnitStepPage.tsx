@@ -54,11 +54,29 @@ export const UnitStepPage = () => {
     fetchWords();
   }, [unit?.wordIds]);
 
-  // ДОДАНО: підрахунок реального прогресу кроків
+  // ВИПРАВЛЕНО: підрахунок реального прогресу кроків
   const stepProgress = useMemo(() => {
     if (!unit) return { current: 0, total: 0 };
-    const totalSteps = unit.steps?.length || 0;
-    // Використовуємо Set, щоб не рахувати двічі один і той самий пройдений крок
+
+    // Якщо бекенд явно прислав масив steps
+    let totalSteps = unit.steps?.length || 0;
+
+    // Якщо steps немає, обчислюємо динамічно на основі контенту
+    if (totalSteps === 0) {
+      const dynamicSteps = ["warmup"]; // warmup є завжди
+      if (unit.wordIds?.length > 0) {
+        dynamicSteps.push("vocabulary");
+        dynamicSteps.push("speaking");
+      }
+      if (unit.grammarTopic && unit.grammarExplanation)
+        dynamicSteps.push("grammar");
+      if (unit.videoUrl) dynamicSteps.push("video");
+      if (unit.readingText) dynamicSteps.push("reading");
+      dynamicSteps.push("test"); // test є завжди наприкінці
+
+      totalSteps = dynamicSteps.length;
+    }
+
     const completedUnique = new Set(unit.completedSteps || []).size;
     return { current: completedUnique, total: totalSteps };
   }, [unit]);
@@ -66,9 +84,7 @@ export const UnitStepPage = () => {
   if (!unit || !stepType)
     return (
       <Screen className="justify-center items-center">
-        <p className="text-[var(--tg-theme-hint-color,#8e8e93)]">
-          Урок не знайдено
-        </p>
+        <p className="text-[var(--tg-theme-hint-color)]">Урок не знайдено</p>
       </Screen>
     );
 
@@ -87,10 +103,10 @@ export const UnitStepPage = () => {
           <Trophy className="w-10 h-10" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black text-[var(--tg-theme-text-color,#000000)]">
+          <h1 className="text-2xl font-black text-[var(--tg-theme-text-color)]">
             Юніт завершено! 🎉
           </h1>
-          <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)]">
+          <p className="text-sm text-[var(--tg-theme-hint-color)]">
             Ви успішно пройшли всі кроки теми «{unit.title}». Наступний юніт
             розблоковано!
           </p>
@@ -108,22 +124,21 @@ export const UnitStepPage = () => {
 
   return (
     <Screen className="justify-between">
-      {/* ОНОВЛЕНО: Хедер із відображенням прогресу "X з N кроків пройдено" */}
-      <div className="flex items-center justify-between pb-3 border-b border-[var(--tg-theme-hint-color,#d1d5db)]/20">
+      <div className="flex items-center justify-between pb-3 border-b border-[var(--tg-theme-hint-color)]/20">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(`/path/${unit.id}`)}
-            className="p-2 rounded-2xl bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] text-[var(--tg-theme-text-color,#000000)] transition-colors active:opacity-70"
+            className="p-2 rounded-2xl bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-text-color)] transition-colors active:opacity-70"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex flex-col">
-            <span className="text-xs font-medium text-[var(--tg-theme-hint-color,#8e8e93)]">
+            <span className="text-xs font-medium text-[var(--tg-theme-hint-color)]">
               {stepProgress.current} з {stepProgress.total} кроків пройдено
             </span>
           </div>
         </div>
-        <Badge className="text-xs uppercase bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] text-[var(--tg-theme-text-color,#000000)]">
+        <Badge className="text-xs uppercase bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-text-color)]">
           {stepType}
         </Badge>
       </div>
