@@ -26,37 +26,57 @@ export const SettingsPage = () => {
 
   const completedCount = units.filter((u) => u.status === "completed").length;
 
-  const handleLevelChange = async (newLevel: EnglishLevel) => {
+  const handleLevelChange = (newLevel: EnglishLevel) => {
     if (newLevel === level) return;
 
-    const confirmed = window.confirm(
-      "Зміна рівня оновить список уроків. Твій попередній прогрес збережеться в базі, але на карті з'являться нові теми. Продовжити?",
-    );
+    const message =
+      "Зміна рівня оновить список уроків. Твій попередній прогрес збережеться в базі, але на карті з'являться нові теми. Продовжити?";
 
-    if (!confirmed) return;
+    const processChange = async () => {
+      console.log("🔄 Початок зміни рівня на:", newLevel);
+      setError(null);
+      setLocalLoading(newLevel);
 
-    setError(null);
-    setLocalLoading(newLevel);
+      try {
+        console.log("📡 Відправка PATCH-запиту до API...");
+        const success = await updateLevel(newLevel);
+        console.log("✅ Результат зміни рівня:", success);
 
-    try {
-      const success = await updateLevel(newLevel);
-      if (success) {
-        await loadUnits(newLevel);
-        navigate("/");
-      } else {
-        setError("Не вдалося оновити рівень. Спробуй ще раз.");
+        if (success) {
+          console.log("📦 Завантаження нових юнітів...");
+          await loadUnits(newLevel);
+          console.log("🚀 Перехід на Головну сторінку...");
+          navigate("/");
+        } else {
+          setError("Не вдалося оновити рівень. Спробуй ще раз.");
+        }
+      } catch (err) {
+        console.error("❌ Помилка з'єднання:", err);
+        setError("Помилка з'єднання. Перевір інтернет і спробуй ще раз.");
+      } finally {
+        setLocalLoading(null);
       }
-    } catch (err) {
-      setError("Помилка з'єднання. Перевір інтернет і спробуй ще раз.");
-    } finally {
-      setLocalLoading(null);
+    };
+
+    // Використовуємо нативний Telegram Confirm замість браузерного (який викликає зависання)
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg?.showConfirm) {
+      tg.showConfirm(message, (confirmed: boolean) => {
+        if (confirmed) {
+          void processChange();
+        }
+      });
+    } else {
+      // Фолбек для локальної розробки у звичайному браузері
+      if (window.confirm(message)) {
+        void processChange();
+      }
     }
   };
 
   return (
-    <Screen className="justify-start p-4 space-y-6">
+    <Screen className="justify-start p-4 space-y-6 bg-[var(--bg-app)]">
       <div className="flex items-center gap-3">
-        {/* ЯВНА маршрутизація замість navigate(-1) */}
         <button
           onClick={() => navigate("/")}
           className="p-2 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] active:opacity-70"
@@ -127,7 +147,7 @@ export const SettingsPage = () => {
                 </span>
               </div>
               {isCurrentLoading ? (
-                <span className="inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span className="inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin text-[var(--accent-cta)]" />
               ) : isActive ? (
                 <span className="text-xs font-bold uppercase tracking-wide">
                   Поточний
