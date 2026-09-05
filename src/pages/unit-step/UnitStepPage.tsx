@@ -1,6 +1,5 @@
-// src/pages/unit/UnitStepPage.tsx
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { Screen } from "../../shared/ui/Screen";
 import { Badge } from "../../shared/ui/Badge";
@@ -11,7 +10,6 @@ import { getWordsByIds } from "../../entities/word/api";
 import type { Word } from "../../entities/word/types";
 import type { UnitStepType } from "../../entities/unit/types";
 
-// Імпорт всіх розбитих компонентів
 import { VocabularyStep } from "./ui/VocabularyStep";
 import { WarmupStep } from "./ui/WarmupStep";
 import { GrammarStep } from "./ui/GrammarStep";
@@ -26,6 +24,7 @@ export const UnitStepPage = () => {
     stepType: UnitStepType;
   }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { units, completeStep } = useProgressStore();
   const incrementWordsLearned = useUserStore(
     (state) => state.incrementWordsLearned,
@@ -35,11 +34,11 @@ export const UnitStepPage = () => {
   const [words, setWords] = useState<Word[]>([]);
   const [isLoadingWords, setIsLoadingWords] = useState(true);
   const [isUnitFinishedModalOpen, setIsUnitFinishedModalOpen] = useState(false);
-
-  // ДОДАНО: Стан для блокування UI під час збереження кроку (захист від дабл-кліку)
   const [isCompleting, setIsCompleting] = useState(false);
 
-  // ВИПРАВЛЕНО: Винесено функцію, щоб її можна було передати як onRetry
+  // Визначаємо шлях повернення з переданого state, або фолбек на сторінку юніта
+  const returnPath = location.state?.from || `/path/${unit?.id}`;
+
   const fetchWords = useCallback(async () => {
     if (!unit) return;
     setIsLoadingWords(true);
@@ -86,11 +85,10 @@ export const UnitStepPage = () => {
   if (!unit || !stepType)
     return (
       <Screen className="justify-center items-center">
-        <p className="text-[var(--tg-theme-hint-color)]">Урок не знайдено</p>
+        <p className="text-[var(--text-muted)]">Урок не знайдено</p>
       </Screen>
     );
 
-  // ВИПРАВЛЕНО: Додано async/await, блокування (isCompleting) та try-finally
   const handleComplete = async () => {
     if (isCompleting) return;
     setIsCompleting(true);
@@ -105,6 +103,7 @@ export const UnitStepPage = () => {
       if (stepType === "test") {
         setIsUnitFinishedModalOpen(true);
       } else {
+        // При завершенні проміжного кроку повертаємось на екран вибору кроків
         navigate(`/path/${unit.id}`);
       }
     } finally {
@@ -115,24 +114,24 @@ export const UnitStepPage = () => {
   if (isUnitFinishedModalOpen) {
     return (
       <Screen className="justify-center items-center text-center p-6 space-y-6">
-        <div className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center animate-bounce">
+        <div className="w-20 h-20 bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] rounded-full flex items-center justify-center animate-bounce">
           <Trophy className="w-10 h-10" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black text-[var(--tg-theme-text-color)]">
+          <h1 className="text-2xl font-black text-[var(--text-main)]">
             Юніт завершено! 🎉
           </h1>
-          <p className="text-sm text-[var(--tg-theme-hint-color)]">
+          <p className="text-sm text-[var(--text-muted)]">
             Ви успішно пройшли всі кроки теми «{unit.title}». Наступний юніт
             розблоковано!
           </p>
         </div>
         <Button
-          onClick={() => navigate("/")}
+          onClick={() => navigate(returnPath === "/" ? "/" : "/path")}
           variant="primary"
           className="w-full"
         >
-          На Головну
+          {returnPath === "/" ? "На Головну" : "На Карту"}
         </Button>
       </Screen>
     );
@@ -142,23 +141,21 @@ export const UnitStepPage = () => {
     <Screen
       className={`justify-between transition-opacity duration-200 ${isCompleting ? "pointer-events-none opacity-60" : ""}`}
     >
-      <div className="flex items-center justify-between pb-3 border-b border-[var(--tg-theme-hint-color)]/20">
+      <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate(`/path/${unit.id}`)}
-            className="p-2 rounded-2xl bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-text-color)] transition-colors active:opacity-70"
+            onClick={() => navigate(returnPath)}
+            className="p-2 rounded-2xl bg-[var(--bg-card)] text-[var(--text-main)] transition-colors active:opacity-70 border border-[var(--border-color)]"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex flex-col">
-            <span className="text-xs font-medium text-[var(--tg-theme-hint-color)]">
+            <span className="text-xs font-medium text-[var(--text-muted)]">
               {stepProgress.current} з {stepProgress.total} кроків пройдено
             </span>
           </div>
         </div>
-        <Badge className="text-xs uppercase bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-text-color)]">
-          {stepType}
-        </Badge>
+        <Badge className="text-xs uppercase">{stepType}</Badge>
       </div>
 
       {stepType === "warmup" && (
@@ -169,7 +166,7 @@ export const UnitStepPage = () => {
           words={words}
           isLoading={isLoadingWords}
           onComplete={handleComplete}
-          onRetry={fetchWords} // ВИПРАВЛЕНО: Передано onRetry
+          onRetry={fetchWords}
         />
       )}
       {stepType === "grammar" && (
@@ -187,8 +184,6 @@ export const UnitStepPage = () => {
       {stepType === "test" && (
         <TestStep words={words} onComplete={handleComplete} />
       )}
-
-      <div />
     </Screen>
   );
 };

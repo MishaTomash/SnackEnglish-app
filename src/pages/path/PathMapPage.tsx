@@ -25,7 +25,7 @@ export const PathMapPage = () => {
     }
 
     hapticSelectNode();
-    navigate(`/path/${unitId}`);
+    navigate(`/path/${unitId}`, { state: { from: "/path" } });
   };
 
   if (isLoading && units.length === 0) {

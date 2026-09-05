@@ -104,7 +104,11 @@ export const HomePage = () => {
         </div>
 
         {activeUnit ? (
-          <Link to={`/path/${activeUnit.id}`} className="block">
+          <Link
+            to={`/path/${activeUnit.id}`}
+            state={{ from: "/" }}
+            className="block"
+          >
             <Button variant="primary" className="w-full">
               Продовжити урок
             </Button>

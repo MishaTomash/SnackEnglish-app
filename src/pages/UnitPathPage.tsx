@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -64,7 +64,11 @@ const STEP_METADATA: Record<
 export const UnitPathPage = () => {
   const { unitId } = useParams<{ unitId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { units, currentUnitId, loadUnits } = useProgressStore();
+
+  // Зчитуємо джерело переходу. Якщо його немає — вважаємо, що прийшли з Карти.
+  const returnPath = location.state?.from || "/path";
 
   useEffect(() => {
     if (units.length === 0) {
@@ -75,7 +79,7 @@ export const UnitPathPage = () => {
   if (units.length === 0) {
     return (
       <Screen className="justify-center items-center">
-        <p className="text-[var(--tg-theme-hint-color,#8e8e93)] animate-pulse">
+        <p className="text-[var(--text-muted)] animate-pulse">
           Завантаження юнітів...
         </p>
       </Screen>
@@ -93,13 +97,8 @@ export const UnitPathPage = () => {
   if (!unit) {
     return (
       <Screen className="justify-center items-center">
-        <p className="text-[var(--tg-theme-hint-color,#8e8e93)]">
-          Юніт не знайдено...
-        </p>
-        <Link
-          to="/"
-          className="mt-4 text-[var(--tg-theme-button-color,#3390ec)] font-semibold"
-        >
+        <p className="text-[var(--text-muted)]">Юніт не знайдено...</p>
+        <Link to="/" className="mt-4 text-[var(--accent-cta)] font-semibold">
           Повернутися на Головну
         </Link>
       </Screen>
@@ -127,56 +126,51 @@ export const UnitPathPage = () => {
     steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0;
 
   return (
-    <Screen className="!p-0 pb-8">
-      {/* Хедер юніта: градієнт, кільце прогресу, тема */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[var(--tg-theme-button-color,#3390ec)] to-[var(--tg-theme-button-color,#3390ec)]/70 text-white px-4 pt-4 pb-6 rounded-b-3xl shadow-lg">
-        <div
-          className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl"
-          aria-hidden
-        />
-        <div
-          className="absolute bottom-0 left-1/3 w-24 h-24 rounded-full bg-white/10 blur-xl"
-          aria-hidden
-        />
-
-        <div className="relative flex items-center justify-between">
+    <Screen className="!p-0 pb-8 bg-[var(--bg-app)]">
+      {/* Хедер юніта */}
+      <div className="relative overflow-hidden bg-[var(--bg-card)] px-4 pt-4 pb-6 rounded-b-3xl shadow-lg border-b border-[var(--border-color)]">
+        <div className="relative flex items-center justify-between z-10">
           <button
-            onClick={() => navigate("/")}
-            className="p-2 rounded-xl bg-white/15 backdrop-blur-sm active:scale-95 transition-transform"
+            onClick={() => navigate(returnPath)}
+            className="p-2 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] active:scale-95 transition-transform"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-[var(--text-main)]" />
           </button>
 
           <div
-            className="relative w-14 h-14 rounded-full grid place-items-center shrink-0"
+            className="relative w-14 h-14 rounded-full grid place-items-center shrink-0 shadow-sm"
             style={{
-              background: `conic-gradient(#ffffff ${percent}%, rgba(255,255,255,0.25) ${percent}% 100%)`,
+              background: `conic-gradient(var(--accent-cta) ${percent}%, var(--locked) ${percent}% 100%)`,
             }}
           >
-            <div className="w-11 h-11 rounded-full bg-[var(--tg-theme-button-color,#3390ec)] grid place-items-center">
-              <span className="text-[11px] font-bold">{percent}%</span>
+            <div className="w-11 h-11 rounded-full bg-[var(--bg-card)] grid place-items-center">
+              <span className="text-[11px] font-bold text-[var(--text-main)]">
+                {percent}%
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="relative mt-4 space-y-1">
+        <div className="relative mt-4 space-y-1 z-10">
           <div className="flex items-center gap-2">
-            <Badge className="bg-white/20 text-white border-none text-[10px] uppercase">
+            <Badge className="bg-[var(--accent-cta)] text-[var(--text-accent)] border-none text-[10px] uppercase shadow-sm">
               {unit.level}
             </Badge>
-            <span className="text-xs text-white/80 font-medium">
+            <span className="text-xs text-[var(--text-muted)] font-medium">
               {(unit as unknown as { topic?: string }).topic || unit.title}
             </span>
           </div>
-          <h1 className="text-xl font-bold leading-tight">{unit.title}</h1>
-          <p className="text-xs text-white/75">
+          <h1 className="text-xl font-bold leading-tight text-[var(--text-main)]">
+            {unit.title}
+          </h1>
+          <p className="text-xs text-[var(--text-muted)]">
             {completedCount} з {steps.length} кроків пройдено
           </p>
         </div>
       </div>
 
       {/* Таймлайн кроків */}
-      <div className="px-4 mt-5 space-y-3 relative before:absolute before:left-[38px] before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--tg-theme-hint-color,#8e8e93)]/15">
+      <div className="px-4 mt-5 space-y-3 relative before:absolute before:left-[38px] before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--border-color)]">
         {steps.map((step, index) => {
           const meta = STEP_METADATA[step.type] ?? {
             title: step.type,
@@ -193,19 +187,19 @@ export const UnitPathPage = () => {
               key={step.id || index}
               className={`relative flex items-center gap-3.5 rounded-2xl p-3.5 transition-all ${
                 isAvailable
-                  ? "bg-[var(--tg-theme-bg-color,#ffffff)] shadow-[0_2px_14px_rgba(0,0,0,0.07)] border-l-4 border-[var(--tg-theme-button-color,#3390ec)]"
+                  ? "bg-[var(--bg-card-elevated)] shadow-lg border-l-4 border-[var(--accent-cta)]"
                   : isLocked
-                    ? "bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)]/60 border-l-4 border-transparent"
-                    : "bg-[var(--tg-theme-bg-color,#ffffff)] border-l-4 border-emerald-400/60"
+                    ? "bg-[var(--bg-app)] border-l-4 border-transparent opacity-60"
+                    : "bg-[var(--bg-card-elevated)] border-l-4 border-[var(--accent-success)]"
               }`}
             >
               <div
                 className={`relative w-11 h-11 rounded-full flex items-center justify-center shrink-0 z-10 ${
                   isCompleted
-                    ? "bg-emerald-500 text-white"
+                    ? "bg-[var(--accent-success)]/20 text-[var(--accent-success)] border border-[var(--accent-success)]/30"
                     : isAvailable
-                      ? "bg-[var(--tg-theme-button-color,#3390ec)] text-white shadow-sm"
-                      : "bg-[var(--tg-theme-bg-color,#ffffff)] text-gray-400 border-2 border-[var(--tg-theme-hint-color,#d1d5db)]/40"
+                      ? "bg-[var(--accent-cta)] text-[var(--text-accent)] shadow-sm"
+                      : "bg-[var(--bg-card)] text-[var(--text-muted)] border-2 border-[var(--border-color)]"
                 }`}
               >
                 <StepIcon className="w-5 h-5" />
@@ -213,35 +207,38 @@ export const UnitPathPage = () => {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-[var(--tg-theme-hint-color,#8e8e93)]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)]">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span
                     className={`text-sm font-bold truncate ${
                       isLocked
-                        ? "text-[var(--tg-theme-hint-color,#9ca3af)]"
-                        : ""
+                        ? "text-[var(--text-muted)]"
+                        : "text-[var(--text-main)]"
                     }`}
                   >
                     {meta.title}
                   </span>
                 </div>
-                <p className="text-xs text-[var(--tg-theme-hint-color,#8e8e93)] truncate">
+                <p className="text-xs text-[var(--text-muted)] truncate">
                   {meta.desc}
                 </p>
               </div>
 
               <div className="shrink-0">
                 {isCompleted && (
-                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                  <CheckCircle2 className="w-6 h-6 text-[var(--accent-success)]" />
                 )}
-                {isLocked && <Lock className="w-4 h-4 text-gray-400" />}
+                {isLocked && <Lock className="w-4 h-4 text-[var(--locked)]" />}
                 {isAvailable && (
                   <button
                     onClick={() =>
-                      navigate(`/unit/${effectiveUnitId}/step/${step.type}`)
+                      navigate(`/unit/${effectiveUnitId}/step/${step.type}`, {
+                        // Важливо: передаємо поточний шлях сторінки юніта, щоб крок міг повернутись сюди
+                        state: { from: location.pathname },
+                      })
                     }
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[var(--tg-theme-button-color,#3390ec)] text-white shadow-sm active:scale-95 transition-transform"
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[var(--accent-cta)] text-[var(--text-accent)] shadow-sm active:scale-95 transition-transform"
                   >
                     Старт
                   </button>
