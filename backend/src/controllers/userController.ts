@@ -58,3 +58,33 @@ export const completeOnboarding = async (
     res.status(500).json({ error: "Failed to complete onboarding" });
   }
 };
+
+export const updateLevel = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const telegramId = req.user?.id;
+    const { level } = req.body;
+
+    if (!telegramId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const user = await User.findOneAndUpdate(
+      { telegramId },
+      { level },
+      { new: true },
+    );
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.status(200).json({ success: true, level: user.level });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update level" });
+  }
+};

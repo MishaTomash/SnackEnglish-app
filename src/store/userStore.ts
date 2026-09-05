@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { EnglishLevel } from "../entities/word/types";
 
-// Helper для API запитів (уявимо, що WebApp вже ініціалізовано)
+// Helper для API запитів
 const getAuthHeaders = () => {
   const initData =
     window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
@@ -26,7 +26,7 @@ interface UserState {
   incrementStreak: () => void;
   incrementWordsLearned: (count?: number) => void;
 
-  // Асинхронні методи
+  updateLevel: (level: EnglishLevel) => Promise<boolean>;
   fetchUser: () => Promise<void>;
   completeOnboarding: (level: EnglishLevel) => Promise<boolean>;
 }
@@ -47,6 +47,25 @@ export const useUserStore = create<UserState>()(
         set((state) => ({
           wordsLearnedCount: state.wordsLearnedCount + count,
         })),
+
+      updateLevel: async (level: EnglishLevel) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await fetch(`${API_URL}/user/level`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ level }),
+          });
+
+          if (!res.ok) throw new Error("Помилка оновлення рівня");
+
+          set({ level, isLoading: false });
+          return true;
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          return false;
+        }
+      },
 
       fetchUser: async () => {
         set({ isLoading: true, error: null });
@@ -89,7 +108,6 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: "snack_user_storage",
-      // Не зберігаємо стани завантаження в localStorage
       partialize: (state) => ({
         level: state.level,
         onboardingCompleted: state.onboardingCompleted,

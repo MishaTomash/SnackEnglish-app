@@ -37,8 +37,8 @@ export interface Unit {
   topic: string;
   order: number;
   wordIds: string[];
-  grammarTopic: string;
-  grammarExplanation: string;
+  grammarTopic: string; // Залишено для зворотної сумісності
+  grammarExplanation: string; // Залишено для зворотної сумісності
   videoUrl: string;
   readingText: string;
   readingTranslation: string;
@@ -46,4 +46,13 @@ export interface Unit {
   status?: StepStatus;
   completedSteps?: UnitStepType[];
   roleplayScenario?: RoleplayScenario;
+  // ДОДАНО: нова структура граматики з JSON-контенту
+  grammar?: {
+    title: string;
+    explanation: string;
+    examples?: Array<{
+      en: string;
+      ua: string;
+    }>;
+  };
 }

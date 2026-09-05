@@ -6,6 +6,7 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
+
 import { initTelegramApp, subscribeToTheme } from "../shared/lib/telegram";
 import { useUserStore } from "../store/userStore";
 import { OnboardingPage } from "../pages/OnboardingPage";
@@ -14,6 +15,7 @@ import { PathMapPage } from "../pages/path/PathMapPage";
 import { UnitPathPage } from "../pages/UnitPathPage";
 import { UnitStepPage } from "../pages/unit-step/UnitStepPage";
 import { PracticePage } from "../pages/PracticePage";
+import { SettingsPage } from "../pages/settings/SettingsPage";
 import { BottomNav } from "../widgets/BottomNav";
 import { Screen } from "../shared/ui/Screen";
 import { CookieMascot } from "../shared/ui/CookieMascot";
@@ -62,6 +64,9 @@ const AppContent = () => {
         {/* Головна сторінка з дашбордом */}
         <Route path="/" element={<HomePage />} />
 
+        {/* Налаштування */}
+        <Route path="/settings" element={<SettingsPage />} />
+
         {/* Карта-шлях уроків */}
         <Route path="/path" element={<PathMapPage />} />
 
@@ -78,7 +83,6 @@ const AppContent = () => {
 
 export const App = () => {
   useEffect(() => {
-    // 1. Негайний виклик ready() та expand() для мобільного клієнта Telegram
     const tg = (
       window as unknown as {
         Telegram?: {
@@ -95,7 +99,6 @@ export const App = () => {
       tg.expand();
     }
 
-    // 2. Ініціалізація внутрішньої логіки та підписка на зміну теми
     try {
       initTelegramApp();
     } catch (err: unknown) {
