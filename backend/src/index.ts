@@ -52,7 +52,7 @@ const frontendDist = path.resolve(process.cwd(), "../dist");
 app.use(express.static(frontendDist));
 
 // SPA fallback: передає index.html для будь-яких невідомих маршрутів React Router
-app.get("*", (_req, res) => {
+app.get(/.*/, (_req, res) => {
   res.sendFile(path.join(frontendDist, "index.html"));
 });
 

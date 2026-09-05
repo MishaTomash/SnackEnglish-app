@@ -9,7 +9,8 @@ import {
 import { initTelegramApp, subscribeToTheme } from "../shared/lib/telegram";
 import { useUserStore } from "../store/userStore";
 import { OnboardingPage } from "../pages/OnboardingPage";
-import { PathMapPage } from "../pages/path/PathMapPage"; // Додано імпорт карти
+import { HomePage } from "../pages/HomePage"; // Додано імпорт головної сторінки
+import { PathMapPage } from "../pages/path/PathMapPage";
 import { UnitPathPage } from "../pages/UnitPathPage";
 import { UnitStepPage } from "../pages/unit-step/UnitStepPage";
 import { PracticePage } from "../pages/PracticePage";
@@ -36,8 +37,11 @@ const AppContent = () => {
     <div className="relative min-h-screen bg-[var(--tg-theme-bg-color,#ffffff)] text-[var(--tg-theme-text-color,#000000)]">
       <Routes>
         <Route path="/onboarding" element={<OnboardingPage />} />
-        {/* Карта тепер є Головним екраном і екраном Уроків */}
-        <Route path="/" element={<PathMapPage />} />
+
+        {/* Головна сторінка з дашбордом */}
+        <Route path="/" element={<HomePage />} />
+
+        {/* Карта-шлях уроків */}
         <Route path="/path" element={<PathMapPage />} />
 
         {/* Кроки конкретного юніта */}
