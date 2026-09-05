@@ -2,18 +2,147 @@
   "level": "B1",
   "units": [
     {
-      "id": "u1_empty",
-      "title": "",
-      "description": "",
+      "id": "u1",
+      "title": "Web Development & E-commerce",
+      "description": "Опануй лексику для розмов про ІТ-проєкти, створення додатків та роботу з клієнтами.",
       "order": 1,
       "steps": {
         "warmup": {},
-        "vocabulary": [],
-        "grammar": { "title": "", "explanation": "", "examples": [] },
-        "video": { "url": "" },
-        "reading": { "title": "", "text": "", "questions": [] },
-        "speaking": { "title": "", "scenario": "", "lines": [] },
-        "test": []
+        "vocabulary": [
+          {
+            "text": "develop",
+            "transcription": "[dɪˈveləp]",
+            "translation": "розробляти",
+            "exampleSentence": "I develop full-stack web applications.",
+            "exampleTranslation": "Я розробляю full-stack веб-додатки."
+          },
+          {
+            "text": "deploy",
+            "transcription": "[dɪˈplɔɪ]",
+            "translation": "розгортати / запускати",
+            "exampleSentence": "We need to deploy the website to the server.",
+            "exampleTranslation": "Нам потрібно розгорнути вебсайт на сервері."
+          },
+          {
+            "text": "database",
+            "transcription": "[ˈdeɪtəbeɪs]",
+            "translation": "база даних",
+            "exampleSentence": "The user progress is saved in the database.",
+            "exampleTranslation": "Прогрес користувача зберігається в базі даних."
+          },
+          {
+            "text": "fix a bug",
+            "transcription": "[fɪks ə bʌɡ]",
+            "translation": "виправити помилку",
+            "exampleSentence": "I spent two hours fixing a bug in the code.",
+            "exampleTranslation": "Я витратив дві години на виправлення помилки в коді."
+          },
+          {
+            "text": "schedule",
+            "transcription": "[ˈʃedjuːl]",
+            "translation": "розклад / призначати",
+            "exampleSentence": "The bot helps clients schedule appointments.",
+            "exampleTranslation": "Бот допомагає клієнтам призначати зустрічі."
+          },
+          {
+            "text": "customer",
+            "transcription": "[ˈkʌstəmə]",
+            "translation": "клієнт / покупець",
+            "exampleSentence": "I have to arrange shipping with the customer.",
+            "exampleTranslation": "Я маю домовитися про доставку з клієнтом."
+          },
+          {
+            "text": "feature",
+            "transcription": "[ˈfiːtʃə]",
+            "translation": "функція / особливість",
+            "exampleSentence": "We are adding a new feature to the app.",
+            "exampleTranslation": "Ми додаємо нову функцію в додаток."
+          },
+          {
+            "text": "manage",
+            "transcription": "[ˈmænɪdʒ]",
+            "translation": "керувати",
+            "exampleSentence": "He manages an online e-commerce store.",
+            "exampleTranslation": "Він керує онлайн-магазином."
+          }
+        ],
+        "grammar": {
+          "title": "Present Perfect",
+          "explanation": "Використовується для дій, які відбулися в минулому, але їхній результат важливий зараз (або для життєвого досвіду). Утворюється за допомогою допоміжного дієслова have/has та третьої форми дієслова (V3/ed).",
+          "examples": [
+            {
+              "en": "I have already deployed the new Telegram bot.",
+              "ua": "Я вже розгорнув новий телеграм-бот."
+            },
+            {
+              "en": "He has fixed all the bugs in the application.",
+              "ua": "Він виправив усі баги в додатку."
+            },
+            {
+              "en": "Have you ever worked with TypeScript?",
+              "ua": "Ти коли-небудь працював з TypeScript?"
+            }
+          ]
+        },
+        "video": {
+          "url": "https://www.youtube.com/watch?v=z8ccv80wR4w"
+        },
+        "reading": {
+          "title": "My Tech Journey",
+          "text": "I am actively learning full-stack web development, focusing on technologies like React, Node.js, and TypeScript. Recently, I have built a Telegram bot that helps clients schedule appointments for a beauty master. I also manage a small e-commerce store online where I sell electronics and plants. Sometimes it is challenging to fix bugs, refactor code, and manage customers at the same time, but I really enjoy developing new features with my brother.",
+          "questions": [
+            {
+              "question": "What is the main purpose of the Telegram bot mentioned in the text?",
+              "options": [
+                "Selling electronics",
+                "Scheduling appointments",
+                "Teaching English",
+                "Learning TypeScript"
+              ],
+              "correctAnswer": 1
+            },
+            {
+              "question": "Who does the author develop new features with?",
+              "options": [
+                "A customer",
+                "A beauty master",
+                "His brother",
+                "A teacher"
+              ],
+              "correctAnswer": 2
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Discussing the Project",
+          "scenario": "Розмова з братом про поточний стан веб-проєкту.",
+          "lines": [
+            {
+              "speaker": "Brother",
+              "text": "Have you deployed the new feature to the server yet?",
+              "translation": "Ти вже розгорнув нову функцію на сервері?"
+            },
+            {
+              "speaker": "You",
+              "text": "Not yet. I have found a small bug in the database, so I need to fix it first.",
+              "translation": "Ще ні. Я знайшов невеликий баг у базі даних, тому спочатку маю його виправити."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "We ___ just finished setting up the new server.",
+            "options": ["has", "have", "are", "did"],
+            "correctAnswer": 1,
+            "explanation": "З займенником 'we' у Present Perfect використовується допоміжне дієслово 'have'."
+          },
+          {
+            "question": "It is important to test the app before you ___ it.",
+            "options": ["develop", "fix", "schedule", "deploy"],
+            "correctAnswer": 3,
+            "explanation": "Deploy означає 'розгортати' або 'запускати' додаток у робоче середовище."
+          }
+        ]
       }
     }
   ]

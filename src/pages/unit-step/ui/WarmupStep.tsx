@@ -12,15 +12,19 @@ export const WarmupStep = ({
 }) => (
   <div className="space-y-4 my-auto">
     <Card className="text-center p-6 space-y-3">
-      <div className="w-14 h-14 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto">
+      <div className="w-14 h-14 bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] rounded-full flex items-center justify-center mx-auto">
         <Sparkles className="w-8 h-8" />
       </div>
-      <h2 className="text-xl font-bold">Готові до нового матеріалу?</h2>
-      <p className="text-sm text-slate-500">
+      <h2 className="text-xl font-bold text-[var(--text-main)]">
+        Готові до нового матеріалу?
+      </h2>
+      <p className="text-sm text-[var(--text-muted)]">
         У цьому юніті ми зануримось у тему{" "}
-        <span className="font-semibold text-slate-800">«{unit.title}»</span>. Ви
-        вивчите {unit.wordIds?.length || 0} нових слів та опануєте правило «
-        {unit.grammarTopic}».
+        <span className="font-semibold text-[var(--text-main)]">
+          «{unit.title}»
+        </span>
+        . Ви вивчите {unit.wordIds?.length || 0} нових слів та опануєте правило
+        «{unit.grammarTopic}».
       </p>
     </Card>
     <Button onClick={onComplete} variant="primary" className="w-full">

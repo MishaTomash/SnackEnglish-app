@@ -69,9 +69,11 @@ export const OnboardingPage = () => {
           <div className="space-y-4 w-full">
             <Badge className="bg-red-500/20 text-red-400">Помилка</Badge>
             <p className="text-sm text-cookieText-primary">{error}</p>
+            {/* ВИПРАВЛЕНО: Додано disabled */}
             <Button
               onClick={() => handleFinish(determinedLevel!)}
               variant="primary"
+              disabled={isLoading}
               className="w-full flex items-center justify-center gap-2"
             >
               <RefreshCw className="w-4 h-4" /> Спробувати ще раз
@@ -79,6 +81,7 @@ export const OnboardingPage = () => {
             <Button
               onClick={() => setStep("choice")}
               variant="secondary"
+              disabled={isLoading}
               className="w-full"
             >
               Почати спочатку

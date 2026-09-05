@@ -2,18 +2,152 @@
   "level": "B2",
   "units": [
     {
-      "id": "u1_empty",
-      "title": "",
-      "description": "",
+      "id": "u1",
+      "title": "Technical Job Interviews",
+      "description": "Опануй професійну лексику для проходження технічних співбесід та обговорення архітектури коду.",
       "order": 1,
       "steps": {
         "warmup": {},
-        "vocabulary": [],
-        "grammar": { "title": "", "explanation": "", "examples": [] },
-        "video": { "url": "" },
-        "reading": { "title": "", "text": "", "questions": [] },
-        "speaking": { "title": "", "scenario": "", "lines": [] },
-        "test": []
+        "vocabulary": [
+          {
+            "text": "refactor",
+            "transcription": "[ˌriːˈfæktə]",
+            "translation": "рефакторити / покращувати код",
+            "exampleSentence": "We need to refactor this component to make it reusable.",
+            "exampleTranslation": "Нам потрібно відрефакторити цей компонент, щоб зробити його перевикористовуваним."
+          },
+          {
+            "text": "bottleneck",
+            "transcription": "[ˈbɒtlnek]",
+            "translation": "вузьке місце / перешкода",
+            "exampleSentence": "Frequent database queries created a major performance bottleneck.",
+            "exampleTranslation": "Часті запити до бази даних створювали значне звуження продуктивності."
+          },
+          {
+            "text": "maintainable",
+            "transcription": "[meɪnˈteɪnəbl]",
+            "translation": "легкий у підтримці",
+            "exampleSentence": "Writing clean TypeScript types makes the codebase maintainable.",
+            "exampleTranslation": "Написання чистих типів TypeScript робить кодову базу легкою в підтримці."
+          },
+          {
+            "text": "scalability",
+            "transcription": "[ˌskeɪləˈbɪləti]",
+            "translation": "масштабованість",
+            "exampleSentence": "In-memory caching is essential for backend scalability.",
+            "exampleTranslation": "Кешування в оперативній пам'яті є критичним для масштабованості бекенду."
+          },
+          {
+            "text": "collaborate",
+            "transcription": "[kəˈlæbəreɪt]",
+            "translation": "співпрацювати",
+            "exampleSentence": "I collaborate with team members using Git branches and pull requests.",
+            "exampleTranslation": "Я співпрацюю з учасниками команди через гілки Git та pull request-и."
+          },
+          {
+            "text": "proficiency",
+            "transcription": "[prəˈfɪʃnsi]",
+            "translation": "рівень володіння / майстерність",
+            "exampleSentence": "He demonstrated high proficiency in full-stack web development.",
+            "exampleTranslation": "Він продемонстрував високий рівень володіння full-stack веб-розробкою."
+          },
+          {
+            "text": "requirement",
+            "transcription": "[rɪˈkwaɪəmənt]",
+            "translation": "вимога",
+            "exampleSentence": "We must analyze every technical requirement before building the feature.",
+            "exampleTranslation": "Ми повинні проаналізувати кожну технічну вимогу перед створенням функції."
+          },
+          {
+            "text": "implement",
+            "transcription": "[ˈɪmplɪment]",
+            "translation": "впроваджувати / реалізувати",
+            "exampleSentence": "We decided to implement custom hooks to manage state cleanly.",
+            "exampleTranslation": "Ми вирішили реалізувати кастомні хуки для чистого керування станом."
+          }
+        ],
+        "grammar": {
+          "title": "Second Conditional",
+          "explanation": "Використовується для уявних або малоймовірних ситуацій у теперішньому чи майбутньому часі (часто для гіпотетичних архітектурних рішень на співбесіді). Структура: If + Past Simple, would + V1.",
+          "examples": [
+            {
+              "en": "If we migrated this state to a global store, the component tree would be cleaner.",
+              "ua": "Якби ми перенесли цей стан у глобальне сховище, дерево компонентів було б чистішим."
+            },
+            {
+              "en": "If you had high traffic, which database would you choose?",
+              "ua": "Якби у вас був високий трафік, яку базу даних ви б обрали?"
+            },
+            {
+              "en": "I would refactor this API route if I had more time.",
+              "ua": "Я б відрефакторив цей API-маршрут, якби мав більше часу."
+            }
+          ]
+        },
+        "video": {
+          "url": "https://www.youtube.com/watch?v=1qw5ITr3k9E"
+        },
+        "reading": {
+          "title": "Acing the Junior Tech Interview",
+          "text": "During a technical interview, interviewers do not just evaluate your code syntax; they focus on your problem-solving mindset and communication proficiency. When asked about complex bugs you have encountered, explain the context clearly: describe where the bottleneck occurred, why you chose a specific architectural pattern, and how you verified the fix. If you make your codebase maintainable and show that you can collaborate effectively, you will stand out from other candidates.",
+          "questions": [
+            {
+              "question": "What do interviewers evaluate besides code syntax?",
+              "options": [
+                "Only speed of typing",
+                "Problem-solving mindset and communication",
+                "Knowledge of hardware parts",
+                "Design software tools"
+              ],
+              "correctAnswer": 1
+            },
+            {
+              "question": "What should you do when describing a bug you solved?",
+              "options": [
+                "Ignore the bottleneck",
+                "Explain context, bottleneck, and your solution",
+                "Blame other developers",
+                "Refuse to answer"
+              ],
+              "correctAnswer": 1
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Explaining Architecture Decisions",
+          "scenario": "Відповідь на запитання техліда під час інтерв'ю.",
+          "lines": [
+            {
+              "speaker": "Interviewer",
+              "text": "Why did you decide to refactor the state management in this module?",
+              "translation": "Чому ви вирішили відрефакторити керування станом у цьому модулі?"
+            },
+            {
+              "speaker": "You",
+              "text": "If we kept the old approach, our codebase would become unmaintainable as the project grew.",
+              "translation": "Якби ми залишили старий підхід, наша кодова база стала б непідтримуваною в міру зростання проєкту."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "If we cached user queries in memory, server response time ___ much lower.",
+            "options": ["will be", "would be", "is", "was"],
+            "correctAnswer": 1,
+            "explanation": "У Second Conditional у головній частині речення використовується конструкція 'would + V1'."
+          },
+          {
+            "question": "Writing tests helps to ensure the application is ___ and easy to scale.",
+            "options": [
+              "maintainable",
+              "bottleneck",
+              "requirement",
+              "collaborate"
+            ],
+            "correctAnswer": 0,
+            "explanation": "Maintainable — легкий у підтримці та супроводі."
+          }
+        ]
       }
     }
   ]

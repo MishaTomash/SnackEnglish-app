@@ -21,6 +21,7 @@ export const PracticePage = () => {
   } = useRepetitionStore();
 
   const [isRevealed, setIsRevealed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     void loadDailyWords();
@@ -30,16 +31,20 @@ export const PracticePage = () => {
   const totalDueToday = dailyQueue.length;
 
   const handleAnswer = async (remembered: boolean) => {
-    if (!currentWord) return;
+    if (!currentWord || isSubmitting) return;
+    setIsSubmitting(true);
+
     const quality = remembered ? 4 : 1;
     setIsRevealed(false);
     await submitReview(quality);
+
+    setIsSubmitting(false);
   };
 
   if (status === "loading" || status === "idle") {
     return (
       <Screen className="justify-center items-center">
-        <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] animate-pulse">
+        <p className="text-sm text-[var(--text-muted)] animate-pulse">
           Завантаження черги повторення...
         </p>
       </Screen>
@@ -49,12 +54,12 @@ export const PracticePage = () => {
   if (status === "error") {
     return (
       <Screen className="justify-center items-center text-center p-6 space-y-6">
-        <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-full bg-[var(--accent-error)]/10 text-[var(--accent-error)] flex items-center justify-center mx-auto">
           <AlertCircle className="w-8 h-8" />
         </div>
         <div className="space-y-2">
           <h2 className="text-xl font-bold">Ой, халепа!</h2>
-          <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] max-w-xs">
+          <p className="text-sm text-[var(--text-muted)] max-w-xs">
             {error ||
               "Не вдалося завантажити слова. Можливо, проблеми з мережею."}
           </p>
@@ -69,16 +74,15 @@ export const PracticePage = () => {
       </Screen>
     );
   }
-
   if (isFinished || totalDueToday === 0 || !currentWord) {
     return (
       <Screen className="justify-center items-center text-center p-6 space-y-6">
-        <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-full bg-[var(--accent-success)]/10 text-[var(--accent-success)] flex items-center justify-center mx-auto">
           <CalendarCheck className="w-8 h-8" />
         </div>
         <div className="space-y-2">
           <h2 className="text-xl font-bold">Чудова робота!</h2>
-          <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] max-w-xs">
+          <p className="text-sm text-[var(--text-muted)] max-w-xs">
             Сьогодні нічого повторювати, смакуй свої знання і повертайся завтра.
           </p>
         </div>
@@ -101,7 +105,7 @@ export const PracticePage = () => {
     <Screen className="justify-between space-y-4">
       {/* Прогрес сесії */}
       <div className="space-y-2">
-        <div className="flex justify-between items-center text-xs font-semibold text-[var(--tg-theme-hint-color,#8e8e93)]">
+        <div className="flex justify-between items-center text-xs font-semibold text-[var(--text-muted)]">
           <span>
             Слово {currentWordIndex + 1} з {totalDueToday}
           </span>
@@ -114,33 +118,35 @@ export const PracticePage = () => {
       <div className="my-auto">
         <Card
           onClick={() => setIsRevealed((prev) => !prev)}
-          className="p-6 text-center cursor-pointer min-h-[300px] flex flex-col justify-center items-center space-y-4 border border-[var(--tg-theme-hint-color,#8e8e93)]/20 active:scale-[0.99] transition-transform select-none shadow-sm"
+          className="p-6 text-center cursor-pointer min-h-[300px] flex flex-col justify-center items-center space-y-4 border border-[var(--border-color)] active:scale-[0.99] transition-transform select-none shadow-sm"
         >
-          <span className="text-xs uppercase tracking-wider font-semibold text-[var(--tg-theme-hint-color,#8e8e93)] flex items-center gap-1">
+          <span className="text-xs uppercase tracking-wider font-semibold text-[var(--text-muted)] flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5" /> Флешкартка
           </span>
 
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold">{currentWord.text}</h1>
-            <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] font-mono">
+            <p className="text-sm text-[var(--text-muted)] font-mono">
               {currentWord.transcription}
             </p>
           </div>
 
           {isRevealed ? (
-            <div className="space-y-3 pt-4 border-t border-[var(--tg-theme-hint-color,#8e8e93)]/20 w-full">
-              <div className="text-2xl font-bold text-[var(--tg-theme-button-color,#d97706)]">
+            <div className="space-y-3 pt-4 border-t border-[var(--border-color)]/50 w-full">
+              <div className="text-2xl font-bold text-[var(--accent-cta)]">
                 {currentWord.translation}
               </div>
-              <div className="bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)]/60 p-3 rounded-xl text-left space-y-1 text-sm">
-                <p className="font-medium">"{currentWord.exampleSentence}"</p>
-                <p className="text-xs text-[var(--tg-theme-hint-color,#8e8e93)]">
+              <div className="bg-[var(--bg-card-hover)] p-3 rounded-xl text-left space-y-1 text-sm">
+                <p className="font-medium text-[var(--text-main)]">
+                  "{currentWord.exampleSentence}"
+                </p>
+                <p className="text-xs text-[var(--text-muted)]">
                   {currentWord.exampleTranslation}
                 </p>
               </div>
             </div>
           ) : (
-            <div className="pt-8 text-xs text-[var(--tg-theme-hint-color,#8e8e93)] flex items-center gap-1.5 opacity-70">
+            <div className="pt-8 text-xs text-[var(--text-muted)] flex items-center gap-1.5 opacity-70">
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Натисніть для перекладу</span>
             </div>
@@ -154,6 +160,7 @@ export const PracticePage = () => {
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="danger"
+              disabled={isSubmitting}
               onClick={() => void handleAnswer(false)}
               className="py-3 text-sm font-bold"
             >
@@ -161,6 +168,7 @@ export const PracticePage = () => {
             </Button>
             <Button
               variant="primary"
+              disabled={isSubmitting}
               onClick={() => void handleAnswer(true)}
               className="py-3 text-sm font-bold"
             >

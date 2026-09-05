@@ -2,18 +2,157 @@
   "level": "C1",
   "units": [
     {
-      "id": "u1_empty",
-      "title": "",
-      "description": "",
+      "id": "u1",
+      "title": "Corporate Financial Health & Strategy",
+      "description": "Опануй аналітичну лексику для оцінки фінансової стійкості, балансових звітів та операційних показників бізнесу.",
       "order": 1,
       "steps": {
         "warmup": {},
-        "vocabulary": [],
-        "grammar": { "title": "", "explanation": "", "examples": [] },
-        "video": { "url": "" },
-        "reading": { "title": "", "text": "", "questions": [] },
-        "speaking": { "title": "", "scenario": "", "lines": [] },
-        "test": []
+        "vocabulary": [
+          {
+            "text": "solvency",
+            "transcription": "[ˈsɒlvənsi]",
+            "translation": "платоспроможність",
+            "exampleSentence": "Long-term solvency depends on consistent operational cash flow.",
+            "exampleTranslation": "Довгострокова платоспроможність залежить від стабільного операційного грошового потоку."
+          },
+          {
+            "text": "leverage",
+            "transcription": "[ˈliːvərɪdʒ]",
+            "translation": "фінансовий левередж / кредитне плече",
+            "exampleSentence": "Excessive financial leverage increases the risk of corporate default.",
+            "exampleTranslation": "Надмірний фінансовий левередж підвищує ризик корпоративного дефолту."
+          },
+          {
+            "text": "margin",
+            "transcription": "[ˈmɑːdʒɪn]",
+            "translation": "маржинальність / прибутковість",
+            "exampleSentence": "The company managed to widen its net profit margin by 4%.",
+            "exampleTranslation": "Компанії вдалося розширити маржу чистого прибутку на 4%."
+          },
+          {
+            "text": "liquidity",
+            "transcription": "[lɪˈkwɪdəti]",
+            "translation": "ліквідність",
+            "exampleSentence": "Maintaining adequate liquidity is vital during market volatility.",
+            "exampleTranslation": "Підтримання належної ліквідності є життєво необхідним під час ринкової волатильності."
+          },
+          {
+            "text": "mitigate",
+            "transcription": "[ˈmɪtɪɡeɪt]",
+            "translation": "мінімізувати / пом'якшувати",
+            "exampleSentence": "Diversifying assets helps mitigate exposure to systemic credit risk.",
+            "exampleTranslation": "Диверсифікація активів допомагає мінімізувати вплив системного кредитного ризику."
+          },
+          {
+            "text": "overhead",
+            "transcription": "[ˈəʊvəhed]",
+            "translation": "накладні витрати",
+            "exampleSentence": "Reducing operational overhead directly boosted the quarterly net income.",
+            "exampleTranslation": "Скорочення операційних накладних витрат безпосередньо збільшило квартальний чистий прибуток."
+          },
+          {
+            "text": "yield",
+            "transcription": "[jiːld]",
+            "translation": "дохідність / вихід",
+            "exampleSentence": "Short-term government securities offer a predictable, low-risk yield.",
+            "exampleTranslation": "Короткострокові державні цінні папери забезпечують передбачувану низькоризикову дохідність."
+          },
+          {
+            "text": "discrepancy",
+            "transcription": "[dɪˈskrepənsi]",
+            "translation": "розбіжність / невідповідність",
+            "exampleSentence": "Auditors identified a significant discrepancy between ledger figures and physical inventory.",
+            "exampleTranslation": "Аудитори виявили суттєву розбіжність між показниками гросбуха та фактичними запасами."
+          }
+        ],
+        "grammar": {
+          "title": "Negative and Restrictive Inversion",
+          "explanation": "Інверсія використовується у формальному та аналітичному мовленні для надання твердженням особливої виразності та категоричності. Після заперечних або обмежувальних часток (rarely, seldom, under no circumstances, not only, little) порядок слів змінюється на питальний: допоміжне або модальне дієслово ставиться перед підметом.",
+          "examples": [
+            {
+              "en": "Rarely do companies survive sustained periods of negative cash flow without restructuring.",
+              "ua": "Рідко компанії виживають протягом тривалих періодів від'ємного грошового потоку без реструктуризації."
+            },
+            {
+              "en": "Under no circumstances should management overlook persistent discrepancies in audit logs.",
+              "ua": "За жодних обставин керівництво не повинно ігнорувати постійні розбіжності в журналах аудиту."
+            },
+            {
+              "en": "Not only did the enterprise retain solvency, but it also expanded its operational margins.",
+              "ua": "Підприємство не лише зберегло платоспроможність, але й розширило свої операційні маржі."
+            }
+          ]
+        },
+        "video": {
+          "url": "https://www.youtube.com/watch?v=WEDIj9JBTC8"
+        },
+        "reading": {
+          "title": "Assessing Corporate Stability",
+          "text": "Evaluating an enterprise's fiscal viability requires examining operational metrics alongside traditional balance sheet ratios. Analysts primarily scrutinize solvency metrics to determine whether long-term obligations can be serviced without liquidating core operating assets. While aggressive leverage can accelerate shareholder returns in favorable markets, it simultaneously leaves the organization vulnerable during economic downturns. Effective management teams prioritize liquidity reserves and strategically trim overhead expenses to mitigate unforeseen revenue shocks.",
+          "questions": [
+            {
+              "question": "Why do analysts closely examine corporate solvency ratios?",
+              "options": [
+                "To eliminate all operational overhead expenses",
+                "To verify if long-term obligations can be met without asset liquidation",
+                "To guarantee high dividend yields every quarter",
+                "To completely avoid taking on commercial debt"
+              ],
+              "correctAnswer": 1
+            },
+            {
+              "question": "What primary risk is associated with aggressive leverage?",
+              "options": [
+                "It immediately reduces net profit margins to zero",
+                "It prevents companies from issuing stock",
+                "It exposes the business to vulnerability during market downturns",
+                "It automatically causes audit discrepancies"
+              ],
+              "correctAnswer": 2
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Quarterly Financial Review",
+          "scenario": "Обговорення річного фінансового звіту та структури боргу з головним аналітиком.",
+          "lines": [
+            {
+              "speaker": "Senior Analyst",
+              "text": "How do you evaluate our liquidity position following the recent capital expenditures?",
+              "translation": "Як ви оцінюєте нашу позицію ліквідності після нещодавніх капітальних витрат?"
+            },
+            {
+              "speaker": "You",
+              "text": "Seldom have we operated with such lean cash reserves, so we must mitigate near-term debt obligations immediately.",
+              "translation": "Рідко ми працювали з настільки обмеженими грошовими резервами, тому ми повинні негайно зменшити короткострокові боргові зобов'язання."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "Little ___ anticipate that sudden liquidity constraints would disrupt corporate solvency.",
+            "options": [
+              "did the executive team",
+              "the executive team did",
+              "does the executive team",
+              "the executive team"
+            ],
+            "correctAnswer": 0,
+            "explanation": "Після заперечного прислівника 'Little' застосовується інверсія в минулому часі: допоміжне дієслово 'did' перед підметом."
+          },
+          {
+            "question": "Implementing automated inventory controls helped ___ the risk of ledger discrepancies.",
+            "options": [
+              "mitigate",
+              "yield",
+              "overhead",
+              "leverage"
+            ],
+            "correctAnswer": 0,
+            "explanation": "'Mitigate' означає зменшувати або мінімізувати ступінь ризику."
+          }
+        ]
       }
     }
   ]

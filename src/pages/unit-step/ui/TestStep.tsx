@@ -18,7 +18,11 @@ export const TestStep = ({
   const testWords = words.slice(0, 5);
 
   if (testWords.length < 5)
-    return <div className="text-center py-20">Недостатньо слів для тесту</div>;
+    return (
+      <div className="text-center py-20 text-[var(--text-muted)]">
+        Недостатньо слів для тесту
+      </div>
+    );
 
   const handleSelect = (idx: number) => {
     const nextAnswers = [...answers];
@@ -36,7 +40,7 @@ export const TestStep = ({
       <div className="space-y-4 my-auto">
         <Card className="text-center p-6 space-y-4">
           <div
-            className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${isPassed ? "bg-emerald-100 text-emerald-500" : "bg-red-100 text-red-500"}`}
+            className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${isPassed ? "bg-[var(--accent-success)]/20 text-[var(--accent-success)]" : "bg-[var(--accent-error)]/20 text-[var(--accent-error)]"}`}
           >
             {isPassed ? (
               <Trophy className="w-8 h-8" />
@@ -45,13 +49,15 @@ export const TestStep = ({
             )}
           </div>
           <div>
-            <h2 className="text-2xl font-black">
+            <h2 className="text-2xl font-black text-[var(--text-main)]">
               {Math.round((correct / 5) * 100)}%
             </h2>
-            <p className="text-sm font-semibold">
+            <p className="text-sm font-semibold text-[var(--text-main)]">
               {isPassed ? "Тест складено!" : "Спробуй ще раз"}
             </p>
-            <p className="text-xs text-slate-500">Правильно: {correct} з 5</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Правильно: {correct} з 5
+            </p>
           </div>
         </Card>
         {isPassed ? (
@@ -88,10 +94,10 @@ export const TestStep = ({
     <div className="space-y-4 my-auto">
       <ProgressBar progress={((testIdx + 1) / 5) * 100} />
       <Card className="p-6 text-center">
-        <span className="text-xs text-slate-400 uppercase font-semibold">
+        <span className="text-xs text-[var(--text-muted)] uppercase font-semibold">
           Перекладіть слово
         </span>
-        <h2 className="text-3xl font-extrabold text-slate-800 mt-2">
+        <h2 className="text-3xl font-extrabold text-[var(--text-main)] mt-2">
           {current.text}
         </h2>
       </Card>
@@ -100,10 +106,10 @@ export const TestStep = ({
           <button
             key={i}
             onClick={() => handleSelect(i)}
-            className="w-full p-4 rounded-2xl font-semibold text-left bg-white border-2 border-slate-100 hover:border-blue-500 flex justify-between shadow-sm active:translate-y-1 transition-all"
+            className="w-full p-4 rounded-2xl font-semibold text-left bg-[var(--bg-card-hover)] border-2 border-[var(--border-color)] hover:border-[var(--accent-cta)] hover:bg-[var(--bg-card-elevated)] text-[var(--text-main)] flex justify-between shadow-sm active:translate-y-1 transition-all"
           >
             <span>{opt}</span>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
+            <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
           </button>
         ))}
       </div>

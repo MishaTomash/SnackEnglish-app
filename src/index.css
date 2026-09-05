@@ -5,19 +5,26 @@
     /* SnackEnglish Dark Theme Palette */
     --bg-app: #241812;
     --bg-card: #33241a;
-    --bg-card-hover: #3d2b20;
-    --primary: #e8a33d;
-    --primary-hover: #d69433;
-    --success: #7ed9a9;
+    --bg-card-elevated: #3d2b20;
+    --bg-card-hover: #4a3b31;
+    --accent-cta: #e8a33d;
+    --accent-cta-hover: #d69433;
+    --accent-cta-active: #c88a30;
+    --accent-success: #7ed9a9;
+    --accent-error: #ef4444;
+    --accent-error-hover: #dc2626;
     --locked: #4a3b31;
+    --border-color: #4a3b31;
+
     --text-main: #f5e9dd;
     --text-muted: #c9b8a8;
+    --text-accent: #241812;
 
     /* Override Telegram WebApp SDK variables to strictly follow our brand */
     --tg-theme-bg-color: var(--bg-app);
     --tg-theme-text-color: var(--text-main);
-    --tg-theme-button-color: var(--primary);
-    --tg-theme-button-text-color: #241812;
+    --tg-theme-button-color: var(--accent-cta);
+    --tg-theme-button-text-color: var(--text-accent);
     --tg-theme-secondary-bg-color: var(--bg-card);
     --tg-theme-hint-color: var(--text-muted);
   }

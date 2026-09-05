@@ -43,9 +43,11 @@ export const PathMapPage = () => {
     return (
       <Screen className="justify-center items-center gap-3">
         <p className="text-[var(--tg-theme-hint-color)]">{error}</p>
+        {/* ВИПРАВЛЕНО: Додано disabled */}
         <button
-          onClick={() => loadUnits("A1")}
-          className="px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--tg-theme-button-color)] text-[var(--tg-theme-button-text-color)] transition-active active:scale-95"
+          onClick={() => void loadUnits("A1")}
+          disabled={isLoading}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--tg-theme-button-color)] text-[var(--tg-theme-button-text-color)] transition-active ${isLoading ? "opacity-50 pointer-events-none" : "active:scale-95"}`}
         >
           Спробувати ще раз
         </button>

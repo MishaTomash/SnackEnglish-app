@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { getMe, completeOnboarding } from "../controllers/userController.js";
+// ДОДАЙ updateLevel у цей список імпортів:
+import {
+  getMe,
+  completeOnboarding,
+  updateLevel,
+} from "../controllers/userController.js";
 
 const router = Router();
 

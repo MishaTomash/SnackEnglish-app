@@ -1,5 +1,5 @@
 // src/pages/unit/UnitStepPage.tsx
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { Screen } from "../../shared/ui/Screen";
@@ -36,34 +36,36 @@ export const UnitStepPage = () => {
   const [isLoadingWords, setIsLoadingWords] = useState(true);
   const [isUnitFinishedModalOpen, setIsUnitFinishedModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (!unit) return;
-    const fetchWords = async () => {
-      setIsLoadingWords(true);
-      try {
-        if (unit.wordIds?.length > 0) {
-          const res = await getWordsByIds(unit.wordIds);
-          setWords(res);
-        } else setWords([]);
-      } catch {
-        setWords([]);
-      } finally {
-        setIsLoadingWords(false);
-      }
-    };
-    fetchWords();
-  }, [unit?.wordIds]);
+  // ДОДАНО: Стан для блокування UI під час збереження кроку (захист від дабл-кліку)
+  const [isCompleting, setIsCompleting] = useState(false);
 
-  // ВИПРАВЛЕНО: підрахунок реального прогресу кроків
+  // ВИПРАВЛЕНО: Винесено функцію, щоб її можна було передати як onRetry
+  const fetchWords = useCallback(async () => {
+    if (!unit) return;
+    setIsLoadingWords(true);
+    try {
+      if (unit.wordIds?.length > 0) {
+        const res = await getWordsByIds(unit.wordIds);
+        setWords(res);
+      } else setWords([]);
+    } catch {
+      setWords([]);
+    } finally {
+      setIsLoadingWords(false);
+    }
+  }, [unit]);
+
+  useEffect(() => {
+    fetchWords();
+  }, [fetchWords]);
+
   const stepProgress = useMemo(() => {
     if (!unit) return { current: 0, total: 0 };
 
-    // Якщо бекенд явно прислав масив steps
     let totalSteps = unit.steps?.length || 0;
 
-    // Якщо steps немає, обчислюємо динамічно на основі контенту
     if (totalSteps === 0) {
-      const dynamicSteps = ["warmup"]; // warmup є завжди
+      const dynamicSteps = ["warmup"];
       if (unit.wordIds?.length > 0) {
         dynamicSteps.push("vocabulary");
         dynamicSteps.push("speaking");
@@ -72,7 +74,7 @@ export const UnitStepPage = () => {
         dynamicSteps.push("grammar");
       if (unit.videoUrl) dynamicSteps.push("video");
       if (unit.readingText) dynamicSteps.push("reading");
-      dynamicSteps.push("test"); // test є завжди наприкінці
+      dynamicSteps.push("test");
 
       totalSteps = dynamicSteps.length;
     }
@@ -88,12 +90,26 @@ export const UnitStepPage = () => {
       </Screen>
     );
 
-  const handleComplete = () => {
-    completeStep(unit.id, stepType);
-    if (stepType === "vocabulary") incrementWordsLearned(words.length);
+  // ВИПРАВЛЕНО: Додано async/await, блокування (isCompleting) та try-finally
+  const handleComplete = async () => {
+    if (isCompleting) return;
+    setIsCompleting(true);
 
-    if (stepType === "test") setIsUnitFinishedModalOpen(true);
-    else navigate(`/path/${unit.id}`);
+    try {
+      await completeStep(unit.id, stepType);
+
+      if (stepType === "vocabulary") {
+        incrementWordsLearned(words.length);
+      }
+
+      if (stepType === "test") {
+        setIsUnitFinishedModalOpen(true);
+      } else {
+        navigate(`/path/${unit.id}`);
+      }
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   if (isUnitFinishedModalOpen) {
@@ -123,7 +139,9 @@ export const UnitStepPage = () => {
   }
 
   return (
-    <Screen className="justify-between">
+    <Screen
+      className={`justify-between transition-opacity duration-200 ${isCompleting ? "pointer-events-none opacity-60" : ""}`}
+    >
       <div className="flex items-center justify-between pb-3 border-b border-[var(--tg-theme-hint-color)]/20">
         <div className="flex items-center gap-3">
           <button
@@ -151,6 +169,7 @@ export const UnitStepPage = () => {
           words={words}
           isLoading={isLoadingWords}
           onComplete={handleComplete}
+          onRetry={fetchWords} // ВИПРАВЛЕНО: Передано onRetry
         />
       )}
       {stepType === "grammar" && (

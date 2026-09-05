@@ -17,14 +17,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[#E8A33D] text-[#241812] border-b-4 border-[#C88A30] hover:bg-[#D69433] active:border-b-0 active:translate-y-1",
+    "bg-[var(--accent-cta)] text-[var(--text-accent)] border-b-4 border-[var(--accent-cta-active)] hover:bg-[var(--accent-cta-hover)] active:border-b-0 active:translate-y-1",
   secondary:
-    "bg-[#33241A] text-[#F5E9DD] border-b-4 border-[#4A3B31] hover:bg-[#3D2B20] active:border-b-0 active:translate-y-1",
+    "bg-[var(--bg-card)] text-[var(--text-main)] border-b-4 border-[var(--border-color)] hover:bg-[var(--bg-card-elevated)] active:border-b-0 active:translate-y-1",
   outline:
-    "border-2 border-[#E8A33D] text-[#E8A33D] hover:bg-[#E8A33D]/10 active:bg-[#E8A33D]/20 active:translate-y-0.5",
-  ghost: "text-[#C9B8A8] hover:bg-[#4A3B31]/50 active:scale-95",
+    "border-2 border-[var(--accent-cta)] text-[var(--accent-cta)] hover:bg-[var(--accent-cta)]/10 active:bg-[var(--accent-cta)]/20 active:translate-y-0.5",
+  ghost:
+    "text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)]/50 active:scale-95",
   danger:
-    "bg-red-500 text-white border-b-4 border-red-700 hover:bg-red-400 active:border-b-0 active:translate-y-1",
+    "bg-[var(--accent-error)] text-[var(--text-main)] border-b-4 border-[var(--accent-error-hover)] hover:bg-[var(--accent-error-hover)] active:border-b-0 active:translate-y-1",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

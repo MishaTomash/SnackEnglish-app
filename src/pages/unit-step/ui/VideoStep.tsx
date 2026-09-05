@@ -13,7 +13,7 @@ export const VideoStep = ({
 
   return (
     <div className="space-y-4 my-auto">
-      <div className="w-full aspect-video rounded-3xl overflow-hidden shadow-md bg-black">
+      <div className="w-full aspect-video rounded-3xl overflow-hidden shadow-md bg-black border border-[var(--border-color)]">
         <iframe
           className="w-full h-full"
           src={getEmbedUrl(unit.videoUrl)}
@@ -22,7 +22,7 @@ export const VideoStep = ({
           allowFullScreen
         />
       </div>
-      <Card className="p-4 text-xs text-slate-500 text-center">
+      <Card className="p-4 text-xs text-[var(--text-muted)] text-center">
         Подивіться це короткохвилинне відео для закріплення правильної
         артикуляції та темпу мови.
       </Card>

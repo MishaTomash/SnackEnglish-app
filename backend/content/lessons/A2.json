@@ -2,18 +2,137 @@
   "level": "A2",
   "units": [
     {
-      "id": "u1_empty",
-      "title": "",
-      "description": "",
+      "id": "u1",
+      "title": "Healthy Habits & Routine",
+      "description": "Навчися розповідати про свій розклад, тренування та порівнювати речі.",
       "order": 1,
       "steps": {
         "warmup": {},
-        "vocabulary": [],
-        "grammar": { "title": "", "explanation": "", "examples": [] },
-        "video": { "url": "" },
-        "reading": { "title": "", "text": "", "questions": [] },
-        "speaking": { "title": "", "scenario": "", "lines": [] },
-        "test": []
+        "vocabulary": [
+          {
+            "text": "workout",
+            "transcription": "[ˈwɜːkaʊт]",
+            "translation": "тренування",
+            "exampleSentence": "I had a great workout today.",
+            "exampleTranslation": "Сьогодні у мене було чудове тренування."
+          },
+          {
+            "text": "muscle",
+            "transcription": "[ˈmʌsl]",
+            "translation": "м'яз",
+            "exampleSentence": "Muscles need protein to grow.",
+            "exampleTranslation": "М'язам потрібен білок для росту."
+          },
+          {
+            "text": "buckwheat",
+            "transcription": "[ˈbʌkwiːt]",
+            "translation": "гречка",
+            "exampleSentence": "I often eat buckwheat for lunch.",
+            "exampleTranslation": "Я часто їм гречку на обід."
+          },
+          {
+            "text": "protein",
+            "transcription": "[ˈprəʊtiːn]",
+            "translation": "білок / протеїн",
+            "exampleSentence": "I drink a whey protein shake.",
+            "exampleTranslation": "Я п'ю сироватковий протеїновий коктейль."
+          },
+          {
+            "text": "heavy",
+            "transcription": "[ˈhevi]",
+            "translation": "важкий",
+            "exampleSentence": "These weights are too heavy for me.",
+            "exampleTranslation": "Ці гирі занадто важкі для мене."
+          },
+          {
+            "text": "routine",
+            "transcription": "[ruːˈtiːn]",
+            "translation": "режим / рутина",
+            "exampleSentence": "My daily routine is quite simple.",
+            "exampleTranslation": "Мій розпорядок дня досить простий."
+          },
+          {
+            "text": "rest",
+            "transcription": "[rest]",
+            "translation": "відпочинок",
+            "exampleSentence": "You must rest every other day.",
+            "exampleTranslation": "Ти повинен відпочивати через день."
+          },
+          {
+            "text": "energy",
+            "transcription": "[ˈenədʒi]",
+            "translation": "енергія",
+            "exampleSentence": "Creatine gives me more energy.",
+            "exampleTranslation": "Креатин дає мені більше енергії."
+          }
+        ],
+        "grammar": {
+          "title": "Comparative Adjectives",
+          "explanation": "Щоб порівняти дві речі, ми додаємо закінчення -er до коротких прикметників (strong -> stronger) або використовуємо слово more перед довгими (expensive -> more expensive).",
+          "examples": [
+            {
+              "en": "I am stronger than last month.",
+              "ua": "Я сильніший, ніж минулого місяця."
+            },
+            {
+              "en": "Whey protein is more convenient than cooking meat.",
+              "ua": "Сироватковий протеїн зручніший, ніж приготування м'яса."
+            },
+            {
+              "en": "He is taller than his brother.",
+              "ua": "Він вищий за свого брата."
+            }
+          ]
+        },
+        "video": {
+          "url": "https://www.youtube.com/watch?v=1vROw6J9aDQ"
+        },
+        "reading": {
+          "title": "My Fitness Routine",
+          "text": "I am a student and I try to keep fit. I go to the gym every other day to build muscle. Nutrition is very important, so I eat a lot of buckwheat, lentils, and fresh salads. After my workout, I always drink a whey protein shake. It is easier and faster than cooking a full meal. I also take creatine to have more energy during heavy lifting.",
+          "questions": [
+            {
+              "question": "How often does the student go to the gym?",
+              "options": ["Every day", "Every other day", "Once a week"],
+              "correctAnswer": 1
+            },
+            {
+              "question": "What does he drink after a workout?",
+              "options": ["Coffee", "Whey protein", "Green tea"],
+              "correctAnswer": 1
+            }
+          ]
+        },
+        "speaking": {
+          "title": "At the Gym",
+          "scenario": "Розмова двох друзів під час тренування.",
+          "lines": [
+            {
+              "speaker": "Friend",
+              "text": "Are you using these heavy weights today?",
+              "translation": "Ти використовуєш ці важкі гантелі сьогодні?"
+            },
+            {
+              "speaker": "You",
+              "text": "Yes, I feel stronger today. I took my creatine before the workout.",
+              "translation": "Так, я почуваюся сильнішим сьогодні. Я випив креатин перед тренуванням."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "Vegetables are ___ than fast food.",
+            "options": ["healthy", "healthier", "more healthy"],
+            "correctAnswer": 1,
+            "explanation": "Для короткого слова healthy (закінчується на -y) використовується форма healthier."
+          },
+          {
+            "question": "I need to buy some whey ___.",
+            "options": ["protein", "workout", "muscle"],
+            "correctAnswer": 0,
+            "explanation": "Whey protein — сироватковий протеїн."
+          }
+        ]
       }
     }
   ]

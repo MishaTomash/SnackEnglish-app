@@ -25,7 +25,7 @@ export const VocabularyStep = ({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <div className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] animate-pulse">
+        <div className="text-sm text-[var(--text-muted)] animate-pulse">
           Завантаження слів...
         </div>
       </div>
@@ -35,10 +35,10 @@ export const VocabularyStep = ({
   if (error || words.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
-        <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full bg-[var(--accent-error)]/10 text-[var(--accent-error)] flex items-center justify-center">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] px-4">
+        <p className="text-sm text-[var(--text-muted)] px-4">
           {error || "Слів для цього уроку не знайдено."}
         </p>
         {onRetry && (
@@ -63,7 +63,7 @@ export const VocabularyStep = ({
 
   return (
     <div className="space-y-4 my-auto">
-      <div className="flex justify-between items-center text-xs font-semibold text-[var(--tg-theme-hint-color,#8e8e93)]">
+      <div className="flex justify-between items-center text-xs font-semibold text-[var(--text-muted)]">
         <span>
           Слово {vocabIndex + 1} з {words.length}
         </span>
@@ -72,18 +72,20 @@ export const VocabularyStep = ({
 
       <Card className="p-6 text-center space-y-4 min-h-[260px] flex flex-col justify-center">
         <div className="flex items-center justify-center gap-3">
-          <span className="text-3xl font-extrabold">{word.text}</span>
+          <span className="text-3xl font-extrabold text-[var(--text-main)]">
+            {word.text}
+          </span>
           <button
             onClick={() => playAudio(word.text)}
-            className="p-3 bg-amber-500/10 text-amber-500 rounded-full hover:bg-amber-500/20 active:scale-95 transition-transform"
+            className="p-3 bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] rounded-full hover:bg-[var(--accent-cta)]/20 active:scale-95 transition-transform"
           >
             <Volume2 className="w-5 h-5" />
           </button>
         </div>
-        <span className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] font-mono">
+        <span className="text-sm text-[var(--text-muted)] font-mono">
           {word.transcription}
         </span>
-        <div className="text-xl font-semibold text-[var(--tg-theme-button-color,#d97706)]">
+        <div className="text-xl font-semibold text-[var(--accent-cta)]">
           {word.translation}
         </div>
       </Card>

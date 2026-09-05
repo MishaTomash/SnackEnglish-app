@@ -10,7 +10,6 @@ import { CookieMascot } from "../shared/ui/CookieMascot";
 import { StreakBadge } from "../entities/user/ui/StreakBadge";
 import { useUserStore } from "../store/userStore";
 import { useProgressStore } from "../store/progressStore";
-
 export const HomePage = () => {
   const { level, streak, wordsLearnedCount } = useUserStore();
   const { units, currentUnitId, loadUnits, isLoading } = useProgressStore();
@@ -44,11 +43,11 @@ export const HomePage = () => {
               <Badge className="px-2 py-0.5 font-bold text-[10px] tracking-wide">
                 {level}
               </Badge>
-              <span className="text-[11px] text-[var(--tg-theme-hint-color)] font-medium">
+              <span className="text-[11px] text-[var(--text-muted)] font-medium">
                 Початковий курс
               </span>
             </div>
-            <h1 className="text-lg font-black text-[var(--tg-theme-text-color)] leading-tight mt-0.5">
+            <h1 className="text-lg font-black text-[var(--text-main)] leading-tight mt-0.5">
               Привіт, друже! 🍪
             </h1>
           </div>
@@ -58,7 +57,7 @@ export const HomePage = () => {
           <StreakBadge streak={streak} />
           <Link
             to="/settings"
-            className="p-2 rounded-full bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-text-color)] transition-colors active:opacity-70"
+            className="p-2 rounded-full bg-[var(--bg-card)] text-[var(--text-main)] transition-colors active:opacity-70 border border-[var(--border-color)]"
           >
             <MoreVertical className="w-5 h-5" />
           </Link>
@@ -68,15 +67,13 @@ export const HomePage = () => {
       {/* Прогрес по рівню */}
       <Card className="space-y-2.5">
         <div className="flex justify-between items-center text-sm font-semibold">
-          <span className="text-[var(--tg-theme-text-color)]">
-            Прогрес рівня {level}
-          </span>
-          <span className="text-[var(--tg-theme-button-color)] font-bold">
+          <span className="text-[var(--text-main)]">Прогрес рівня {level}</span>
+          <span className="text-[var(--accent-cta)] font-bold">
             {progressPercent}%
           </span>
         </div>
         <ProgressBar progress={progressPercent} />
-        <div className="flex justify-between text-xs text-[var(--tg-theme-hint-color)]">
+        <div className="flex justify-between text-xs text-[var(--text-muted)]">
           <span>
             Пройдено тем: {completedCount} з {totalCount}
           </span>
@@ -85,23 +82,23 @@ export const HomePage = () => {
       </Card>
 
       {/* Картка "Поточна тема" */}
-      <Card className="space-y-4 border-[var(--tg-theme-button-color)]/20">
+      <Card className="space-y-4 border-[var(--accent-cta)]/20">
         <div className="flex items-start justify-between">
           <div>
-            <span className="text-xs uppercase tracking-wider font-bold text-[var(--tg-theme-button-color)]">
+            <span className="text-xs uppercase tracking-wider font-bold text-[var(--accent-cta)]">
               Поточна тема
             </span>
-            <h2 className="text-xl font-bold mt-1 text-[var(--tg-theme-text-color)]">
+            <h2 className="text-xl font-bold mt-1 text-[var(--text-main)]">
               {isLoading
                 ? "Завантаження..."
                 : (activeUnit?.title ?? "Немає активних уроків")}
             </h2>
-            <p className="text-xs text-[var(--tg-theme-hint-color)] mt-0.5">
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
               Граматика:{" "}
               {activeUnit?.grammarTopic || activeUnit?.grammar?.title || "—"}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-[var(--tg-theme-button-color)]/10 text-[var(--tg-theme-button-color)] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] flex items-center justify-center shrink-0">
             <BookOpen className="w-5 h-5" />
           </div>
         </div>
@@ -122,28 +119,28 @@ export const HomePage = () => {
       {/* Статистичний грід */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="flex flex-col items-start gap-2 p-3.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-2xl font-black text-[var(--tg-theme-text-color)] leading-none">
+            <div className="text-2xl font-black text-[var(--text-main)] leading-none">
               {wordsLearnedCount}
             </div>
-            <div className="text-xs text-[var(--tg-theme-hint-color)] mt-1 font-medium">
+            <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
               слів вивчено
             </div>
           </div>
         </Card>
 
         <Card className="flex flex-col items-start gap-2 p-3.5">
-          <div className="w-8 h-8 rounded-xl bg-orange-500/15 text-orange-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-[var(--accent-success)]/15 text-[var(--accent-success)] flex items-center justify-center">
             <BrainCircuit className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-2xl font-black text-[var(--tg-theme-text-color)] leading-none">
+            <div className="text-2xl font-black text-[var(--text-main)] leading-none">
               {reviewWordsCount}
             </div>
-            <div className="text-xs text-[var(--tg-theme-hint-color)] mt-1 font-medium">
+            <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
               на повторення
             </div>
           </div>
