@@ -21,6 +21,8 @@ import { BottomNav } from "../widgets/BottomNav";
 import { Screen } from "../shared/ui/Screen";
 import { CookieMascot } from "../shared/ui/CookieMascot";
 import { useProgressStore } from "../store/progressStore";
+import { GamesPage } from "../pages/GamesPage";
+import { GameRunnerPage } from "../pages/GameRunnerPage";
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
@@ -75,6 +77,8 @@ const AppContent = () => {
         <Route path="/unit/:unitId/step/:stepType" element={<UnitStepPage />} />
         <Route path="/practice" element={<PracticePage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />{" "}
+        <Route path="/games" element={<GamesPage />} />
+        <Route path="/games/:gameId" element={<GameRunnerPage />} />
         {/* ДОДАНО */}
       </Routes>
 
