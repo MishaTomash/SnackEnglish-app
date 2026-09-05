@@ -12,6 +12,7 @@ import progressRoutes from "./routes/progressRoutes.js";
 import { bot } from "./bot.js";
 import { initCronJobs } from "./services/cronService.js";
 import wordRoutes from "./routes/wordRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -35,13 +36,7 @@ app.get("/health", (_req, res) => {
 // Захищені API роути
 app.use("/api/progress", authMiddleware, progressRoutes);
 
-// Захищений роут перевірки сесії
-app.get("/api/me", authMiddleware, (req, res) => {
-  res.status(200).json({
-    message: "Authorized successfully",
-    user: req.user,
-  });
-});
+app.use("/api/user", authMiddleware, userRoutes);
 
 app.use("/api/words", wordRoutes);
 

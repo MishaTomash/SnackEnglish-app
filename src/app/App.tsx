@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -9,27 +9,48 @@ import {
 import { initTelegramApp, subscribeToTheme } from "../shared/lib/telegram";
 import { useUserStore } from "../store/userStore";
 import { OnboardingPage } from "../pages/OnboardingPage";
-import { HomePage } from "../pages/HomePage"; // Додано імпорт головної сторінки
+import { HomePage } from "../pages/HomePage";
 import { PathMapPage } from "../pages/path/PathMapPage";
 import { UnitPathPage } from "../pages/UnitPathPage";
 import { UnitStepPage } from "../pages/unit-step/UnitStepPage";
 import { PracticePage } from "../pages/PracticePage";
 import { BottomNav } from "../widgets/BottomNav";
+import { Screen } from "../shared/ui/Screen";
+import { CookieMascot } from "../shared/ui/CookieMascot";
 
 const AppContent = () => {
-  const level = useUserStore((state) => state.level);
+  const { onboardingCompleted, fetchUser } = useUserStore();
   const location = useLocation();
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Синхронізація з бекендом при старті
+  useEffect(() => {
+    const initApp = async () => {
+      await fetchUser();
+      setIsInitializing(false);
+    };
+    void initApp();
+  }, [fetchUser]);
+
+  // Показуємо завантажувач, щоб уникнути "блимання" екранів до отримання відповіді від API
+  if (isInitializing) {
+    return (
+      <Screen className="justify-center items-center">
+        <CookieMascot state="thinking" size={64} className="animate-pulse" />
+      </Screen>
+    );
+  }
 
   const isInsideStep = location.pathname.includes("/step/");
   const isOnboarding = location.pathname === "/onboarding";
 
-  // Якщо рівень ще не обрано — перенаправляємо на онбординг
-  if (!level && !isOnboarding) {
+  // Якщо онбординг не завершено — обов'язково ведемо на сторінку онбордингу
+  if (!onboardingCompleted && !isOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Якщо рівень уже є, але користувач заходить на онбординг — ведемо на головну
-  if (level && isOnboarding) {
+  // Якщо онбординг завершено, але користувач намагається зайти на нього — ведемо на головну
+  if (onboardingCompleted && isOnboarding) {
     return <Navigate to="/" replace />;
   }
 
