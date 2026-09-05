@@ -1,5 +1,17 @@
+// src/pages/PathMapPage/PathMapVariantRoad.tsx
 import { useMemo, useState, useEffect } from "react";
-import { CheckIcon, Cloud, Lock, TreePine, Sparkles } from "lucide-react";
+import {
+  CheckIcon,
+  Cloud,
+  Lock,
+  TreePine,
+  Star,
+  Handshake,
+  Coffee,
+  MessageCircle,
+  Dumbbell,
+  Apple,
+} from "lucide-react";
 import type { Unit } from "../../entities/unit/types";
 import { hapticLockedNode } from "../../shared/lib/telegramHaptics";
 import { CookieMascot } from "../../shared/ui/CookieMascot";
@@ -40,6 +52,16 @@ const buildTrailPath = (points: { x: number; y: number }[]) => {
 const DECORATIONS = [Cloud, TreePine, Cloud, TreePine, TreePine, Cloud];
 const CHAPTER_SIZE = 5;
 
+// Словник іконок для тем
+const ICON_MAP: Record<string, React.ElementType> = {
+  Handshake,
+  Coffee,
+  MessageCircle,
+  Dumbbell,
+  Apple,
+  Star, // фоллбек за замовчуванням
+};
+
 export const PathMapVariantRoad = ({
   units,
   currentUnitId,
@@ -66,7 +88,6 @@ export const PathMapVariantRoad = ({
     ROW_HEIGHT + TOP_PADDING,
   );
 
-  // Автоскрол до поточного активного юніту після рендеру
   useEffect(() => {
     if (currentUnitId && units.length > 0) {
       const timer = setTimeout(() => {
@@ -74,7 +95,7 @@ export const PathMapVariantRoad = ({
         if (activeNode) {
           activeNode.scrollIntoView({ behavior: "smooth", block: "center" });
         }
-      }, 300); // 300мс дають браузеру час на малювання SVG та позиціонування
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [currentUnitId, units.length]);
@@ -208,11 +229,15 @@ export const PathMapVariantRoad = ({
           const isCurrent = unitId === currentUnitId && isAvailable;
           const { x, y } = points[i];
 
+          // Визначаємо тематичну іконку
+          const ThemeIcon =
+            unit.icon && ICON_MAP[unit.icon] ? ICON_MAP[unit.icon] : Star;
+
           return (
             <div
               key={unitId || i}
-              id={`unit-${unitId}`} // Додано унікальний ID для навігації
-              className="absolute flex flex-col items-center z-10 scroll-m-24" // Додано scroll-m-24, щоб хедер не перекривав юніт
+              id={`unit-${unitId}`}
+              className="absolute flex flex-col items-center z-10 scroll-m-24"
               style={{
                 left: x - NODE_SIZE / 2,
                 top: y - NODE_SIZE / 2,
@@ -266,17 +291,22 @@ export const PathMapVariantRoad = ({
                   className={`relative w-full h-full rounded-2xl flex items-center justify-center transition-all ${
                     isCompleted || isCurrent
                       ? "bg-[var(--accent-cta)] border-b-[6px] border-[var(--accent-cta-active)] text-[var(--text-accent)] shadow-lg"
-                      : "bg-[var(--bg-card-hover)] border-[1px] border-[var(--border-color)] text-[var(--locked)] shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)]"
+                      : "bg-[var(--bg-card-hover)] border-[1px] border-[var(--border-color)] text-[var(--text-muted)] shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)]"
                   }`}
                 >
-                  {isCompleted && (
-                    <CheckIcon className="w-7 h-7" strokeWidth={3} />
-                  )}
+                  <ThemeIcon
+                    className={`w-7 h-7 transition-all ${isLocked ? "opacity-30" : "opacity-100 drop-shadow-md"}`}
+                    strokeWidth={isCurrent ? 2.5 : 2}
+                  />
+
+                  {/* Оверлей замка для заблокованих юнітів */}
                   {isLocked && (
-                    <Lock className="w-6 h-6 opacity-60 drop-shadow-md" />
-                  )}
-                  {isCurrent && (
-                    <Sparkles className="w-7 h-7 drop-shadow-md text-white" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Lock
+                        className="w-5 h-5 text-[var(--text-main)] drop-shadow-md"
+                        strokeWidth={2.5}
+                      />
+                    </div>
                   )}
                 </div>
 

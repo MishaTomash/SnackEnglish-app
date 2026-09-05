@@ -4,6 +4,7 @@
     {
       "id": "u1",
       "title": "Healthy Habits & Routine",
+      "icon": "Dumbbell",
       "description": "Навчися розповідати про свій розклад, тренування та порівнювати речі.",
       "order": 1,
       "steps": {

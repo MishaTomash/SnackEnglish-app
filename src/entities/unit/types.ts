@@ -1,3 +1,4 @@
+// src/entities/unit/types.ts
 import type { EnglishLevel } from "../word/types";
 
 export type UnitStepType =
@@ -37,8 +38,8 @@ export interface Unit {
   topic: string;
   order: number;
   wordIds: string[];
-  grammarTopic: string; // Залишено для зворотної сумісності
-  grammarExplanation: string; // Залишено для зворотної сумісності
+  grammarTopic: string;
+  grammarExplanation: string;
   videoUrl: string;
   readingText: string;
   readingTranslation: string;
@@ -46,7 +47,6 @@ export interface Unit {
   status?: StepStatus;
   completedSteps?: UnitStepType[];
   roleplayScenario?: RoleplayScenario;
-  // ДОДАНО: нова структура граматики з JSON-контенту
   grammar?: {
     title: string;
     explanation: string;
@@ -55,4 +55,6 @@ export interface Unit {
       ua: string;
     }>;
   };
+  // ДОДАНО: назва іконки теми (напр., 'Handshake', 'Coffee')
+  icon?: string;
 }

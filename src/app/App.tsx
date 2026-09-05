@@ -100,6 +100,9 @@ export const App = () => {
           WebApp?: {
             ready: () => void;
             expand: () => void;
+            setBackgroundColor: (color: string) => void;
+            setHeaderColor: (color: string) => void;
+            disableVerticalSwipes: () => void; // <-- Додано сюди
           };
         };
       }
@@ -108,6 +111,15 @@ export const App = () => {
     if (tg) {
       tg.ready();
       tg.expand();
+
+      // Вимикаємо жест закриття свайпом вниз, щоб не заважав скролити Карту
+      try {
+        if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+        if (tg.setBackgroundColor) tg.setBackgroundColor("#241812");
+        if (tg.setHeaderColor) tg.setHeaderColor("#241812");
+      } catch (err: unknown) {
+        console.warn("Помилка налаштування Telegram WebApp:", err);
+      }
     }
 
     try {
