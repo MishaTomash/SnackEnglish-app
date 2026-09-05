@@ -14,7 +14,7 @@ const NODE_SIZE = 72;
 const ROW_HEIGHT = 152;
 const CANVAS_WIDTH = 340;
 const CENTER_X = CANVAS_WIDTH / 2;
-const TOP_PADDING = 140; // Гарантований відступ зверху, щоб обійти системний хедер
+const TOP_PADDING = 140;
 
 const getUnitId = (u: Unit) =>
   u.id || (u as unknown as { _id?: string })._id || "";
@@ -54,7 +54,6 @@ export const PathMapVariantRoad = ({
         const amplitude = 96;
         return {
           x: CENTER_X + wave * amplitude,
-          // Додано TOP_PADDING до Y-координати для відступу згори
           y: ROW_HEIGHT * i + ROW_HEIGHT / 2 + TOP_PADDING,
         };
       }),
@@ -62,7 +61,6 @@ export const PathMapVariantRoad = ({
   );
 
   const pathD = useMemo(() => buildTrailPath(points), [points]);
-  // Враховуємо новий паддінг у розрахунку загальної висоти
   const canvasHeight = Math.max(
     units.length * ROW_HEIGHT + TOP_PADDING + 80,
     ROW_HEIGHT + TOP_PADDING,
@@ -76,14 +74,18 @@ export const PathMapVariantRoad = ({
 
   return (
     <div
-      className="relative w-full overflow-hidden" // Outer wrapper: 100% width
+      className="relative w-full overflow-hidden"
       style={{
-        background:
-          "radial-gradient(120% 40% at 50% 0%, rgba(232, 163, 61, 0.08) 0%, rgba(232, 163, 61, 0.02) 45%, transparent 70%)," +
-          "linear-gradient(180deg, rgba(51, 36, 26, 0.3) 0%, transparent 260px)",
+        backgroundColor: "var(--bg-app)",
+        // Глибокий фон з радіальним градієнтом + патерн "крихт"
+        backgroundImage: `
+          radial-gradient(120% 50% at 50% 0%, rgba(232, 163, 61, 0.12) 0%, transparent 60%),
+          radial-gradient(rgba(201, 184, 168, 0.06) 1.5px, transparent 1.5px)
+        `,
+        backgroundSize: "100% 100%, 28px 28px",
+        backgroundPosition: "0 0, 0 0",
       }}
     >
-      {/* Inner wrapper: Centered canvas for exact roadmap calculations */}
       <div
         className="relative mx-auto"
         style={{ width: CANVAS_WIDTH, height: canvasHeight }}
@@ -97,19 +99,32 @@ export const PathMapVariantRoad = ({
             80% { transform: translateX(4px); }
           }
           .pm-shake { animation: pm-shake 0.4s ease-in-out; }
+          
           @keyframes pm-float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-7px); }
           }
           .pm-float { animation: pm-float 2.4s ease-in-out infinite; }
-          @keyframes pm-glow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(232, 163, 61, 0.3); }
-            70% { box-shadow: 0 0 0 12px rgba(232, 163, 61, 0); }
+          
+          /* Анімація біжучої стежки */
+          @keyframes pm-dash-flow {
+            to { stroke-dashoffset: -24; }
           }
-          .pm-glow { animation: pm-glow 2s ease-out infinite; }
+          
+          /* Пульсуючі хвилі для поточного юніту */
+          @keyframes pm-ripple {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(1.8); opacity: 0; }
+          }
+          
+          /* Легка левітація для поточного юніту */
+          @keyframes pm-bounce-subtle {
+            0%, 100% { transform: translateY(0) scale(1.1); }
+            50% { transform: translateY(-4px) scale(1.1); }
+          }
         `}</style>
 
-        {/* Декорації ландшафту */}
+        {/* Декорації */}
         {units.map((_, i) => {
           if (i % 2 !== 0) return null;
           const Deco = DECORATIONS[i % DECORATIONS.length];
@@ -119,7 +134,7 @@ export const PathMapVariantRoad = ({
           return (
             <Deco
               key={`deco-${i}`}
-              className="absolute text-[var(--text-muted)] opacity-20"
+              className="absolute text-[var(--text-muted)] opacity-20 mix-blend-screen"
               style={{ left: px, top: py }}
               width={26}
               height={26}
@@ -128,7 +143,7 @@ export const PathMapVariantRoad = ({
           );
         })}
 
-        {/* Банери розділів: w-fit, whitespace-nowrap */}
+        {/* Банери розділів */}
         {units.map((_, i) => {
           if (i % CHAPTER_SIZE !== 0) return null;
           const chapterNumber = Math.floor(i / CHAPTER_SIZE) + 1;
@@ -136,7 +151,7 @@ export const PathMapVariantRoad = ({
           return (
             <div
               key={`chapter-${i}`}
-              className="absolute left-1/2 -translate-x-1/2 px-6 py-1.5 w-fit whitespace-nowrap text-center rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] text-[12px] font-bold tracking-wide shadow-sm z-10"
+              className="absolute left-1/2 -translate-x-1/2 px-6 py-1.5 w-fit whitespace-nowrap text-center rounded-full bg-[var(--bg-card-elevated)] border border-[var(--border-color)] text-[var(--text-main)] text-[12px] font-bold tracking-wide shadow-md z-10"
               style={{ top: py }}
             >
               Розділ {chapterNumber}
@@ -144,37 +159,40 @@ export const PathMapVariantRoad = ({
           );
         })}
 
-        {/* Стежка */}
+        {/* Тришарова стежка */}
         <svg
           className="absolute inset-0"
           width={CANVAS_WIDTH}
           height={canvasHeight}
           viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
         >
+          {/* 1. Широка напівпрозора тінь/основа */}
           <path
             d={pathD}
             fill="none"
-            stroke="#000000"
-            strokeOpacity={0.3}
-            strokeWidth={22}
+            stroke="rgba(0,0,0,0.25)"
+            strokeWidth={26}
             strokeLinecap="round"
-            transform="translate(0, 4)"
+            transform="translate(0, 6)"
           />
+          {/* 2. Темна шоколадна підложка */}
           <path
             d={pathD}
             fill="none"
-            stroke="var(--border-color)"
+            stroke="var(--bg-card-hover)"
             strokeWidth={18}
             strokeLinecap="round"
           />
+          {/* 3. Анімована карамельна лінія (біжучі пунктири) */}
           <path
             d={pathD}
             fill="none"
             stroke="var(--accent-cta)"
-            strokeOpacity={0.4}
-            strokeWidth={2}
+            strokeOpacity={0.85}
+            strokeWidth={4}
             strokeDasharray="1 11"
             strokeLinecap="round"
+            style={{ animation: "pm-dash-flow 1s linear infinite" }}
           />
         </svg>
 
@@ -196,12 +214,12 @@ export const PathMapVariantRoad = ({
                 left: x - NODE_SIZE / 2,
                 top: y - NODE_SIZE / 2,
                 width: NODE_SIZE,
+                height: NODE_SIZE,
               }}
             >
-              {/* МАЛЯВАННЯ МАСКОТА: Без жорсткої висоти, звичайний Flex GAP */}
               {isCurrent && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 flex flex-col items-center gap-1.5 pm-float pointer-events-none z-20">
-                  <div className="relative w-fit whitespace-nowrap px-3 py-1.5 rounded-xl bg-[var(--accent-cta)] text-[var(--text-accent)] text-[12px] font-bold shadow-md">
+                <div className="absolute bottom-[85%] left-1/2 -translate-x-1/2 mb-3 flex flex-col items-center gap-1.5 pm-float pointer-events-none z-20">
+                  <div className="relative w-fit whitespace-nowrap px-3 py-1.5 rounded-xl bg-[var(--accent-cta)] text-[var(--text-accent)] text-[12px] font-bold shadow-lg">
                     Уперед! 🍪
                     <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-3 h-3 rotate-45 bg-[var(--accent-cta)] -z-10" />
                   </div>
@@ -213,43 +231,70 @@ export const PathMapVariantRoad = ({
                 onClick={() =>
                   isLocked ? handleLockedTap(unitId) : onSelectUnit(unitId)
                 }
-                className={`relative flex items-center justify-center rounded-2xl shrink-0 transition-transform active:scale-95 ${
+                className={`relative flex items-center justify-center rounded-2xl w-full h-full transition-all duration-300 ${
                   shakeId === unitId ? "pm-shake" : ""
-                } ${isCurrent ? "pm-glow" : ""}`}
-                style={{ width: NODE_SIZE, height: NODE_SIZE }}
+                } ${
+                  isCurrent
+                    ? "pm-bounce-subtle z-10"
+                    : "hover:scale-105 active:scale-95"
+                }`}
               >
-                {/* КОЛЬОРИ ТОКЕНІВ: Акцентні для пройдених/поточних */}
+                {/* Пульсуючі кільця для активного юніту */}
+                {isCurrent && (
+                  <>
+                    <div
+                      className="absolute inset-0 rounded-2xl bg-[var(--accent-cta)]"
+                      style={{
+                        animation:
+                          "pm-ripple 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0 rounded-2xl bg-[var(--accent-cta)]"
+                      style={{
+                        animation:
+                          "pm-ripple 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                        animationDelay: "1s",
+                      }}
+                    />
+                  </>
+                )}
+
                 <div
-                  className={`w-full h-full rounded-2xl flex items-center justify-center border-b-[6px] shadow-sm transition-colors ${
-                    isCompleted || isAvailable
-                      ? "bg-[var(--accent-cta)] border-[var(--accent-cta-active)] text-[var(--text-accent)]"
-                      : "bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-muted)]"
+                  className={`relative w-full h-full rounded-2xl flex items-center justify-center transition-all ${
+                    isCompleted || isCurrent
+                      ? "bg-[var(--accent-cta)] border-b-[6px] border-[var(--accent-cta-active)] text-[var(--text-accent)] shadow-lg"
+                      : "bg-[var(--bg-card-hover)] border-[1px] border-[var(--border-color)] text-[var(--locked)] shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)]"
                   }`}
                 >
                   {isCompleted && (
                     <CheckIcon className="w-7 h-7" strokeWidth={3} />
                   )}
-                  {isLocked && <Lock className="w-6 h-6 opacity-50" />}
-                  {isAvailable && !isCompleted && (
-                    <Sparkles className="w-7 h-7 drop-shadow-sm" />
+                  {isLocked && (
+                    <Lock className="w-6 h-6 opacity-60 drop-shadow-md" />
+                  )}
+                  {isCurrent && (
+                    <Sparkles className="w-7 h-7 drop-shadow-md text-white" />
                   )}
                 </div>
 
                 {isCompleted && (
-                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[var(--bg-card)] shadow border border-[var(--border-color)] flex items-center justify-center">
+                  <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[var(--bg-card-elevated)] shadow-md border-2 border-[var(--border-color)] flex items-center justify-center z-10">
                     <CheckIcon
-                      className="w-4 h-4 text-[var(--accent-cta)]"
-                      strokeWidth={3.5}
+                      className="w-4 h-4 text-[var(--accent-success)]"
+                      strokeWidth={4}
                     />
                   </span>
                 )}
               </button>
 
               <span
-                className={`mt-2 text-[11px] font-semibold text-center w-[110px] leading-tight line-clamp-2 ${
+                className={`absolute top-full mt-2 text-[11px] font-semibold text-center w-[120px] left-1/2 -translate-x-1/2 leading-tight line-clamp-2 ${
                   isLocked
                     ? "text-[var(--text-muted)] opacity-60"
-                    : "text-[var(--text-main)]"
+                    : isCurrent
+                      ? "text-[var(--accent-cta)] drop-shadow-sm"
+                      : "text-[var(--text-main)]"
                 }`}
               >
                 {unit.title}
