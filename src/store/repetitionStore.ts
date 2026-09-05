@@ -15,6 +15,8 @@ interface RepetitionState {
   resetQueue: () => void;
 }
 
+const TIMEOUT_MS = 8000;
+
 export const useRepetitionStore = create<RepetitionState>((set, get) => ({
   dailyQueue: [],
   currentWordIndex: 0,
@@ -29,21 +31,33 @@ export const useRepetitionStore = create<RepetitionState>((set, get) => ({
       isFinished: false,
       currentWordIndex: 0,
     });
+
     try {
-      const data = await getPracticeWordsApi();
+      // Реалізація таймауту на фронтенді
+      const timeoutPromise = new Promise<{ words: Word[] }>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Сервер не відповідає. Перевірте з'єднання.")),
+          TIMEOUT_MS,
+        ),
+      );
+
+      // Запит перерветься з помилкою, якщо getPracticeWordsApi триватиме довше 8 секунд
+      const data = await Promise.race([getPracticeWordsApi(), timeoutPromise]);
+
       set({
         dailyQueue: data.words,
         status: "success",
+        // Якщо бекенд повернув порожній масив — це норма (isFinished = true)
         isFinished: data.words.length === 0,
       });
     } catch (err: unknown) {
-      console.error("Помилка завантаження слів на повторення:", err);
+      console.error("❌ Помилка завантаження слів на повторення:", err);
       set({
         status: "error",
         error:
           err instanceof Error
             ? err.message
-            : "Не вдалося завантажити слова. Перевірте з'єднання.",
+            : "Не вдалося завантажити слова. Спробуйте ще раз.",
         dailyQueue: [],
       });
     }
@@ -65,8 +79,7 @@ export const useRepetitionStore = create<RepetitionState>((set, get) => ({
         set({ currentWordIndex: nextIndex });
       }
     } catch (err: unknown) {
-      console.error("Помилка надсилання оцінки SM-2:", err);
-      // Тут можна додати toast-сповіщення, але ми не блокуємо UI
+      console.error("❌ Помилка надсилання оцінки SM-2:", err);
     }
   },
 

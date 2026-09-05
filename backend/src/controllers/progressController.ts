@@ -6,6 +6,7 @@ import {
   UserUnitProgress,
   UnitStepType,
   UnitProgressStatus,
+  Word,
 } from "../models/index.js";
 import { calculateSM2 } from "../utils/spacedRepetition.js";
 import { contentService } from "../services/contentService.js";
@@ -134,13 +135,11 @@ export const completeStep = async (
     }
 
     await progress.save();
-    res
-      .status(200)
-      .json({
-        success: true,
-        status: progress.status,
-        completedSteps: progress.completedSteps,
-      });
+    res.status(200).json({
+      success: true,
+      status: progress.status,
+      completedSteps: progress.completedSteps,
+    });
   } catch (error: unknown) {
     res.status(500).json({ error: "Failed to complete step", details: error });
   }
@@ -151,30 +150,54 @@ export const getPracticeWords = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const telegramId = req.user?.id;
-    if (!telegramId)
-      return void res.status(401).json({ error: "Unauthorized" });
+    const telegramId = req.user?.id; // Number з Telegram
 
+    if (!telegramId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    // 1. Отримуємо внутрішній ObjectId користувача
     const user = await User.findOne({ telegramId });
-    if (!user) return void res.status(404).json({ error: "User not found" });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    console.log(
+      `[Practice API] ⏳ Запит слів для повторення (Користувач: ${user._id})`,
+    );
 
     const now = new Date();
-    // ОНОВЛЕНО: Видалено .populate("wordId"), оскільки колекції Word більше не існує
-    const records = await UserProgress.find({
+
+    // 2. Шукаємо прогрес за правильним ObjectId
+    const overdueProgress = await UserProgress.find({
       userId: user._id,
       nextReviewDate: { $lte: now },
-    });
+    }).limit(30);
 
-    // ОНОВЛЕНО: Ручний мапінг слів з пам'яті
-    const words = records
-      .map((record) => contentService.getWordById(record.wordId.toString()))
-      .filter(Boolean);
+    // ЯВНА ОБРОБКА ПОРОЖНЬОЇ ЧЕРГИ
+    if (!overdueProgress || overdueProgress.length === 0) {
+      console.log(
+        `[Practice API] ℹ️ Черга порожня для користувача ${user._id}.`,
+      );
+      res.status(200).json({ words: [] });
+      return;
+    }
 
-    res.status(200).json({ count: words.length, words });
-  } catch (error: unknown) {
+    const wordIds = overdueProgress.map((p) => p.wordId);
+    const words = await Word.find({ _id: { $in: wordIds } });
+
+    console.log(
+      `[Practice API] ✅ Знайдено ${words.length} слів для ${user._id}.`,
+    );
+    res.status(200).json({ words });
+  } catch (error) {
+    console.error(`[Practice API] 💥 КРИТИЧНА ПОМИЛКА:`, error);
     res
       .status(500)
-      .json({ error: "Failed to fetch practice words", details: error });
+      .json({ error: "Внутрішня помилка сервера при формуванні черги." });
   }
 };
 
