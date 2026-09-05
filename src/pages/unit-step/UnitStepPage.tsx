@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+// src/pages/unit/UnitStepPage.tsx
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { Screen } from "../../shared/ui/Screen";
@@ -53,10 +54,21 @@ export const UnitStepPage = () => {
     fetchWords();
   }, [unit?.wordIds]);
 
+  // ДОДАНО: підрахунок реального прогресу кроків
+  const stepProgress = useMemo(() => {
+    if (!unit) return { current: 0, total: 0 };
+    const totalSteps = unit.steps?.length || 0;
+    // Використовуємо Set, щоб не рахувати двічі один і той самий пройдений крок
+    const completedUnique = new Set(unit.completedSteps || []).size;
+    return { current: completedUnique, total: totalSteps };
+  }, [unit]);
+
   if (!unit || !stepType)
     return (
       <Screen className="justify-center items-center">
-        <p>Урок не знайдено</p>
+        <p className="text-[var(--tg-theme-hint-color,#8e8e93)]">
+          Урок не знайдено
+        </p>
       </Screen>
     );
 
@@ -75,8 +87,10 @@ export const UnitStepPage = () => {
           <Trophy className="w-10 h-10" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black">Юніт завершено! 🎉</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-2xl font-black text-[var(--tg-theme-text-color,#000000)]">
+            Юніт завершено! 🎉
+          </h1>
+          <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)]">
             Ви успішно пройшли всі кроки теми «{unit.title}». Наступний юніт
             розблоковано!
           </p>
@@ -94,14 +108,24 @@ export const UnitStepPage = () => {
 
   return (
     <Screen className="justify-between">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-        <button
-          onClick={() => navigate(`/path/${unit.id}`)}
-          className="p-2 rounded-2xl bg-slate-100 text-slate-600"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <Badge className="text-xs uppercase">{stepType}</Badge>
+      {/* ОНОВЛЕНО: Хедер із відображенням прогресу "X з N кроків пройдено" */}
+      <div className="flex items-center justify-between pb-3 border-b border-[var(--tg-theme-hint-color,#d1d5db)]/20">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(`/path/${unit.id}`)}
+            className="p-2 rounded-2xl bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] text-[var(--tg-theme-text-color,#000000)] transition-colors active:opacity-70"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-[var(--tg-theme-hint-color,#8e8e93)]">
+              {stepProgress.current} з {stepProgress.total} кроків пройдено
+            </span>
+          </div>
+        </div>
+        <Badge className="text-xs uppercase bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] text-[var(--tg-theme-text-color,#000000)]">
+          {stepType}
+        </Badge>
       </div>
 
       {stepType === "warmup" && (
@@ -129,8 +153,6 @@ export const UnitStepPage = () => {
       {stepType === "test" && (
         <TestStep words={words} onComplete={handleComplete} />
       )}
-
-      {/* Roleplay пропущено для компактності, але ти можеш додати його аналогічно за потреби */}
 
       <div />
     </Screen>

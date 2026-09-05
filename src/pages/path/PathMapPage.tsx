@@ -17,7 +17,17 @@ export const PathMapPage = () => {
     }
   }, [units.length, loadUnits]);
 
+  // ДОДАНО: Валідація статусу юніта перед переходом
   const handleSelectUnit = (unitId: string) => {
+    const selectedUnit = units.find((u) => u.id === unitId);
+
+    if (selectedUnit?.status === "locked") {
+      // Якщо юніт заблоковано - викликаємо легку вібрацію помилки (якщо підтримується)
+      // і не пускаємо далі.
+      hapticSelectNode(); // можна замінити на hapticError, якщо є
+      return;
+    }
+
     hapticSelectNode();
     navigate(`/path/${unitId}`);
   };
@@ -38,7 +48,7 @@ export const PathMapPage = () => {
         <p className="text-[var(--tg-theme-hint-color,#8e8e93)]">{error}</p>
         <button
           onClick={() => loadUnits("A1")}
-          className="px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--tg-theme-button-color,#3390ec)] text-[var(--tg-theme-button-text-color,#ffffff)]"
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--tg-theme-button-color,#3390ec)] text-[var(--tg-theme-button-text-color,#ffffff)] transition-active active:scale-95"
         >
           Спробувати ще раз
         </button>
@@ -50,7 +60,9 @@ export const PathMapPage = () => {
     <Screen className="!p-0 pb-24">
       <div className="sticky top-0 z-20 bg-[var(--tg-theme-bg-color,#ffffff)]/95 backdrop-blur px-4 pt-4 pb-3 space-y-3 border-b border-[var(--tg-theme-hint-color,#d1d5db)]/20">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">Твій шлях до рівня</h1>
+          <h1 className="text-lg font-bold text-[var(--tg-theme-text-color,#000000)]">
+            Твій шлях до рівня
+          </h1>
           <span className="text-xs font-semibold text-[var(--tg-theme-hint-color,#8e8e93)]">
             {progressPercent}%
           </span>
