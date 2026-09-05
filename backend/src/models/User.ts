@@ -1,6 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 
-export type UserEnglishLevel = "A1" | "A2" | "B1" | "B2" | "C1" | null;
+// Додано "C2"
+export type UserEnglishLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
 
 export interface IUser extends Document {
   telegramId: number;
@@ -28,7 +29,8 @@ const userSchema = new Schema<IUser>(
     },
     level: {
       type: String,
-      enum: ["A1", "A2", "B1", "B2", "C1", null],
+      // Додано "C2"
+      enum: ["A1", "A2", "B1", "B2", "C1", "C2", null],
       default: null,
     },
     weakAreas: {

@@ -143,6 +143,7 @@ export const OnboardingPage = () => {
       { id: "B1", desc: "Середній (Intermediate)" },
       { id: "B2", desc: "Вище середнього (Upper-Int.)" },
       { id: "C1", desc: "Просунутий (Advanced)" },
+      { id: "C2", desc: "Просунутий+ (Proficiency)" },
     ];
 
     return (
