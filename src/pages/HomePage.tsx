@@ -6,6 +6,7 @@ import {
   Sparkles,
   MoreVertical,
   User as UserIcon,
+  Trophy, // ДОДАНО
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -30,6 +31,7 @@ export const HomePage = () => {
   const {
     level,
     streak,
+    totalScore, // ДОДАНО
     wordsLearnedCount,
     telegramFirstName,
     telegramPhotoUrl,
@@ -75,7 +77,6 @@ export const HomePage = () => {
 
   return (
     <Screen className="space-y-4">
-      {/* НОВИЙ БЛОК ПРОФІЛЮ */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-3">
           <Link to="/settings" className="relative shrink-0">
@@ -105,7 +106,7 @@ export const HomePage = () => {
             {nickname ? (
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-[11px] font-bold text-[var(--accent-cta)]">
-                  Топ: ?
+                  Топ:
                 </span>
                 <span className="text-[10px] font-medium text-[var(--text-muted)]">
                   @{nickname}
@@ -122,6 +123,12 @@ export const HomePage = () => {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* НОВИЙ БЕЙДЖ БАЛІВ */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cta)]/10 border border-[var(--accent-cta)]/20 text-[var(--accent-cta)] font-black text-sm shadow-sm">
+            <Trophy className="w-4 h-4" />
+            <span>{totalScore || 0}</span>
+          </div>
+
           <StreakBadge streak={streak} />
           <Link
             to="/settings"
@@ -132,7 +139,6 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* ПРОГРЕС */}
       <Card className="space-y-2.5">
         <div className="flex justify-between items-center text-sm font-semibold">
           <span className="text-[var(--text-main)]">Прогрес рівня {level}</span>
@@ -149,7 +155,6 @@ export const HomePage = () => {
         </div>
       </Card>
 
-      {/* ПОТОЧНА ТЕМА */}
       <Card className="space-y-4 border-[var(--accent-cta)]/20">
         <div className="flex items-start justify-between">
           <div>
@@ -188,7 +193,6 @@ export const HomePage = () => {
         )}
       </Card>
 
-      {/* СТАТИСТИКА ТА ПРАКТИКА */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="flex flex-col items-start gap-2 p-3.5 h-full">
           <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">

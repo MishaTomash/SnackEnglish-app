@@ -86,7 +86,6 @@ export const completeStep = async (
     const unit = contentService.getUnitById(unitId);
     if (!unit) return void res.status(404).json({ error: "Unit not found" });
 
-    // ВИПРАВЛЕНО: unit.id замість unit._id
     let progress = await UserUnitProgress.findOne({
       userId: user._id,
       unitId: unit.id,
@@ -95,35 +94,44 @@ export const completeStep = async (
     if (!progress) {
       progress = new UserUnitProgress({
         userId: user._id,
-        unitId: unit.id, // ВИПРАВЛЕНО
+        unitId: unit.id,
         status: "available",
         completedSteps: [],
       });
     }
 
+    let isNewStep = false;
+    let isNewlyFinished = false;
+
+    // ПЕРЕВІРКА: чи проходив користувач цей крок раніше?
     if (!progress.completedSteps.includes(stepType)) {
       progress.completedSteps.push(stepType);
+      isNewStep = true;
+      // Нараховуємо +10 балів за кожен новий крок
+      (user as any).totalScore = ((user as any).totalScore || 0) + 10;
     }
 
     const isFinished = stepType === "test";
-    if (isFinished) {
+    // ПЕРЕВІРКА: чи юніт завершується вперше?
+    if (isFinished && progress.status !== "completed") {
       progress.status = "completed";
+      isNewlyFinished = true;
+      // Нараховуємо одноразовий бонус +50
+      (user as any).totalScore = ((user as any).totalScore || 0) + 50;
 
       const nextUnit = contentService.getUnitByOrder(
         unit.level,
         unit.order + 1,
       );
       if (nextUnit) {
-        // ВИПРАВЛЕНО: nextUnit.id замість nextUnit._id
         const nextProgress = await UserUnitProgress.findOne({
           userId: user._id,
           unitId: nextUnit.id,
         });
-
         if (!nextProgress) {
           await UserUnitProgress.create({
             userId: user._id,
-            unitId: nextUnit.id, // ВИПРАВЛЕНО
+            unitId: nextUnit.id,
             status: "available",
             completedSteps: [],
           });
@@ -134,11 +142,17 @@ export const completeStep = async (
       }
     }
 
+    // Зберігаємо зміни юзера ТІЛЬКИ якщо були нові бали
+    if (isNewStep || isNewlyFinished) {
+      await user.save();
+    }
     await progress.save();
+
     res.status(200).json({
       success: true,
       status: progress.status,
       completedSteps: progress.completedSteps,
+      totalScore: (user as any).totalScore,
     });
   } catch (error: unknown) {
     res.status(500).json({ error: "Failed to complete step", details: error });

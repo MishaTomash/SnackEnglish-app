@@ -15,6 +15,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 export interface UserState {
   telegramId: number | null;
+  totalScore: number; // ДОДАНО
   level: EnglishLevel | null;
   onboardingCompleted: boolean;
   streak: number;
@@ -52,6 +53,7 @@ export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       telegramId: null,
+      totalScore: 0, // ДОДАНО
       level: null,
       onboardingCompleted: false,
       streak: 1,
@@ -103,6 +105,7 @@ export const useUserStore = create<UserState>()(
           const data = await res.json();
           set({
             telegramId: data.telegramId,
+            totalScore: data.totalScore || 0, // ДОДАНО
             level: data.level,
             onboardingCompleted: data.onboardingCompleted,
             streak: data.streak,
@@ -192,6 +195,7 @@ export const useUserStore = create<UserState>()(
       name: "snack_user_storage",
       partialize: (state) => ({
         telegramId: state.telegramId,
+        totalScore: state.totalScore, // ДОДАНО
         level: state.level,
         onboardingCompleted: state.onboardingCompleted,
         streak: state.streak,

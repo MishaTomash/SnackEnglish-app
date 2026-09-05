@@ -16,6 +16,7 @@ export interface IUser extends Document {
   onboardingCompleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+  totalScore: number;
 }
 
 const userSchema = new Schema<IUser>(
@@ -73,6 +74,7 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    totalScore: { type: Number, default: 0 },
   },
   {
     timestamps: true,
