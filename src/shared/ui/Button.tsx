@@ -17,12 +17,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-blue-500 text-white border-b-4 border-blue-700 hover:bg-blue-400 active:border-b-0 active:translate-y-1",
+    "bg-[#E8A33D] text-[#241812] border-b-4 border-[#C88A30] hover:bg-[#D69433] active:border-b-0 active:translate-y-1",
   secondary:
-    "bg-amber-100 text-amber-800 border-b-4 border-amber-300 hover:bg-amber-50 active:border-b-0 active:translate-y-1",
+    "bg-[#33241A] text-[#F5E9DD] border-b-4 border-[#4A3B31] hover:bg-[#3D2B20] active:border-b-0 active:translate-y-1",
   outline:
-    "border-2 border-slate-200 text-slate-500 hover:bg-slate-50 active:bg-slate-100 active:translate-y-0.5",
-  ghost: "text-slate-500 hover:bg-slate-100 active:scale-95",
+    "border-2 border-[#E8A33D] text-[#E8A33D] hover:bg-[#E8A33D]/10 active:bg-[#E8A33D]/20 active:translate-y-0.5",
+  ghost: "text-[#C9B8A8] hover:bg-[#4A3B31]/50 active:scale-95",
   danger:
     "bg-red-500 text-white border-b-4 border-red-700 hover:bg-red-400 active:border-b-0 active:translate-y-1",
 };

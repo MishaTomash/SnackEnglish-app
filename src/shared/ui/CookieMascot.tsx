@@ -24,7 +24,7 @@ export const CookieMascot: React.FC<CookieMascotProps> = ({
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full drop-shadow-md"
+        className="w-full h-full drop-shadow-[0_0_12px_rgba(232,163,61,0.15)]"
       >
         {/* Тіло печива */}
         <circle

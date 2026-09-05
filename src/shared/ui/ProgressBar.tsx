@@ -8,10 +8,10 @@ export const ProgressBar = ({ progress, className = "" }: ProgressBarProps) => {
 
   return (
     <div
-      className={`w-full h-3 bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] rounded-full overflow-hidden ${className}`}
+      className={`w-full h-3 bg-[#4A3B31] rounded-full overflow-hidden ${className}`}
     >
       <div
-        className="h-full bg-[var(--tg-theme-button-color,#3390ec)] transition-all duration-300 rounded-full"
+        className="h-full bg-[#7ED9A9] transition-all duration-300 rounded-full"
         style={{ width: `${clampedProgress}%` }}
       />
     </div>
