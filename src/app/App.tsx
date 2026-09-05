@@ -16,6 +16,7 @@ import { UnitPathPage } from "../pages/UnitPathPage";
 import { UnitStepPage } from "../pages/unit-step/UnitStepPage";
 import { PracticePage } from "../pages/PracticePage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
+import { LeaderboardPage } from "../pages/LeaderboardPage"; // ДОДАНО
 import { BottomNav } from "../widgets/BottomNav";
 import { Screen } from "../shared/ui/Screen";
 import { CookieMascot } from "../shared/ui/CookieMascot";
@@ -28,7 +29,6 @@ const AppContent = () => {
 
   useEffect(() => {
     const initApp = async () => {
-      // Усунення Waterfall: якщо рівень відомий з кешу persist, вантажимо дані паралельно
       const cachedLevel = useUserStore.getState().level;
 
       if (cachedLevel) {
@@ -45,7 +45,6 @@ const AppContent = () => {
     void initApp();
   }, [fetchUser]);
 
-  // Показуємо завантажувач, щоб уникнути "блимання" екранів до отримання відповіді від API
   if (isInitializing) {
     return (
       <Screen className="justify-center items-center">
@@ -57,12 +56,10 @@ const AppContent = () => {
   const isInsideStep = location.pathname.includes("/step/");
   const isOnboarding = location.pathname === "/onboarding";
 
-  // Якщо онбординг не завершено — обов'язково ведемо на сторінку онбордингу
   if (!onboardingCompleted && !isOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Якщо онбординг завершено, але користувач намагається зайти на нього — ведемо на головну
   if (onboardingCompleted && isOnboarding) {
     return <Navigate to="/" replace />;
   }
@@ -71,20 +68,14 @@ const AppContent = () => {
     <div className="relative min-h-[100dvh] bg-[var(--bg-app)] text-[var(--text-main)]">
       <Routes>
         <Route path="/onboarding" element={<OnboardingPage />} />
-
-        {/* Головна сторінка з дашбордом */}
         <Route path="/" element={<HomePage />} />
-
-        {/* Налаштування */}
         <Route path="/settings" element={<SettingsPage />} />
-
-        {/* Карта-шлях уроків */}
         <Route path="/path" element={<PathMapPage />} />
-
-        {/* Кроки конкретного юніта */}
         <Route path="/path/:unitId" element={<UnitPathPage />} />
         <Route path="/unit/:unitId/step/:stepType" element={<UnitStepPage />} />
         <Route path="/practice" element={<PracticePage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />{" "}
+        {/* ДОДАНО */}
       </Routes>
 
       {!isInsideStep && !isOnboarding && <BottomNav />}
@@ -102,7 +93,7 @@ export const App = () => {
             expand: () => void;
             setBackgroundColor: (color: string) => void;
             setHeaderColor: (color: string) => void;
-            disableVerticalSwipes: () => void; // <-- Додано сюди
+            disableVerticalSwipes: () => void;
           };
         };
       }
@@ -111,8 +102,6 @@ export const App = () => {
     if (tg) {
       tg.ready();
       tg.expand();
-
-      // Вимикаємо жест закриття свайпом вниз, щоб не заважав скролити Карту
       try {
         if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
         if (tg.setBackgroundColor) tg.setBackgroundColor("#241812");

@@ -14,6 +14,7 @@ const getAuthHeaders = () => {
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 export interface UserState {
+  telegramId: number | null;
   level: EnglishLevel | null;
   onboardingCompleted: boolean;
   streak: number;
@@ -50,6 +51,7 @@ export interface UserState {
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
+      telegramId: null,
       level: null,
       onboardingCompleted: false,
       streak: 1,
@@ -100,6 +102,7 @@ export const useUserStore = create<UserState>()(
           if (!res.ok) throw new Error("Failed to fetch user");
           const data = await res.json();
           set({
+            telegramId: data.telegramId,
             level: data.level,
             onboardingCompleted: data.onboardingCompleted,
             streak: data.streak,
@@ -188,6 +191,7 @@ export const useUserStore = create<UserState>()(
     {
       name: "snack_user_storage",
       partialize: (state) => ({
+        telegramId: state.telegramId,
         level: state.level,
         onboardingCompleted: state.onboardingCompleted,
         streak: state.streak,
