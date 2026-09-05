@@ -1,19 +1,43 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, BrainCircuit, Sparkles, MoreVertical } from "lucide-react";
+import {
+  BookOpen,
+  BrainCircuit,
+  Sparkles,
+  MoreVertical,
+  User as UserIcon,
+} from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { Badge } from "../shared/ui/Badge";
 import { ProgressBar } from "../shared/ui/ProgressBar";
-import { CookieMascot } from "../shared/ui/CookieMascot";
 import { StreakBadge } from "../entities/user/ui/StreakBadge";
 import { useUserStore } from "../store/userStore";
 import { useProgressStore } from "../store/progressStore";
 import { useRepetitionStore } from "../store/repetitionStore";
 
+const resolveAvatarUrl = (url: string | null) => {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:3000")
+    .replace(/\/api$/, "")
+    .replace(/\/$/, "");
+  return `${apiBase}${url}?ngrok-skip-browser-warning=true`;
+};
+
 export const HomePage = () => {
-  const { level, streak, wordsLearnedCount } = useUserStore();
+  const {
+    level,
+    streak,
+    wordsLearnedCount,
+    telegramFirstName,
+    telegramPhotoUrl,
+    customDisplayName,
+    customAvatarUrl,
+    nickname,
+  } = useUserStore();
+
   const {
     units,
     currentUnitId,
@@ -22,6 +46,7 @@ export const HomePage = () => {
     progressPercent,
     lastFetchedLevel,
   } = useProgressStore();
+
   const { dailyQueue, loadDailyWords, status } = useRepetitionStore();
 
   useEffect(() => {
@@ -44,31 +69,59 @@ export const HomePage = () => {
   ).length;
   const totalUnitsCount = units.length;
 
+  const currentDisplayName =
+    customDisplayName || telegramFirstName || "Користувач";
+  const currentPhotoUrl = resolveAvatarUrl(customAvatarUrl) || telegramPhotoUrl;
+
   return (
     <Screen className="space-y-4">
+      {/* НОВИЙ БЛОК ПРОФІЛЮ */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-3">
-          <CookieMascot state="happy" size={50} />
-          <div>
-            {/* БЛОК 3: Швидкий доступ до зміни рівня */}
-            <Link
-              to="/settings"
-              className="flex items-center gap-2 group active:opacity-70 transition-opacity"
-            >
-              <Badge className="px-2 py-0.5 font-bold text-[10px] tracking-wide border border-[var(--accent-cta)]/30 group-hover:border-[var(--accent-cta)] transition-colors">
+          <Link to="/settings" className="relative shrink-0">
+            {currentPhotoUrl ? (
+              <img
+                src={currentPhotoUrl}
+                alt="Avatar"
+                className="w-12 h-12 rounded-full object-cover bg-[var(--bg-app)] border border-[var(--border-color)]"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-muted)] border border-[var(--border-color)]">
+                <UserIcon className="w-6 h-6" />
+              </div>
+            )}
+          </Link>
+
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-black text-[var(--text-main)] leading-tight truncate max-w-[140px]">
+                {currentDisplayName}
+              </h1>
+              <Badge className="px-1.5 py-0 font-bold text-[10px] tracking-wide bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] border border-[var(--accent-cta)]/20">
                 {level}
               </Badge>
-              <span className="text-[11px] text-[var(--accent-cta)] font-semibold underline underline-offset-2">
-                Змінити рівень
-              </span>
-            </Link>
-            <h1 className="text-lg font-black text-[var(--text-main)] leading-tight mt-0.5">
-              Привіт, друже! 🍪
-            </h1>
+            </div>
+
+            {nickname ? (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[11px] font-bold text-[var(--accent-cta)]">
+                  Топ: ?
+                </span>
+                <span className="text-[10px] font-medium text-[var(--text-muted)]">
+                  @{nickname}
+                </span>
+              </div>
+            ) : (
+              <Link to="/settings" className="mt-0.5">
+                <span className="text-[11px] font-semibold text-amber-500 underline underline-offset-2 active:opacity-70">
+                  Додай нікнейм і потрап у Топ
+                </span>
+              </Link>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <StreakBadge streak={streak} />
           <Link
             to="/settings"
@@ -79,6 +132,7 @@ export const HomePage = () => {
         </div>
       </div>
 
+      {/* ПРОГРЕС */}
       <Card className="space-y-2.5">
         <div className="flex justify-between items-center text-sm font-semibold">
           <span className="text-[var(--text-main)]">Прогрес рівня {level}</span>
@@ -95,6 +149,7 @@ export const HomePage = () => {
         </div>
       </Card>
 
+      {/* ПОТОЧНА ТЕМА */}
       <Card className="space-y-4 border-[var(--accent-cta)]/20">
         <div className="flex items-start justify-between">
           <div>
@@ -133,6 +188,7 @@ export const HomePage = () => {
         )}
       </Card>
 
+      {/* СТАТИСТИКА ТА ПРАКТИКА */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="flex flex-col items-start gap-2 p-3.5 h-full">
           <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">
@@ -148,7 +204,6 @@ export const HomePage = () => {
           </div>
         </Card>
 
-        {/* БЛОК 2: Швидкий перехід у Практику */}
         <Link to="/practice" className="block h-full">
           <Card
             className={`flex flex-col items-start gap-2 p-3.5 h-full transition-all active:scale-[0.98] ${
