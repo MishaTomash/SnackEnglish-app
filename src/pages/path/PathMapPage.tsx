@@ -58,7 +58,7 @@ export const PathMapPage = () => {
   return (
     <Screen
       fullBleed
-      className="!pt-0 !pb-[calc(96px+env(safe-area-inset-bottom))] bg-[var(--bg-app)]"
+      className="!pt-0 !pb-[calc(96px+env(safe-area-inset-bottom))] bg-[var(--bg-app)] min-h-[100dvh] overscroll-none"
     >
       {/* Хедер Карти */}
       <div className="sticky top-0 z-20 bg-[var(--bg-app)]/95 backdrop-blur px-4 pt-4 pb-3 space-y-3 border-b border-[var(--border-color)]">

@@ -68,7 +68,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-[var(--bg-app)] text-[var(--text-main)]">
+    <div className="relative min-h-[100dvh] bg-[var(--bg-app)] text-[var(--text-main)]">
       <Routes>
         <Route path="/onboarding" element={<OnboardingPage />} />
 
