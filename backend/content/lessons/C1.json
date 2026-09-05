@@ -1,0 +1,20 @@
+{
+  "level": "A2",
+  "units": [
+    {
+      "id": "u1_empty",
+      "title": "",
+      "description": "",
+      "order": 1,
+      "steps": {
+        "warmup": {},
+        "vocabulary": [],
+        "grammar": { "title": "", "explanation": "", "examples": [] },
+        "video": { "url": "" },
+        "reading": { "title": "", "text": "", "questions": [] },
+        "speaking": { "title": "", "scenario": "", "lines": [] },
+        "test": []
+      }
+    }
+  ]
+}
