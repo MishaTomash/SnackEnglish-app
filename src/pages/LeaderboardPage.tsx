@@ -3,10 +3,14 @@ import { Link } from "react-router-dom";
 import {
   Trophy,
   Gift,
-  AlertCircle,
   ArrowRight,
   Medal,
   ShieldAlert,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Timer,
+  Star,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -25,27 +29,61 @@ const resolveAvatarUrl = (url: string | null | undefined) => {
   return `${apiBase}${url}?ngrok-skip-browser-warning=true`;
 };
 
+const calculateTimeLeft = () => {
+  const now = new Date();
+  const nextSunday = new Date();
+  nextSunday.setDate(now.getDate() + ((7 - now.getDay()) % 7));
+  nextSunday.setHours(20, 0, 0, 0);
+
+  if (now.getTime() > nextSunday.getTime()) {
+    nextSunday.setDate(nextSunday.getDate() + 7);
+  }
+
+  const difference = nextSunday.getTime() - now.getTime();
+  if (difference > 0) {
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+    };
+  }
+  return { days: 0, hours: 0, minutes: 0 };
+};
+
 export const LeaderboardPage = () => {
-  const { nickname, telegramId } = useUserStore();
+  const {
+    nickname,
+    telegramId,
+    telegramPhotoUrl,
+    customAvatarUrl,
+    streak,
+    wordsLearnedCount,
+  } = useUserStore();
   const { topUsers, currentUserRank, isLoading, fetchLeaderboard } =
     useLeaderboardStore();
-  const [activeTab, setActiveTab] = useState<Tab>("rating");
 
-  // Перевірка на адміна (твій ID з логів)
+  const [activeTab, setActiveTab] = useState<Tab>("rating");
+  const [showRules, setShowRules] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
   const adminId = Number(import.meta.env.VITE_ADMIN_ID);
   const isAdmin = telegramId === adminId;
 
   useEffect(() => {
-    if (nickname) {
-      fetchLeaderboard();
-    }
+    if (nickname) fetchLeaderboard();
   }, [nickname, fetchLeaderboard]);
+
+  useEffect(() => {
+    if (activeTab === "giveaway") {
+      const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 60000);
+      return () => clearInterval(timer);
+    }
+  }, [activeTab]);
 
   const handleForceEndGiveaway = () => {
     if (
       window.confirm("Закінчити розіграш і визначити переможців прямо зараз?")
     ) {
-      // Заглушка до Кроку 6
       alert(
         "Ендпоінт для ручного завершення розіграшу буде підключено в Кроці 6!",
       );
@@ -62,11 +100,11 @@ export const LeaderboardPage = () => {
           Ти ще не в Топі!
         </h2>
         <p className="text-sm text-[var(--text-muted)] mt-2 max-w-[260px] mx-auto leading-relaxed">
-          Щоб брати участь у щотижневих розіграшах та змагатися з іншими,
-          встанови унікальний нікнейм.
+          Щоб брати участь у розіграшах та змагатися, встанови унікальний
+          нікнейм.
         </p>
       </div>
-      <Link to="/settings" className="mt-4 block w-full max-w-[240px]">
+      <Link to="/settings" className="mt-4 block w-full max-w-[240px] mx-auto">
         <Button
           variant="primary"
           className="w-full flex items-center justify-center gap-2"
@@ -78,7 +116,7 @@ export const LeaderboardPage = () => {
   );
 
   return (
-    <Screen className="justify-start p-4 space-y-6 bg-[var(--bg-app)] pb-24">
+    <Screen className="justify-start p-4 space-y-6 bg-[var(--bg-app)] pb-28">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black text-[var(--text-main)]">
           Топ Гравців
@@ -113,58 +151,131 @@ export const LeaderboardPage = () => {
       ) : (
         <>
           {activeTab === "rating" && (
-            <div className="space-y-3 relative pb-16">
+            <div className="space-y-4 relative pb-16 animate-in fade-in duration-200">
+              <Card className="p-3 bg-[var(--bg-card)]/50">
+                <button
+                  onClick={() => setShowRules(!showRules)}
+                  className="flex items-center justify-between w-full text-sm font-bold text-[var(--text-main)]"
+                >
+                  <span className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-[var(--accent-cta)]" /> Як
+                    рахуються бали?
+                  </span>
+                  {showRules ? (
+                    <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
+                  )}
+                </button>
+                {showRules && (
+                  <div className="mt-3 pt-3 border-t border-[var(--border-color)] text-xs text-[var(--text-muted)] leading-relaxed space-y-2">
+                    <p>
+                      Твій рейтинг = <b>Слова + Теми + Дні поспіль (Streak)</b>.
+                    </p>
+                    <p>
+                      Чим регулярніше ти навчаєшся, тим вище твоя позиція та
+                      шанси на перемогу в розіграшах!
+                    </p>
+                  </div>
+                )}
+              </Card>
+
               {isLoading ? (
                 <div className="text-center py-10 text-[var(--text-muted)] text-sm">
                   Завантаження...
                 </div>
-              ) : topUsers.length === 0 ? (
-                <div className="text-center py-10 text-[var(--text-muted)] text-sm">
-                  Рейтинг поки порожній. Будь першим!
-                </div>
               ) : (
-                topUsers.map((user) => (
-                  <Card key={user._id} className="flex items-center p-3 gap-3">
-                    <div className="w-6 text-center font-bold text-[var(--text-muted)]">
-                      {user.position === 1
-                        ? "🥇"
-                        : user.position === 2
-                          ? "🥈"
-                          : user.position === 3
-                            ? "🥉"
-                            : `#${user.position}`}
-                    </div>
-                    <img
-                      src={
-                        resolveAvatarUrl(
-                          user.customAvatarUrl || user.telegramPhotoUrl,
-                        ) || ""
-                      }
-                      alt="Avatar"
-                      className="w-10 h-10 rounded-full bg-[var(--bg-app)] object-cover border border-[var(--border-color)]"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                    <div className="flex-1 overflow-hidden">
-                      <div className="font-bold text-[var(--text-main)] truncate">
-                        @{user.nickname}
+                <div className="space-y-2.5">
+                  {topUsers.length === 0 && (
+                    <Card className="flex items-center p-4 gap-4 border-[var(--accent-cta)] bg-[var(--accent-cta)]/5">
+                      <div className="w-8 text-center text-2xl">🥇</div>
+                      <img
+                        src={
+                          resolveAvatarUrl(
+                            customAvatarUrl || telegramPhotoUrl,
+                          ) || ""
+                        }
+                        alt="Avatar"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-[var(--accent-cta)]"
+                        onError={(e) =>
+                          (e.currentTarget.style.display = "none")
+                        }
+                      />
+                      <div className="flex-1 overflow-hidden">
+                        <div className="font-bold text-lg text-[var(--text-main)] truncate">
+                          @{nickname}
+                        </div>
+                        <div className="text-xs text-[var(--text-muted)]">
+                          Ти перший у списку!
+                        </div>
                       </div>
-                    </div>
-                    <div className="font-black text-[var(--accent-cta)]">
-                      {user.score}
-                    </div>
-                  </Card>
-                ))
+                      <div className="font-black text-xl text-[var(--accent-cta)]">
+                        {wordsLearnedCount + streak}
+                      </div>
+                    </Card>
+                  )}
+
+                  {topUsers.map((user, idx) => {
+                    const isTop3 = idx < 3;
+                    return (
+                      <Card
+                        key={user._id}
+                        className={`flex items-center gap-3 transition-all ${
+                          isTop3
+                            ? "p-4 border-[var(--accent-cta)]/50 bg-[var(--accent-cta)]/5"
+                            : "p-2.5 bg-[var(--bg-card)]"
+                        }`}
+                      >
+                        <div
+                          className={`w-8 text-center font-black ${isTop3 ? "text-2xl" : "text-sm text-[var(--text-muted)]"}`}
+                        >
+                          {user.position === 1
+                            ? "🥇"
+                            : user.position === 2
+                              ? "🥈"
+                              : user.position === 3
+                                ? "🥉"
+                                : `#${user.position}`}
+                        </div>
+                        <img
+                          src={
+                            resolveAvatarUrl(
+                              user.customAvatarUrl || user.telegramPhotoUrl,
+                            ) || ""
+                          }
+                          alt="Avatar"
+                          className={`${isTop3 ? "w-12 h-12 border-2 border-[var(--accent-cta)]/30" : "w-9 h-9 border border-[var(--border-color)]"} rounded-full bg-[var(--bg-app)] object-cover`}
+                          onError={(e) =>
+                            (e.currentTarget.style.display = "none")
+                          }
+                        />
+                        <div className="flex-1 overflow-hidden">
+                          <div
+                            className={`font-bold text-[var(--text-main)] truncate ${isTop3 ? "text-lg" : "text-sm"}`}
+                          >
+                            @{user.nickname}
+                          </div>
+                        </div>
+                        <div
+                          className={`font-black text-[var(--accent-cta)] ${isTop3 ? "text-xl" : "text-base"}`}
+                        >
+                          {user.score}
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
               )}
 
-              {currentUserRank && (
-                <Card className="fixed bottom-[calc(75px+env(safe-area-inset-bottom))] left-4 right-4 flex items-center p-3 gap-3 border-[var(--accent-cta)] shadow-lg bg-[var(--bg-card-elevated)] z-40">
-                  <div className="w-6 text-center font-bold text-[var(--accent-cta)]">
+              {currentUserRank && topUsers.length > 0 && (
+                <Card className="fixed bottom-[calc(70px+env(safe-area-inset-bottom))] left-4 right-4 flex items-center p-3 gap-3 border-[var(--accent-cta)] shadow-2xl bg-[var(--bg-card-elevated)] z-40">
+                  <div className="w-8 text-center font-black text-[var(--accent-cta)]">
                     #{currentUserRank.position}
                   </div>
                   <div className="flex-1 font-bold text-[var(--text-main)] truncate">
                     Ви (@{nickname})
                   </div>
-                  <div className="font-black text-[var(--accent-cta)]">
+                  <div className="font-black text-[var(--accent-cta)] text-lg">
                     {currentUserRank.score}
                   </div>
                 </Card>
@@ -173,48 +284,84 @@ export const LeaderboardPage = () => {
           )}
 
           {activeTab === "giveaway" && (
-            <div className="space-y-4">
-              {/* Блок для Адміна */}
+            <div className="space-y-4 animate-in fade-in duration-200">
               {isAdmin && (
-                <Card className="p-4 bg-red-500/10 border-red-500/20 space-y-3">
+                <Card className="p-4 bg-red-500/10 border-red-500/30 space-y-3">
                   <div className="flex items-center gap-2 text-red-500 font-bold">
                     <ShieldAlert className="w-5 h-5" /> Панель Адміністратора
                   </div>
                   <Button
                     onClick={handleForceEndGiveaway}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold border-none"
+                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold border-none shadow-md"
                   >
                     Закінчити розіграш зараз
                   </Button>
                 </Card>
               )}
 
-              <Card className="p-4 bg-[var(--accent-success)]/10 border-[var(--accent-success)]/20 space-y-3">
-                <div className="flex items-center gap-2 text-[var(--accent-success)] font-bold">
-                  <Gift className="w-5 h-5" /> Умови розіграшу
-                </div>
-                <p className="text-sm text-[var(--text-main)] leading-relaxed">
-                  Ти береш участь автоматично, оскільки в тебе встановлений
-                  нікнейм! Чим більше слів ти вивчаєш, тим вище твоя позиція в
-                  Топі, але шанс виграти є у кожного активного гравця.
-                </p>
-                <div className="flex items-start gap-2 bg-[var(--bg-app)] p-3 rounded-xl border border-[var(--border-color)] mt-2">
-                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <div className="text-sm text-[var(--text-main)]">
-                    <span className="font-bold">Коли розіграш?</span>
-                    <br />
-                    Щонеділі о 20:00 (Київ) або достроково за рішенням
-                    адміністратора.
+              <Card className="p-5 bg-gradient-to-br from-[var(--accent-success)]/20 to-[var(--bg-app)] border-[var(--accent-success)]/30 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[var(--accent-success)] font-black text-lg">
+                    <Gift className="w-6 h-6" /> Наступний розіграш
                   </div>
+                </div>
+
+                <div className="flex justify-center gap-3 py-2">
+                  <div className="flex flex-col items-center bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--accent-success)]/20 min-w-[70px] shadow-sm">
+                    <span className="text-2xl font-black text-[var(--text-main)]">
+                      {timeLeft.days}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-[var(--text-muted)]">
+                      Днів
+                    </span>
+                  </div>
+                  <div className="text-2xl font-black text-[var(--text-muted)] self-center">
+                    :
+                  </div>
+                  <div className="flex flex-col items-center bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--accent-success)]/20 min-w-[70px] shadow-sm">
+                    <span className="text-2xl font-black text-[var(--text-main)]">
+                      {timeLeft.hours}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-[var(--text-muted)]">
+                      Годин
+                    </span>
+                  </div>
+                  <div className="text-2xl font-black text-[var(--text-muted)] self-center">
+                    :
+                  </div>
+                  <div className="flex flex-col items-center bg-[var(--bg-card)] p-3 rounded-xl border border-[var(--accent-success)]/20 min-w-[70px] shadow-sm">
+                    <span className="text-2xl font-black text-[var(--text-main)]">
+                      {timeLeft.minutes}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-[var(--text-muted)]">
+                      Хвилин
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 bg-[var(--bg-app)]/50 p-3 rounded-xl mt-2">
+                  <Timer className="w-4 h-4 text-[var(--accent-success)] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[var(--text-main)] leading-relaxed font-medium">
+                    Участь автоматична для всіх у Топі! Переможці обираються
+                    випадково, але вищий рейтинг = більше шансів.
+                  </p>
                 </div>
               </Card>
 
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] ml-1 mb-2">
-                  Історія переможців
+                <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] ml-1 mb-3 flex items-center gap-2">
+                  <Star className="w-4 h-4" /> Історія переможців
                 </h3>
-                <Card className="p-6 text-center text-sm text-[var(--text-muted)] border-dashed">
-                  Дані з'являться після першого розіграшу
+                <Card className="p-8 text-center border-dashed border-[var(--border-color)] bg-transparent">
+                  <div className="w-12 h-12 mx-auto bg-[var(--bg-card)] rounded-full flex items-center justify-center text-[var(--text-muted)] mb-3 shadow-sm">
+                    <Trophy className="w-6 h-6" />
+                  </div>
+                  <p className="text-sm font-bold text-[var(--text-main)]">
+                    Перший розіграш ще попереду!
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                    Грай щодня, щоб потрапити в історію.
+                  </p>
                 </Card>
               </div>
             </div>
