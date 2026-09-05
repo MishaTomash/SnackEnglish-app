@@ -2,10 +2,13 @@ import { create } from "zustand";
 import type { Word } from "../entities/word/types";
 import { getPracticeWordsApi, reviewWordApi } from "../entities/word/api";
 
+type RequestStatus = "idle" | "loading" | "success" | "error";
+
 interface RepetitionState {
   dailyQueue: Word[];
   currentWordIndex: number;
-  isLoading: boolean;
+  status: RequestStatus;
+  error: string | null;
   isFinished: boolean;
   loadDailyWords: () => Promise<void>;
   submitReview: (quality: number) => Promise<void>;
@@ -15,21 +18,34 @@ interface RepetitionState {
 export const useRepetitionStore = create<RepetitionState>((set, get) => ({
   dailyQueue: [],
   currentWordIndex: 0,
-  isLoading: false,
+  status: "idle",
+  error: null,
   isFinished: false,
 
   loadDailyWords: async () => {
-    set({ isLoading: true, isFinished: false, currentWordIndex: 0 });
+    set({
+      status: "loading",
+      error: null,
+      isFinished: false,
+      currentWordIndex: 0,
+    });
     try {
       const data = await getPracticeWordsApi();
       set({
         dailyQueue: data.words,
-        isLoading: false,
+        status: "success",
         isFinished: data.words.length === 0,
       });
     } catch (err: unknown) {
       console.error("Помилка завантаження слів на повторення:", err);
-      set({ isLoading: false });
+      set({
+        status: "error",
+        error:
+          err instanceof Error
+            ? err.message
+            : "Не вдалося завантажити слова. Перевірте з'єднання.",
+        dailyQueue: [],
+      });
     }
   },
 
@@ -50,10 +66,16 @@ export const useRepetitionStore = create<RepetitionState>((set, get) => ({
       }
     } catch (err: unknown) {
       console.error("Помилка надсилання оцінки SM-2:", err);
+      // Тут можна додати toast-сповіщення, але ми не блокуємо UI
     }
   },
 
   resetQueue: () => {
-    set({ currentWordIndex: 0, isFinished: false });
+    set({
+      currentWordIndex: 0,
+      isFinished: false,
+      status: "idle",
+      error: null,
+    });
   },
 }));

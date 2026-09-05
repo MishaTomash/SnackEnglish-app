@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IWord extends Document {
+  id?: string;
   text: string;
   transcription: string;
   translation: string;
@@ -26,6 +27,14 @@ const WordSchema = new Schema<IWord>(
 );
 
 WordSchema.index({ text: 1, level: 1 }, { unique: true });
+
+WordSchema.set("toJSON", {
+  virtuals: true,
+  transform: (_doc, ret) => {
+    (ret as any).id = ret._id.toString();
+    return ret;
+  },
+});
 
 export const Word =
   mongoose.models.Word || mongoose.model<IWord>("Word", WordSchema);

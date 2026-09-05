@@ -1,10 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { Home, BookOpen, Dumbbell } from "lucide-react";
+import { Home, Map, Dumbbell } from "lucide-react";
 
 export const BottomNav = () => {
   const navItems = [
     { path: "/", label: "Головна", icon: Home },
-    { path: "/path", label: "Урок", icon: BookOpen },
+    // "/path" тепер веде на PathMapPage (гейміфікована мапа юнітів),
+    // тому іконку і підпис змінено з "Урок"/BookOpen на "Карта"/Map.
+    { path: "/path", label: "Карта", icon: Map },
     { path: "/practice", label: "Практика", icon: Dumbbell },
   ];
 

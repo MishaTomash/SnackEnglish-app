@@ -13,7 +13,7 @@ import { calculateSM2 } from "../utils/spacedRepetition.js";
 
 /**
  * Отримує всі юніти користувача разом із його персональним прогресом.
- * GET /api/progress/units
+ * GET /api/progress/units?level=A1
  */
 export const getUserUnits = async (
   req: Request,
@@ -34,13 +34,21 @@ export const getUserUnits = async (
       return;
     }
 
-    const units = await Unit.find().sort({ order: 1 });
+    // ДОДАНО: рівень береться з query (?level=A1), інакше з профілю юзера, інакше "A1".
+    // Раніше юніти тягнулись усі підряд без фільтра по рівню.
+    const level =
+      (req.query.level as string) ||
+      (user as unknown as { level?: string }).level ||
+      "A1";
+
+    const units = await Unit.find({ level }).sort({ order: 1 });
     const userProgressList = await UserUnitProgress.find({ userId: user._id });
 
     const progressMap = new Map<
       string,
       { status: UnitProgressStatus; completedSteps: UnitStepType[] }
     >();
+
     userProgressList.forEach((prog) => {
       progressMap.set(prog.unitId.toString(), {
         status: prog.status,
@@ -72,7 +80,11 @@ export const getUserUnits = async (
       };
     });
 
-    res.status(200).json(result);
+    res.status(200).json({
+      units: result,
+      level,
+      streak: (user as unknown as { streak?: number }).streak ?? 0,
+    });
   } catch (error: unknown) {
     res
       .status(500)

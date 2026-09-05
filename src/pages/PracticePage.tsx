@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, CalendarCheck, RotateCcw } from "lucide-react";
+import { Sparkles, CalendarCheck, RotateCcw, AlertCircle } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
@@ -13,7 +13,8 @@ export const PracticePage = () => {
   const {
     dailyQueue,
     currentWordIndex,
-    isLoading,
+    status,
+    error,
     isFinished,
     loadDailyWords,
     submitReview,
@@ -30,19 +31,41 @@ export const PracticePage = () => {
 
   const handleAnswer = async (remembered: boolean) => {
     if (!currentWord) return;
-
-    // SM-2: 4 (успішне згадування), 1 (забув)
     const quality = remembered ? 4 : 1;
     setIsRevealed(false);
     await submitReview(quality);
   };
 
-  if (isLoading) {
+  if (status === "loading" || status === "idle") {
     return (
       <Screen className="justify-center items-center">
-        <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)]">
+        <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] animate-pulse">
           Завантаження черги повторення...
         </p>
+      </Screen>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <Screen className="justify-center items-center text-center p-6 space-y-6">
+        <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold">Ой, халепа!</h2>
+          <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] max-w-xs">
+            {error ||
+              "Не вдалося завантажити слова. Можливо, проблеми з мережею."}
+          </p>
+        </div>
+        <Button
+          onClick={() => void loadDailyWords()}
+          variant="primary"
+          className="max-w-xs"
+        >
+          Спробувати ще раз
+        </Button>
       </Screen>
     );
   }
@@ -50,17 +73,15 @@ export const PracticePage = () => {
   if (isFinished || totalDueToday === 0 || !currentWord) {
     return (
       <Screen className="justify-center items-center text-center p-6 space-y-6">
-        <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
           <CalendarCheck className="w-8 h-8" />
         </div>
-
         <div className="space-y-2">
           <h2 className="text-xl font-bold">Чудова робота!</h2>
           <p className="text-sm text-[var(--tg-theme-hint-color,#8e8e93)] max-w-xs">
-            Сьогодні нічого повторювати, повертайся завтра.
+            Сьогодні нічого повторювати, смакуй свої знання і повертайся завтра.
           </p>
         </div>
-
         <Button
           onClick={() => navigate("/")}
           variant="primary"
@@ -108,7 +129,7 @@ export const PracticePage = () => {
 
           {isRevealed ? (
             <div className="space-y-3 pt-4 border-t border-[var(--tg-theme-hint-color,#8e8e93)]/20 w-full">
-              <div className="text-2xl font-bold text-[var(--tg-theme-button-color,#3390ec)]">
+              <div className="text-2xl font-bold text-[var(--tg-theme-button-color,#d97706)]">
                 {currentWord.translation}
               </div>
               <div className="bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)]/60 p-3 rounded-xl text-left space-y-1 text-sm">

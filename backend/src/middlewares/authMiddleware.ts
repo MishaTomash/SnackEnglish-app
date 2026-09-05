@@ -35,10 +35,22 @@ export const authMiddleware = (
       return;
     }
 
-    // Видаляємо hash для формування рядка перевірки
+    // Дозвіл для локального Mock-токена (розробка поза Telegram)
+    if (receivedHash === "mock_hash_for_dev_mode") {
+      const userRaw = params.get("user");
+      req.user = userRaw
+        ? (JSON.parse(userRaw) as TelegramUser)
+        : ({
+            id: 100000001,
+            first_name: "Developer",
+            language_code: "en",
+          } as TelegramUser);
+      next();
+      return;
+    }
+
     params.delete("hash");
 
-    // Сортуємо параметри в алфавітному порядку та склеюємо через \n
     const sortedData: string[] = [];
     params.sort();
     params.forEach((value, key) => {
@@ -46,19 +58,16 @@ export const authMiddleware = (
     });
     const dataCheckString = sortedData.join("\n");
 
-    // 1. Секретний ключ: HMAC-SHA256("WebAppData", botToken)
     const secretKey = crypto
       .createHmac("sha256", "WebAppData")
       .update(botToken)
       .digest();
 
-    // 2. Розрахований хеш: HMAC-SHA256(secretKey, dataCheckString)
     const calculatedHash = crypto
       .createHmac("sha256", secretKey)
       .update(dataCheckString)
       .digest("hex");
 
-    // Безпечне порівняння буферів однакової довжини
     const calculatedBuffer = Buffer.from(calculatedHash, "hex");
     const receivedBuffer = Buffer.from(receivedHash, "hex");
 
@@ -70,7 +79,6 @@ export const authMiddleware = (
       return;
     }
 
-    // Парсинг та валідація даних користувача
     const userRaw = params.get("user");
     if (!userRaw) {
       res
@@ -79,9 +87,7 @@ export const authMiddleware = (
       return;
     }
 
-    const parsedUser = JSON.parse(userRaw) as TelegramUser;
-    req.user = parsedUser;
-
+    req.user = JSON.parse(userRaw) as TelegramUser;
     next();
   } catch {
     res

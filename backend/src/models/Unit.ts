@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IUnit extends Document {
+  id?: string;
   title: string;
   description: string;
   level: "A1" | "A2" | "B1" | "B2" | "C1";
@@ -88,6 +89,14 @@ const UnitSchema = new Schema<IUnit>(
   },
   { timestamps: true },
 );
+
+UnitSchema.set("toJSON", {
+  virtuals: true,
+  transform: (_doc, ret) => {
+    (ret as any).id = ret._id.toString();
+    return ret;
+  },
+});
 
 export const Unit =
   mongoose.models.Unit || mongoose.model<IUnit>("Unit", UnitSchema);

@@ -9,9 +9,9 @@ import {
 import { initTelegramApp, subscribeToTheme } from "../shared/lib/telegram";
 import { useUserStore } from "../store/userStore";
 import { OnboardingPage } from "../pages/OnboardingPage";
-import { HomePage } from "../pages/HomePage";
+import { PathMapPage } from "../pages/path/PathMapPage"; // Додано імпорт карти
 import { UnitPathPage } from "../pages/UnitPathPage";
-import { UnitStepPage } from "../pages/UnitStepPage";
+import { UnitStepPage } from "../pages/unit-step/UnitStepPage";
 import { PracticePage } from "../pages/PracticePage";
 import { BottomNav } from "../widgets/BottomNav";
 
@@ -36,8 +36,11 @@ const AppContent = () => {
     <div className="relative min-h-screen bg-[var(--tg-theme-bg-color,#ffffff)] text-[var(--tg-theme-text-color,#000000)]">
       <Routes>
         <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="/path" element={<UnitPathPage />} />
+        {/* Карта тепер є Головним екраном і екраном Уроків */}
+        <Route path="/" element={<PathMapPage />} />
+        <Route path="/path" element={<PathMapPage />} />
+
+        {/* Кроки конкретного юніта */}
         <Route path="/path/:unitId" element={<UnitPathPage />} />
         <Route path="/unit/:unitId/step/:stepType" element={<UnitStepPage />} />
         <Route path="/practice" element={<PracticePage />} />

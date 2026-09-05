@@ -11,6 +11,7 @@ import { authMiddleware } from "./middlewares/authMiddleware.js";
 import progressRoutes from "./routes/progressRoutes.js";
 import { bot } from "./bot.js";
 import { initCronJobs } from "./services/cronService.js";
+import wordRoutes from "./routes/wordRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -42,6 +43,8 @@ app.get("/api/me", authMiddleware, (req, res) => {
   });
 });
 
+app.use("/api/words", wordRoutes);
+
 // Шлях до скомпільованого фронтенду (папка dist у корені проєкту)
 const frontendDist = path.resolve(process.cwd(), "../dist");
 
@@ -49,7 +52,7 @@ const frontendDist = path.resolve(process.cwd(), "../dist");
 app.use(express.static(frontendDist));
 
 // SPA fallback: передає index.html для будь-яких невідомих маршрутів React Router
-app.get("/{*splat}", (_req, res) => {
+app.get("*", (_req, res) => {
   res.sendFile(path.join(frontendDist, "index.html"));
 });
 
