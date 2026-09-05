@@ -1,5 +1,10 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { Screen } from "../../shared/ui/Screen";
 import { Badge } from "../../shared/ui/Badge";
@@ -58,6 +63,45 @@ export const UnitStepPage = () => {
     fetchWords();
   }, [fetchWords]);
 
+  // ЗАХИСТ ВІД ПРЯМОГО ПЕРЕХОДУ (STEP-GATING)
+  const isStepAccessible = useMemo(() => {
+    if (!unit || !stepType) return false;
+
+    // Збираємо список усіх кроків, аналогічно до логіки stepProgress
+    let stepsList: UnitStepType[] = [];
+    if (unit.steps && unit.steps.length > 0) {
+      stepsList = unit.steps.map((s) => s.type);
+    } else {
+      stepsList = ["warmup"];
+      if (unit.wordIds?.length > 0) {
+        stepsList.push("vocabulary", "speaking");
+      }
+      if (unit.grammarTopic && unit.grammarExplanation) {
+        stepsList.push("grammar");
+      }
+      if (unit.videoUrl) {
+        stepsList.push("video");
+      }
+      if (unit.readingText) {
+        stepsList.push("reading");
+      }
+      stepsList.push("test");
+    }
+
+    const completedSteps = unit.completedSteps || [];
+
+    // Якщо крок вже пройдений — дозволяємо доступ (для повторення)
+    if (completedSteps.includes(stepType)) return true;
+
+    // Знаходимо перший ще не пройдений крок
+    const firstUncompleted = stepsList.find(
+      (type) => !completedSteps.includes(type),
+    );
+
+    // Дозволяємо доступ, тільки якщо запитуваний крок є наступним у черзі
+    return firstUncompleted === stepType;
+  }, [unit, stepType]);
+
   const stepProgress = useMemo(() => {
     if (!unit) return { current: 0, total: 0 };
 
@@ -88,6 +132,11 @@ export const UnitStepPage = () => {
         <p className="text-[var(--text-muted)]">Урок не знайдено</p>
       </Screen>
     );
+
+  // Редирект, якщо користувач намагається зайти на заблокований крок через URL
+  if (!isStepAccessible) {
+    return <Navigate to={`/path/${unit.id}`} replace />;
+  }
 
   const handleComplete = async () => {
     if (isCompleting) return;

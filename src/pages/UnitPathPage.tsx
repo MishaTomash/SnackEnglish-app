@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+// src/pages/UnitPathPage.tsx
+import { useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -18,6 +19,7 @@ import { Screen } from "../shared/ui/Screen";
 import { Badge } from "../shared/ui/Badge";
 import { useProgressStore } from "../store/progressStore";
 import type { UnitStepType } from "../entities/unit/types";
+import { hapticLockedNode } from "../shared/lib/telegramHaptics";
 
 const STEP_METADATA: Record<
   UnitStepType,
@@ -67,7 +69,6 @@ export const UnitPathPage = () => {
   const location = useLocation();
   const { units, currentUnitId, loadUnits } = useProgressStore();
 
-  // Зчитуємо джерело переходу. Якщо його немає — вважаємо, що прийшли з Карти.
   const returnPath = location.state?.from || "/path";
 
   useEffect(() => {
@@ -75,6 +76,52 @@ export const UnitPathPage = () => {
       loadUnits("A1");
     }
   }, [units.length, loadUnits]);
+
+  const activeId = unitId || currentUnitId;
+  const unit =
+    units.find(
+      (u) =>
+        u.id === activeId ||
+        (u as unknown as { _id?: string })._id === activeId,
+    ) ?? units[0];
+
+  const processedSteps = useMemo(() => {
+    if (!unit) return [];
+
+    const defaultSteps: Array<{ id: string; type: UnitStepType }> = [
+      { id: "1", type: "vocabulary" },
+      { id: "2", type: "grammar" },
+      { id: "3", type: "video" },
+      { id: "4", type: "reading" },
+      { id: "5", type: "roleplay" },
+      { id: "6", type: "test" },
+    ];
+
+    const rawSteps =
+      unit.steps && unit.steps.length > 0 ? unit.steps : defaultSteps;
+    const completedSteps = unit.completedSteps || [];
+
+    let isNextAvailableFound = false;
+
+    return rawSteps.map((step) => {
+      const isCompleted = completedSteps.includes(step.type);
+
+      let status: "completed" | "available" | "locked";
+      if (isCompleted) {
+        status = "completed";
+      } else if (!isNextAvailableFound) {
+        status = "available";
+        isNextAvailableFound = true; // Перший непройдений крок стає доступним
+      } else {
+        status = "locked"; // Всі інші непройдені кроки - заблоковані
+      }
+
+      return {
+        ...step,
+        status,
+      };
+    });
+  }, [unit]);
 
   if (units.length === 0) {
     return (
@@ -85,14 +132,6 @@ export const UnitPathPage = () => {
       </Screen>
     );
   }
-
-  const activeId = unitId || currentUnitId;
-  const unit =
-    units.find(
-      (u) =>
-        u.id === activeId ||
-        (u as unknown as { _id?: string })._id === activeId,
-    ) ?? units[0];
 
   if (!unit) {
     return (
@@ -106,24 +145,17 @@ export const UnitPathPage = () => {
   }
 
   const effectiveUnitId = unit.id || (unit as unknown as { _id?: string })._id;
-
-  const defaultSteps: Array<{
-    id: string;
-    type: UnitStepType;
-    status: "completed" | "available" | "locked";
-  }> = [
-    { id: "1", type: "vocabulary", status: "available" },
-    { id: "2", type: "grammar", status: "available" },
-    { id: "3", type: "video", status: "available" },
-    { id: "4", type: "reading", status: "available" },
-    { id: "5", type: "roleplay", status: "available" },
-    { id: "6", type: "test", status: "available" },
-  ];
-
-  const steps = unit.steps && unit.steps.length > 0 ? unit.steps : defaultSteps;
-  const completedCount = steps.filter((s) => s.status === "completed").length;
+  const completedCount = processedSteps.filter(
+    (s) => s.status === "completed",
+  ).length;
   const percent =
-    steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0;
+    processedSteps.length > 0
+      ? Math.round((completedCount / processedSteps.length) * 100)
+      : 0;
+
+  const handleLockedClick = () => {
+    hapticLockedNode();
+  };
 
   return (
     <Screen className="!p-0 pb-8 bg-[var(--bg-app)]">
@@ -164,14 +196,14 @@ export const UnitPathPage = () => {
             {unit.title}
           </h1>
           <p className="text-xs text-[var(--text-muted)]">
-            {completedCount} з {steps.length} кроків пройдено
+            {completedCount} з {processedSteps.length} кроків пройдено
           </p>
         </div>
       </div>
 
       {/* Таймлайн кроків */}
       <div className="px-4 mt-5 space-y-3 relative before:absolute before:left-[38px] before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--border-color)]">
-        {steps.map((step, index) => {
+        {processedSteps.map((step, index) => {
           const meta = STEP_METADATA[step.type] ?? {
             title: step.type,
             desc: "Урок юніту",
@@ -227,14 +259,30 @@ export const UnitPathPage = () => {
 
               <div className="shrink-0">
                 {isCompleted && (
-                  <CheckCircle2 className="w-6 h-6 text-[var(--accent-success)]" />
+                  <button
+                    onClick={() =>
+                      navigate(`/unit/${effectiveUnitId}/step/${step.type}`, {
+                        state: { from: location.pathname },
+                      })
+                    }
+                    className="flex flex-col items-center justify-center w-12 text-[var(--accent-success)] active:scale-95 transition-transform"
+                  >
+                    <CheckCircle2 className="w-6 h-6" />
+                    <span className="text-[10px] font-bold mt-1">Пройдено</span>
+                  </button>
                 )}
-                {isLocked && <Lock className="w-4 h-4 text-[var(--locked)]" />}
+                {isLocked && (
+                  <button
+                    onClick={handleLockedClick}
+                    className="flex flex-col items-center justify-center w-12"
+                  >
+                    <Lock className="w-5 h-5 text-[var(--locked)]" />
+                  </button>
+                )}
                 {isAvailable && (
                   <button
                     onClick={() =>
                       navigate(`/unit/${effectiveUnitId}/step/${step.type}`, {
-                        // Важливо: передаємо поточний шлях сторінки юніта, щоб крок міг повернутись сюди
                         state: { from: location.pathname },
                       })
                     }

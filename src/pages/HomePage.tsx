@@ -13,7 +13,15 @@ import { useProgressStore } from "../store/progressStore";
 
 export const HomePage = () => {
   const { level, streak, wordsLearnedCount } = useUserStore();
-  const { units, currentUnitId, loadUnits, isLoading } = useProgressStore();
+  const {
+    units,
+    currentUnitId,
+    loadUnits,
+    isLoading,
+    progressPercent,
+    completedStepsCount,
+    totalStepsCount,
+  } = useProgressStore();
 
   useEffect(() => {
     if (units.length === 0) {
@@ -21,19 +29,11 @@ export const HomePage = () => {
     }
   }, [units.length, loadUnits, level]);
 
-  const completedCount = units.filter((u) => u.status === "completed").length;
-  const totalCount = units.length;
-  const progressPercent =
-    totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
-  // Логіка визначення юніту тепер повністю спирається на store
   const activeUnit = units.find((u) => u.id === currentUnitId) ?? units[0];
-
   const reviewWordsCount = 7;
 
   return (
     <Screen className="space-y-4">
-      {/* ... [Весь інший UI залишається без змін] ... */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-3">
           <CookieMascot state="happy" size={50} />
@@ -73,9 +73,9 @@ export const HomePage = () => {
         <ProgressBar progress={progressPercent} />
         <div className="flex justify-between text-xs text-[var(--text-muted)]">
           <span>
-            Пройдено тем: {completedCount} з {totalCount}
+            Пройдено кроків: {completedStepsCount} з {totalStepsCount}
           </span>
-          <span>{totalCount - completedCount} залишилось</span>
+          <span>{totalStepsCount - completedStepsCount} залишилось</span>
         </div>
       </Card>
 
