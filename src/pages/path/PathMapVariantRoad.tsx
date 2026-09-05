@@ -20,10 +20,9 @@ const getUnitId = (u: Unit) =>
   u.id || (u as unknown as { _id?: string })._id || "";
 const getStatus = (u: Unit) => u.status ?? "locked";
 
-// Детермінований псевдо-рандом (щоб стежка не "стрибала" між рендерами)
 const seededOffset = (i: number) => {
   const seed = Math.sin(i * 12.9898) * 43758.5453;
-  return seed - Math.floor(seed); // 0..1
+  return seed - Math.floor(seed);
 };
 
 const buildTrailPath = (points: { x: number; y: number }[]) => {
@@ -51,7 +50,6 @@ export const PathMapVariantRoad = ({
   const points = useMemo(
     () =>
       units.map((_, i) => {
-        // Органічна, злегка "нерівна" амплітуда — не ідеально симетрична змійка
         const wave = Math.sin(i * 0.9) * 0.6 + (seededOffset(i) - 0.5) * 0.5;
         const amplitude = 96;
         return {
@@ -77,9 +75,10 @@ export const PathMapVariantRoad = ({
       style={{
         width: CANVAS_WIDTH,
         height: canvasHeight,
+        // ОНОВЛЕНО: Темний градієнт для фону (світло від зірок/магії замість блакитного неба)
         background:
-          "radial-gradient(120% 40% at 50% 0%, rgba(74,222,128,0.16) 0%, rgba(74,222,128,0.05) 45%, transparent 70%)," +
-          "linear-gradient(180deg, rgba(191,219,254,0.15) 0%, transparent 260px)",
+          "radial-gradient(120% 40% at 50% 0%, rgba(232, 163, 61, 0.08) 0%, rgba(232, 163, 61, 0.02) 45%, transparent 70%)," +
+          "linear-gradient(180deg, rgba(51, 36, 26, 0.3) 0%, transparent 260px)",
       }}
     >
       <style>{`
@@ -97,13 +96,13 @@ export const PathMapVariantRoad = ({
         }
         .pm-float { animation: pm-float 2.4s ease-in-out infinite; }
         @keyframes pm-glow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
-          70% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(232, 163, 61, 0.3); }
+          70% { box-shadow: 0 0 0 12px rgba(232, 163, 61, 0); }
         }
         .pm-glow { animation: pm-glow 2s ease-out infinite; }
       `}</style>
 
-      {/* Декорації ландшафту */}
+      {/* Декорації ландшафту (Змінено колір для темної теми) */}
       {units.map((_, i) => {
         if (i % 2 !== 0) return null;
         const Deco = DECORATIONS[i % DECORATIONS.length];
@@ -113,7 +112,7 @@ export const PathMapVariantRoad = ({
         return (
           <Deco
             key={`deco-${i}`}
-            className="absolute text-emerald-600/20"
+            className="absolute text-[var(--tg-theme-hint-color)] opacity-20"
             style={{ left: px, top: py }}
             width={26}
             height={26}
@@ -122,7 +121,7 @@ export const PathMapVariantRoad = ({
         );
       })}
 
-      {/* Банери розділів над стежкою */}
+      {/* Банери розділів */}
       {units.map((_, i) => {
         if (i % CHAPTER_SIZE !== 0) return null;
         const chapterNumber = Math.floor(i / CHAPTER_SIZE) + 1;
@@ -130,7 +129,7 @@ export const PathMapVariantRoad = ({
         return (
           <div
             key={`chapter-${i}`}
-            className="absolute left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold tracking-wide shadow-sm whitespace-nowrap"
+            className="absolute left-1/2 -translate-x-1/2 px-4 py-1.5 min-w-[100px] text-center rounded-full bg-[var(--tg-theme-secondary-bg-color)] border border-[var(--tg-theme-hint-color)]/20 text-[var(--tg-theme-text-color)] text-[11px] font-bold tracking-wide shadow-sm"
             style={{ top: py }}
           >
             Розділ {chapterNumber}
@@ -138,35 +137,37 @@ export const PathMapVariantRoad = ({
         );
       })}
 
-      {/* Стежка: м'яка тінь-підкладка + основне "земляне" полотно + пунктирна центральна лінія */}
+      {/* Стежка */}
       <svg
         className="absolute inset-0"
         width={CANVAS_WIDTH}
         height={canvasHeight}
         viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
       >
+        {/* Тінь від стежки */}
         <path
           d={pathD}
           fill="none"
           stroke="#000000"
-          strokeOpacity={0.06}
+          strokeOpacity={0.3}
           strokeWidth={22}
           strokeLinecap="round"
-          transform="translate(0, 3)"
+          transform="translate(0, 4)"
         />
+        {/* Основна стежка */}
         <path
           d={pathD}
           fill="none"
-          stroke="#DFC28B"
-          strokeOpacity={0.55}
+          stroke="#4a3b31"
           strokeWidth={18}
           strokeLinecap="round"
         />
+        {/* Пунктирна лінія */}
         <path
           d={pathD}
           fill="none"
-          stroke="#B08D57"
-          strokeOpacity={0.5}
+          stroke="#e8a33d"
+          strokeOpacity={0.4}
           strokeWidth={2}
           strokeDasharray="1 11"
           strokeLinecap="round"
@@ -193,10 +194,11 @@ export const PathMapVariantRoad = ({
             }}
           >
             {isCurrent && (
-              <div className="absolute -top-20 flex flex-col items-center pm-float">
-                <div className="relative mb-1 px-2.5 py-1 rounded-xl bg-[var(--tg-theme-bg-color,#ffffff)] shadow-md text-[10px] font-bold text-[var(--tg-theme-text-color,#000000)] whitespace-nowrap">
+              <div className="absolute -top-20 flex flex-col items-center justify-end w-[120px] h-[80px] pm-float pointer-events-none">
+                {/* ОНОВЛЕНО: Бульбашка тепер використовує токени і центрується за допомогою flex */}
+                <div className="relative mb-2 px-3 py-1.5 rounded-xl bg-[var(--tg-theme-button-color)] text-[var(--tg-theme-button-text-color)] text-[11px] font-bold shadow-md whitespace-nowrap">
                   Уперед! 🍪
-                  <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 rotate-45 bg-[var(--tg-theme-bg-color,#ffffff)]" />
+                  <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-[var(--tg-theme-button-color)]" />
                 </div>
                 <CookieMascot state="celebrating" size={54} />
               </div>
@@ -212,36 +214,38 @@ export const PathMapVariantRoad = ({
               style={{ width: NODE_SIZE, height: NODE_SIZE }}
             >
               <div
-                className={`w-full h-full rounded-2xl flex items-center justify-center border-b-4 shadow-md transition-colors ${
+                className={`w-full h-full rounded-2xl flex items-center justify-center border-b-[6px] shadow-sm transition-colors ${
                   isCompleted
-                    ? "bg-gradient-to-b from-emerald-400 to-emerald-500 border-emerald-700 text-white"
+                    ? "bg-[#d69433] border-[#a16b1e] text-[#241812]"
                     : isAvailable
-                      ? "bg-gradient-to-b from-amber-300 to-amber-500 border-amber-700 text-white"
-                      : "bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] border-black/5 text-[var(--tg-theme-hint-color,#9ca3af)]"
+                      ? "bg-[var(--tg-theme-button-color)] border-[#a16b1e] text-[var(--tg-theme-button-text-color)]"
+                      : "bg-[#33241a] border-[#221711] text-[#c9b8a8]" /* Стиль заблокованого юніту під темну тему */
                 }`}
               >
-                {isCompleted && <CheckIcon className="w-7 h-7" />}
-                {isLocked && <Lock className="w-6 h-6" />}
+                {isCompleted && (
+                  <CheckIcon className="w-7 h-7" strokeWidth={3} />
+                )}
+                {isLocked && <Lock className="w-6 h-6 opacity-50" />}
                 {isAvailable && !isCompleted && (
                   <Sparkles className="w-7 h-7 drop-shadow-sm" />
                 )}
               </div>
 
               {isCompleted && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[var(--tg-theme-bg-color)] shadow border border-[var(--tg-theme-hint-color)]/20 flex items-center justify-center">
                   <CheckIcon
-                    className="w-3 h-3 text-emerald-500"
-                    strokeWidth={3}
+                    className="w-4 h-4 text-[var(--tg-theme-button-color)]"
+                    strokeWidth={3.5}
                   />
                 </span>
               )}
             </button>
 
             <span
-              className={`mt-2 text-[11px] font-semibold text-center w-28 line-clamp-2 ${
+              className={`mt-2 text-[11px] font-semibold text-center w-[90px] leading-tight line-clamp-2 ${
                 isLocked
-                  ? "text-[var(--tg-theme-hint-color,#9ca3af)]"
-                  : "text-[var(--tg-theme-text-color,#000000)]"
+                  ? "text-[var(--tg-theme-hint-color)] opacity-60"
+                  : "text-[var(--tg-theme-text-color)]"
               }`}
             >
               {unit.title}
