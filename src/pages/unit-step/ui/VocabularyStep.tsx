@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Volume2, AlertCircle } from "lucide-react";
+import { Volume2, AlertCircle, CheckCircle } from "lucide-react";
 import { Card } from "../../../shared/ui/Card";
 import { Button } from "../../../shared/ui/Button";
 import { ProgressBar } from "../../../shared/ui/ProgressBar";
 import type { Word } from "../../../entities/word/types";
+import { useProgressStore } from "../../../store/progressStore";
 
 interface Props {
   words: Word[];
@@ -21,6 +22,17 @@ export const VocabularyStep = ({
   onComplete,
 }: Props) => {
   const [vocabIndex, setVocabIndex] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Підключаємо store для отримання статусу юніту та функції оновлення прогресу
+  const currentUnitId = useProgressStore((state) => state.currentUnitId);
+  const units = useProgressStore((state) => state.units);
+  const completeStep = useProgressStore((state) => state.completeStep);
+
+  const currentUnit = units.find((u) => u.id === currentUnitId);
+  const isAlreadyCompleted =
+    currentUnit?.completedSteps?.includes("vocabulary");
 
   if (isLoading) {
     return (
@@ -50,6 +62,32 @@ export const VocabularyStep = ({
     );
   }
 
+  // Екран успішного завершення
+  if (isFinished) {
+    return (
+      <div className="flex flex-col justify-center items-center h-full min-h-[300px] space-y-6 animate-in fade-in duration-500">
+        <div className="w-20 h-20 bg-[var(--accent-success)]/10 rounded-full flex items-center justify-center mb-2">
+          <CheckCircle className="w-10 h-10 text-[var(--accent-success)]" />
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-extrabold text-[var(--text-main)]">
+            Слова вивчено!
+          </h2>
+          <p className="text-sm font-medium text-[var(--text-muted)]">
+            Ти успішно пройшов усі {words.length} слів.
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          onClick={onComplete}
+          className="w-full mt-4 active:scale-95 transition-transform"
+        >
+          Повернутись до уроку
+        </Button>
+      </div>
+    );
+  }
+
   const word = words[vocabIndex];
   const isLastWord = vocabIndex === words.length - 1;
 
@@ -61,12 +99,34 @@ export const VocabularyStep = ({
     window.speechSynthesis.speak(utterance);
   };
 
+  const handleNext = async () => {
+    if (isLastWord) {
+      // Якщо крок проходиться вперше, зберігаємо прогрес на бекенді
+      if (!isAlreadyCompleted && currentUnitId) {
+        setIsSaving(true);
+        await completeStep(currentUnitId, "vocabulary");
+        setIsSaving(false);
+      }
+      // Показуємо екран завершення
+      setIsFinished(true);
+    } else {
+      setVocabIndex((p) => p + 1);
+    }
+  };
+
   return (
     <div className="space-y-4 my-auto">
-      <div className="flex justify-between items-center text-xs font-semibold text-[var(--text-muted)]">
+      <div className="flex justify-between items-center text-xs font-semibold text-[var(--text-muted)] h-6">
         <span>
           Слово {vocabIndex + 1} з {words.length}
         </span>
+
+        {/* Позначка, якщо користувач зайшов сюди повторно */}
+        {isAlreadyCompleted && (
+          <span className="px-2 py-1 rounded-md bg-[var(--accent-success)]/10 text-[var(--accent-success)] flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" /> Повторення
+          </span>
+        )}
       </div>
       <ProgressBar progress={((vocabIndex + 1) / words.length) * 100} />
 
@@ -96,6 +156,7 @@ export const VocabularyStep = ({
             variant="secondary"
             onClick={() => setVocabIndex((p) => p - 1)}
             className="w-1/3"
+            disabled={isSaving}
           >
             Назад
           </Button>
@@ -103,11 +164,10 @@ export const VocabularyStep = ({
         <Button
           variant="primary"
           className="flex-1"
-          onClick={() =>
-            isLastWord ? onComplete() : setVocabIndex((p) => p + 1)
-          }
+          onClick={handleNext}
+          disabled={isSaving}
         >
-          {isLastWord ? "Завершити" : "Далі"}
+          {isSaving ? "Збереження..." : isLastWord ? "Завершити" : "Далі"}
         </Button>
       </div>
     </div>
