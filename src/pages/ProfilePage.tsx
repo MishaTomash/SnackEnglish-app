@@ -11,6 +11,7 @@ import {
   Flame,
   BookOpen,
   ChevronLeft,
+  Swords,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -324,10 +325,22 @@ export const ProfilePage = () => {
               )}
               {profile.friendStatus === "friends" && (
                 <Button
-                  variant="secondary"
-                  className="w-full flex items-center justify-center gap-2 border-[var(--accent-success)] text-[var(--accent-success)]"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`${API_URL}/duels/invite`, {
+                        method: "POST",
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ targetUserId: userId }),
+                      });
+                      const data = await res.json();
+                      if (data.roomId) navigate(`/duel/${data.roomId}`);
+                    } catch (error) {
+                      console.error("Помилка виклику", error);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-[var(--accent-cta)] font-bold text-white shadow-md border-none"
                 >
-                  <Check className="w-5 h-5" /> Друзі ✓
+                  <Swords className="w-5 h-5" /> Викликати на дуель
                 </Button>
               )}
             </>

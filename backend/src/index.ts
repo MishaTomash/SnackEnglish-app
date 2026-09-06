@@ -1,5 +1,7 @@
 import path from "path";
+import http from "http";
 import dotenv from "dotenv";
+import { initSocket } from "./socket.js";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
@@ -18,6 +20,8 @@ import { seedGames } from "./services/gameService.js";
 // ДОДАНО: Імпорт нового сервісу контенту
 import { contentService } from "./services/contentService.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import duelRoutes from "./routes/duelRoutes.js";
+import { Server } from "http";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -31,7 +35,7 @@ app.use(compression());
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
-
+app.use("/api/duels", authMiddleware, duelRoutes);
 app.use("/api/progress", authMiddleware, progressRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/words", wordRoutes);
@@ -65,7 +69,10 @@ async function bootstrap(): Promise<void> {
       console.log("Telegram bot is running.");
     });
 
-    app.listen(PORT, () => {
+    const server = http.createServer(app);
+    initSocket(server);
+
+    server.listen(PORT, () => {
       console.log(`SnackEnglish server is running on http://localhost:${PORT}`);
     });
 
