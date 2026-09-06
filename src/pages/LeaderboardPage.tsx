@@ -50,6 +50,37 @@ const calculateTimeLeft = () => {
   return { days: 0, hours: 0, minutes: 0 };
 };
 
+const UserAvatar = ({
+  url,
+  nickname,
+  className,
+}: {
+  url?: string | null;
+  nickname: string;
+  className: string;
+}) => {
+  const [hasError, setHasError] = useState(false);
+
+  if (!url || hasError) {
+    return (
+      <div
+        className={`${className} flex items-center justify-center bg-[var(--bg-card)] text-[var(--text-main)] font-black uppercase shrink-0`}
+      >
+        {nickname ? nickname.charAt(0) : "U"}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={url}
+      alt={nickname}
+      className={`${className} bg-[var(--bg-app)] shrink-0`}
+      onError={() => setHasError(true)}
+    />
+  );
+};
+
 export const LeaderboardPage = () => {
   const {
     nickname,
@@ -189,17 +220,12 @@ export const LeaderboardPage = () => {
                   {topUsers.length === 0 && (
                     <Card className="flex items-center p-4 gap-4 border-[var(--accent-cta)] bg-[var(--accent-cta)]/5">
                       <div className="w-8 text-center text-2xl">🥇</div>
-                      <img
-                        src={
-                          resolveAvatarUrl(
-                            customAvatarUrl || telegramPhotoUrl,
-                          ) || ""
-                        }
-                        alt="Avatar"
+                      <UserAvatar
+                        url={resolveAvatarUrl(
+                          customAvatarUrl || telegramPhotoUrl,
+                        )}
+                        nickname={nickname || ""}
                         className="w-12 h-12 rounded-full object-cover border-2 border-[var(--accent-cta)]"
-                        onError={(e) =>
-                          (e.currentTarget.style.display = "none")
-                        }
                       />
                       <div className="flex-1 overflow-hidden">
                         <div className="font-bold text-lg text-[var(--text-main)] truncate">
@@ -237,17 +263,12 @@ export const LeaderboardPage = () => {
                                 ? "🥉"
                                 : `#${user.position}`}
                         </div>
-                        <img
-                          src={
-                            resolveAvatarUrl(
-                              user.customAvatarUrl || user.telegramPhotoUrl,
-                            ) || ""
-                          }
-                          alt="Avatar"
-                          className={`${isTop3 ? "w-12 h-12 border-2 border-[var(--accent-cta)]/30" : "w-9 h-9 border border-[var(--border-color)]"} rounded-full bg-[var(--bg-app)] object-cover`}
-                          onError={(e) =>
-                            (e.currentTarget.style.display = "none")
-                          }
+                        <UserAvatar
+                          url={resolveAvatarUrl(
+                            user.customAvatarUrl || user.telegramPhotoUrl,
+                          )}
+                          nickname={user.nickname}
+                          className={`${isTop3 ? "w-12 h-12 border-2 border-[var(--accent-cta)]/30" : "w-9 h-9 border border-[var(--border-color)]"} rounded-full object-cover`}
                         />
                         <div className="flex-1 overflow-hidden">
                           <div

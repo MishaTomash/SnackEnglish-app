@@ -9,6 +9,8 @@ import {
   updateProfile,
   updateNickname,
 } from "../controllers/userController.js";
+// ДОДАНО: Імпортуємо контролер лідерборду
+import { getLeaderboard } from "../controllers/leaderboardController.js";
 
 const router = Router();
 
@@ -34,6 +36,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 router.get("/me", getMe);
+// ДОДАНО: Підключаємо ендпоінт для отримання лідерборду
+router.get("/leaderboard", getLeaderboard);
 router.patch("/onboarding", completeOnboarding);
 router.patch("/level", updateLevel);
 router.patch("/profile", upload.single("avatar"), updateProfile);

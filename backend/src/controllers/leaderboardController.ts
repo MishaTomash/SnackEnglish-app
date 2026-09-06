@@ -8,11 +8,24 @@ export const getLeaderboard = async (
   try {
     const telegramId = req.user?.id;
 
-    const users = await User.find({ nickname: { $exists: true, $ne: null } })
+    const totalUsersInDb = await User.countDocuments();
+    const allUsersTest = await User.find({})
+      .select("nickname telegramId")
+      .lean();
+
+    const users = await User.find({
+      nickname: { $exists: true, $ne: null, $ne: "" },
+    })
       .select(
         "telegramId nickname totalScore customAvatarUrl telegramPhotoUrl streak",
       )
       .lean();
+
+    console.log(`\n--- DEBUG LEADERBOARD (User: ${telegramId}) ---`);
+    console.log(`1. Total users in DB: ${totalUsersInDb}`);
+    console.log(`2. Users passing nickname filter: ${users.length}`);
+    console.log(`3. ALL users in DB (Raw dump):`, allUsersTest);
+    console.log(`-------------------------------------------\n`);
 
     // Сортуємо напряму за totalScore (streak залишаємо як тай-брейкер при рівних балах)
     users.sort((a, b) => {
