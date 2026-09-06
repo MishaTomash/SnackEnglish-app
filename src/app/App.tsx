@@ -23,6 +23,7 @@ import { CookieMascot } from "../shared/ui/CookieMascot";
 import { useProgressStore } from "../store/progressStore";
 import { GamesPage } from "../pages/GamesPage";
 import { GameRunnerPage } from "../pages/GameRunnerPage";
+import { ProfilePage } from "../pages/ProfilePage";
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
@@ -79,6 +80,8 @@ const AppContent = () => {
         <Route path="/leaderboard" element={<LeaderboardPage />} />{" "}
         <Route path="/games" element={<GamesPage />} />
         <Route path="/games/:gameId" element={<GameRunnerPage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/profile/:userId" element={<ProfilePage />} />
         {/* ДОДАНО */}
       </Routes>
 

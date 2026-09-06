@@ -17,6 +17,7 @@ import gamesRoutes from "./routes/gamesRoutes.js";
 import { seedGames } from "./services/gameService.js";
 // ДОДАНО: Імпорт нового сервісу контенту
 import { contentService } from "./services/contentService.js";
+import profileRoutes from "./routes/profileRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -36,6 +37,7 @@ app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/words", wordRoutes);
 
 app.use("/api/games", authMiddleware, gamesRoutes);
+app.use("/api/profile", authMiddleware, profileRoutes);
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 

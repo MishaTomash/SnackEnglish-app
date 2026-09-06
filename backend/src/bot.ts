@@ -9,6 +9,7 @@ import { User } from "./models/User.js";
 import { Game } from "./models/Game.js";
 import { UserGamePurchase } from "./models/UserGamePurchase.js";
 import { ManualPaymentRequest } from "./models/ManualPaymentRequest.js";
+import { Friendship } from "./models/Friendship.js";
 
 const botToken = process.env.BOT_TOKEN;
 
@@ -235,5 +236,78 @@ bot.action(/^(approve|reject)_(.+)$/, async (ctx) => {
     await ctx.answerCbQuery();
   } catch (error) {
     console.error("Admin action processing error:", error);
+  }
+});
+
+bot.action(/^f_(acc|rej)_(.+)$/, async (ctx) => {
+  try {
+    const action = ctx.match[1];
+    const friendshipId = ctx.match[2];
+
+    const friendship =
+      await Friendship.findById(friendshipId).populate("requestedBy");
+    if (!friendship || friendship.status !== "pending") {
+      return ctx.answerCbQuery("Заявка вже оброблена або не існує.");
+    }
+
+    const currentUser = await User.findOne({ telegramId: ctx.from?.id });
+    if (
+      !currentUser ||
+      (friendship.userId.toString() !== currentUser._id.toString() &&
+        friendship.friendId.toString() !== currentUser._id.toString())
+    ) {
+      return ctx.answerCbQuery("Це не ваша заявка.");
+    }
+
+    // Формуємо реальне ім'я ініціатора (того, хто кинув заявку)
+    const requester = friendship.requestedBy as any;
+    const reqFirstName = requester.telegramFirstName;
+    const reqUsername = requester.username ? `@${requester.username}` : null;
+    let reqName =
+      reqFirstName && reqUsername
+        ? `${reqFirstName} (${reqUsername})`
+        : reqFirstName || reqUsername || `ID: ${requester.telegramId}`;
+    const reqSafeName = reqName
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // Формуємо реальне ім'я поточного юзера (того, хто натискає кнопку)
+    const myFirstName = currentUser.telegramFirstName;
+    const myUsername = currentUser.username ? `@${currentUser.username}` : null;
+    let myName =
+      myFirstName && myUsername
+        ? `${myFirstName} (${myUsername})`
+        : myFirstName || myUsername || `ID: ${currentUser.telegramId}`;
+    const mySafeName = myName
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    if (action === "acc") {
+      friendship.status = "accepted";
+      await friendship.save();
+      await ctx.editMessageText(`✅ Ви додали <b>${reqSafeName}</b> у друзі!`, {
+        parse_mode: "HTML",
+      });
+
+      // Повідомляємо ініціатора, що його заявку прийнято
+      await ctx.telegram.sendMessage(
+        requester.telegramId,
+        `🎉 <b>${mySafeName}</b> прийняв(ла) вашу заявку в друзі!`,
+        { parse_mode: "HTML" },
+      );
+    } else {
+      await friendship.deleteOne();
+      await ctx.editMessageText(
+        `❌ Ви відхилили заявку від <b>${reqSafeName}</b>.`,
+        { parse_mode: "HTML" },
+      );
+    }
+
+    await ctx.answerCbQuery();
+  } catch (error) {
+    console.error("Помилка обробки заявки в друзі через бота:", error);
+    await ctx.answerCbQuery("Сталася помилка.");
   }
 });

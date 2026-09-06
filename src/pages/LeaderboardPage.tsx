@@ -244,62 +244,84 @@ export const LeaderboardPage = () => {
                   {topUsers.map((user, idx) => {
                     const isTop3 = idx < 3;
                     return (
-                      <Card
+                      <Link
+                        to={`/profile/${user._id}`}
                         key={user._id}
-                        className={`flex items-center gap-3 transition-all ${
-                          isTop3
-                            ? "p-4 border-[var(--accent-cta)]/50 bg-[var(--accent-cta)]/5"
-                            : "p-2.5 bg-[var(--bg-card)]"
-                        }`}
+                        className="block hover:scale-[1.02] transition-transform"
                       >
-                        <div
-                          className={`w-8 text-center font-black ${isTop3 ? "text-2xl" : "text-sm text-[var(--text-muted)]"}`}
+                        <Card
+                          className={`flex items-center gap-3 transition-all ${
+                            isTop3
+                              ? "p-4 border-[var(--accent-cta)]/50 bg-[var(--accent-cta)]/5"
+                              : "p-2.5 bg-[var(--bg-card)]"
+                          }`}
                         >
-                          {user.position === 1
-                            ? "🥇"
-                            : user.position === 2
-                              ? "🥈"
-                              : user.position === 3
-                                ? "🥉"
-                                : `#${user.position}`}
-                        </div>
-                        <UserAvatar
-                          url={resolveAvatarUrl(
-                            user.customAvatarUrl || user.telegramPhotoUrl,
-                          )}
-                          nickname={user.nickname}
-                          className={`${isTop3 ? "w-12 h-12 border-2 border-[var(--accent-cta)]/30" : "w-9 h-9 border border-[var(--border-color)]"} rounded-full object-cover`}
-                        />
-                        <div className="flex-1 overflow-hidden">
                           <div
-                            className={`font-bold text-[var(--text-main)] truncate ${isTop3 ? "text-lg" : "text-sm"}`}
+                            className={`w-8 text-center font-black ${
+                              isTop3
+                                ? "text-2xl"
+                                : "text-sm text-[var(--text-muted)]"
+                            }`}
                           >
-                            @{user.nickname}
+                            {user.position === 1
+                              ? "🥇"
+                              : user.position === 2
+                                ? "🥈"
+                                : user.position === 3
+                                  ? "🥉"
+                                  : `#${user.position}`}
                           </div>
-                        </div>
-                        <div
-                          className={`font-black text-[var(--accent-cta)] ${isTop3 ? "text-xl" : "text-base"}`}
-                        >
-                          {user.score}
-                        </div>
-                      </Card>
+                          <UserAvatar
+                            url={resolveAvatarUrl(
+                              user.customAvatarUrl || user.telegramPhotoUrl,
+                            )}
+                            nickname={user.nickname}
+                            className={`${
+                              isTop3
+                                ? "w-12 h-12 border-2 border-[var(--accent-cta)]/30"
+                                : "w-9 h-9 border border-[var(--border-color)]"
+                            } rounded-full object-cover`}
+                          />
+                          <div className="flex-1 overflow-hidden">
+                            <div
+                              className={`font-bold text-[var(--text-main)] truncate ${
+                                isTop3 ? "text-lg" : "text-sm"
+                              }`}
+                            >
+                              @{user.nickname}
+                            </div>
+                          </div>
+                          <div
+                            className={`font-black text-[var(--accent-cta)] ${
+                              isTop3 ? "text-xl" : "text-base"
+                            }`}
+                          >
+                            {user.score}
+                          </div>
+                        </Card>
+                      </Link>
                     );
                   })}
                 </div>
               )}
 
               {currentUserRank && topUsers.length > 0 && (
-                <Card className="fixed bottom-[calc(70px+env(safe-area-inset-bottom))] left-4 right-4 flex items-center p-3 gap-3 border-[var(--accent-cta)] shadow-2xl bg-[var(--bg-card-elevated)] z-40">
-                  <div className="w-8 text-center font-black text-[var(--accent-cta)]">
-                    #{currentUserRank.position}
-                  </div>
-                  <div className="flex-1 font-bold text-[var(--text-main)] truncate">
-                    Ви (@{nickname})
-                  </div>
-                  <div className="font-black text-[var(--accent-cta)] text-lg">
-                    {currentUserRank.score}
-                  </div>
-                </Card>
+                <Link
+                  to={`/profile/${currentUserRank._id}`}
+                  className="fixed bottom-[calc(70px+env(safe-area-inset-bottom))] left-4 right-4 z-40 block hover:scale-[1.02] transition-transform"
+                >
+                  <Card className="flex items-center p-3 gap-3 border-[var(--accent-cta)] shadow-2xl bg-[var(--bg-card-elevated)]">
+                    <div className="w-8 text-center font-black text-[var(--accent-cta)]">
+                      #{currentUserRank.position}
+                    </div>
+                    <div className="flex-1 font-bold text-[var(--text-main)] truncate">
+                      Ви (@{nickname})
+                    </div>
+                    <div className="font-black text-[var(--accent-cta)] text-lg">
+                      {currentUserRank.score}
+                    </div>
+                  </Card>
+                </Link>
               )}
             </div>
           )}
