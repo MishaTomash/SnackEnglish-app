@@ -1,0 +1,110 @@
+{
+  "level": "B2",
+  "units": [
+    {
+      "id": "b2-u1",
+      "title": "Global Issues & Environment",
+      "description": "Обговорення глобальних проблем, використання Conditionals 2 та 3 типів.",
+      "order": 1,
+      "steps": {
+        "warmup": {},
+        "vocabulary": [
+          {
+            "text": "sustainable",
+            "transcription": "[səˈsteɪnəbl]",
+            "translation": "стійкий / екологічний",
+            "exampleSentence": "We need to find more sustainable sources of energy.",
+            "exampleTranslation": "Нам потрібно знайти більш екологічні джерела енергії."
+          },
+          {
+            "text": "emission",
+            "transcription": "[ɪˈmɪʃn]",
+            "translation": "викид (газів)",
+            "exampleSentence": "Reducing carbon emissions is a global priority.",
+            "exampleTranslation": "Скорочення викидів вуглецю є глобальним пріоритетом."
+          },
+          {
+            "text": "consequence",
+            "transcription": "[ˈkɒnsɪkwəns]",
+            "translation": "наслідок",
+            "exampleSentence": "Deforestation has devastating environmental consequences.",
+            "exampleTranslation": "Вирубка лісів має руйнівні екологічні наслідки."
+          }
+        ],
+        "grammar": {
+          "title": "Second & Third Conditionals",
+          "explanation": "2 Conditional (If + Past Simple, would + V1) — для уявних ситуацій у теперішньому. 3 Conditional (If + Past Perfect, would have + V3) — для упущених можливостей у минулому.",
+          "examples": [
+            {
+              "en": "If we planted more trees, the air would be cleaner.",
+              "ua": "Якби ми саджали більше дерев, повітря було б чистішим. (зараз)"
+            },
+            {
+              "en": "If they had acted sooner, the disaster would have been avoided.",
+              "ua": "Якби вони подіяли раніше, катастрофи можна було б уникнути. (у минулому)"
+            }
+          ]
+        },
+        "video": {
+          "url": "https://www.youtube.com/watch?v=envB2"
+        },
+        "reading": {
+          "title": "The Shift to Renewable Energy",
+          "text": "The transition to sustainable energy is no longer optional; it is an absolute necessity. If governments had implemented stricter regulations a decade ago, current carbon emissions would be significantly lower. However, even if we stop all emissions today, the consequences of past pollution will persist for decades.",
+          "questions": [
+            {
+              "question": "What would have happened if strict regulations were implemented earlier?",
+              "options": [
+                "Carbon emissions would be lower today",
+                "Energy would be more expensive",
+                "Pollution would completely disappear",
+                "Sustainable sources would be depleted"
+              ],
+              "correctAnswer": "Carbon emissions would be lower today"
+            },
+            {
+              "question": "According to the text, what happens if we stop all emissions today?",
+              "options": [
+                "The environment heals immediately",
+                "Past pollution consequences will still persist",
+                "Renewable energy becomes obsolete",
+                "No one will notice the difference"
+              ],
+              "correctAnswer": "Past pollution consequences will still persist"
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Debating Solutions",
+          "scenario": "Обговорення екологічної ініціативи.",
+          "lines": [
+            {
+              "speaker": "You",
+              "text": "If we invested more in solar power, we wouldn't rely on fossil fuels.",
+              "translation": "Якби ми більше інвестували в сонячну енергію, ми б не покладалися на викопне паливо."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "If I ___ about the environmental campaign, I would have joined it.",
+            "options": ["knew", "had known", "know", "knows"],
+            "correctAnswer": "had known",
+            "explanation": "Це 3 Conditional (жаль про минуле), тому в частині If використовується Past Perfect (had known)."
+          },
+          {
+            "question": "The ___ of greenhouse gases must be reduced drastically.",
+            "options": [
+              "consequence",
+              "emission",
+              "sustainable",
+              "development"
+            ],
+            "correctAnswer": "emission",
+            "explanation": "Emission of greenhouse gases — викиди парникових газів."
+          }
+        ]
+      }
+    }
+  ]
+}

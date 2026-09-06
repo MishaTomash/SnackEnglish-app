@@ -1,0 +1,105 @@
+{
+  "level": "C1",
+  "units": [
+    {
+      "id": "c1-u1",
+      "title": "Psychology & Human Behavior",
+      "description": "Психологічні терміни, складні абстрактні поняття та Advanced Passive Structures.",
+      "order": 1,
+      "steps": {
+        "warmup": {},
+        "vocabulary": [
+          {
+            "text": "cognitive",
+            "transcription": "[ˈkɒɡnətɪv]",
+            "translation": "когнітивний / пізнавальний",
+            "exampleSentence": "Cognitive behavioral therapy is highly effective for anxiety.",
+            "exampleTranslation": "Когнітивно-поведінкова терапія дуже ефективна при тривожності."
+          },
+          {
+            "text": "resilience",
+            "transcription": "[rɪˈzɪliəns]",
+            "translation": "життєстійкість / опірність",
+            "exampleSentence": "Psychological resilience helps people recover from trauma.",
+            "exampleTranslation": "Психологічна життєстійкість допомагає людям відновлюватися після травм."
+          },
+          {
+            "text": "bias",
+            "transcription": "[ˈbaɪəs]",
+            "translation": "упередження / схильність",
+            "exampleSentence": "Confirmation bias leads us to ignore contradictory evidence.",
+            "exampleTranslation": "Схильність до підтвердження змушує нас ігнорувати суперечливі докази."
+          }
+        ],
+        "grammar": {
+          "title": "Advanced Passive Structures",
+          "explanation": "Використовуються для передачі об'єктивної інформації або чуток. (It is said that... / He is believed to have...).",
+          "examples": [
+            {
+              "en": "The brain is known to rewire itself after injury.",
+              "ua": "Відомо, що мозок перебудовується після травми."
+            },
+            {
+              "en": "The experiment is thought to have been flawed.",
+              "ua": "Вважається, що експеримент був проведений з помилками."
+            }
+          ]
+        },
+        "video": {
+          "url": "https://www.youtube.com/watch?v=psychC1"
+        },
+        "reading": {
+          "title": "The Illusion of Choice",
+          "text": "Human behavior is widely believed to be guided by rational thought. However, numerous studies indicate that cognitive biases significantly distort our decision-making processes. It has been proven that consumers are often manipulated by subtle environmental cues, rendering the concept of total free will somewhat illusory.",
+          "questions": [
+            {
+              "question": "What is widely believed about human behavior?",
+              "options": [
+                "It is completely random",
+                "It is guided by rational thought",
+                "It is immune to environmental cues",
+                "It is always deeply flawed"
+              ],
+              "correctAnswer": "It is guided by rational thought"
+            },
+            {
+              "question": "What distorts our decision-making processes according to studies?",
+              "options": [
+                "Lack of intelligence",
+                "Environmental awareness",
+                "Cognitive biases",
+                "Physical fatigue"
+              ],
+              "correctAnswer": "Cognitive biases"
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Behavioral Analysis",
+          "scenario": "Обговорення упереджень на семінарі.",
+          "lines": [
+            {
+              "speaker": "You",
+              "text": "It is argued that unconscious biases affect even the most objective professionals.",
+              "translation": "Стверджується, що несвідомі упередження впливають навіть на найоб'єктивніших професіоналів."
+            }
+          ]
+        },
+        "test": [
+          {
+            "question": "The suspect is believed ___ the country yesterday.",
+            "options": ["to leave", "leaving", "to have left", "left"],
+            "correctAnswer": "to have left",
+            "explanation": "Оскільки дія (виїхав) відбулася ДО моменту мовлення (yesterday), використовується Perfect Infinitive (to have left)."
+          },
+          {
+            "question": "Overcoming severe stress requires immense psychological ___.",
+            "options": ["bias", "resilience", "cognitive", "dichotomy"],
+            "correctAnswer": "resilience",
+            "explanation": "Resilience — здатність психіки відновлюватися."
+          }
+        ]
+      }
+    }
+  ]
+}

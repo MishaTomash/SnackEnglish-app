@@ -17,46 +17,11 @@
             "exampleTranslation": "Його неоднозначна відповідь залишила раду директорів у невідомості щодо його справжніх намірів."
           },
           {
-            "text": "dichotomy",
-            "transcription": "[daɪˈkɒtəmi]",
-            "translation": "дихотомія / протиставлення",
-            "exampleSentence": "The debate created a false dichotomy between security and civil liberties.",
-            "exampleTranslation": "Дебати створили хибну дихотомію між безпекою та громадянськими свободами."
-          },
-          {
-            "text": "ubiquitous",
-            "transcription": "[juːˈbɪkwɪtəs]",
-            "translation": "всюдисущий / повсюдний",
-            "exampleSentence": "Smartphones have become a ubiquitous facet of modern existence.",
-            "exampleTranslation": "Смартфони стали всюдисущим аспектом сучасного життя."
-          },
-          {
-            "text": "nuance",
-            "transcription": "[ˈnjuːɑːns]",
-            "translation": "відтінок значення / нюанс",
-            "exampleSentence": "A seasoned diplomat must perceive the subtle nuances in formal communiqués.",
-            "exampleTranslation": "Досвідчений дипломат повинен помічати тонкі нюанси у формальних комюніке."
-          },
-          {
             "text": "cogent",
             "transcription": "[ˈkəʊdʒənt]",
             "translation": "переконливий / неспростовний",
             "exampleSentence": "She put forward a remarkably cogent argument backed by longitudinal data.",
             "exampleTranslation": "Вона висунула напрочуд переконливий аргумент, підкріплений лонгітюдними даними."
-          },
-          {
-            "text": "paradigm",
-            "transcription": "[ˈpærədaɪm]",
-            "translation": "парадигма / концептуальна модель",
-            "exampleSentence": "Decentralized architecture represents a fundamental shift in the computing paradigm.",
-            "exampleTranslation": "Децентралізована архітектура являє собою фундаментальний зсув у парадигмі обчислень."
-          },
-          {
-            "text": "elucidate",
-            "transcription": "[ɪˈluːsɪdeɪt]",
-            "translation": "прояснювати / тлумачити",
-            "exampleSentence": "The counsel was summoned to elucidate the legal ramifications of the treaty.",
-            "exampleTranslation": "Юрисконсульта викликали, щоб прояснити правові наслідки угоди."
           },
           {
             "text": "ephemeral",
@@ -68,19 +33,15 @@
         ],
         "grammar": {
           "title": "Inverted Conditionals & The Subjunctive",
-          "explanation": "У прецизійному мовленні рівня C2 замість сполучника 'if' застосовується стилістична інверсія (Were you to consider..., Had we anticipated..., Should any dispute arise). Також використовується Subjunctive Mood (базова форма дієслова без закінчень) після слів вимоги чи необхідності (insist that he be, vital that it remain).",
+          "explanation": "У прецизійному мовленні рівня C2 замість сполучника 'if' застосовується стилістична інверсія (Were you to consider..., Had we anticipated..., Should any dispute arise).",
           "examples": [
             {
-              "en": "Were the delegates to reject the compromise, the summit would collapse into acrimony.",
-              "ua": "Якби делегати відкинули компроміс, саміт завершився б взаємними звинуваченнями."
+              "en": "Were the delegates to reject the compromise, the summit would collapse.",
+              "ua": "Якби делегати відкинули компроміс, саміт зазнав би краху."
             },
             {
-              "en": "Had the executive board anticipated these ramifications, the merger would never have transpired.",
-              "ua": "Якби рада директорів передбачила ці наслідки, злиття ніколи б не відбулося."
-            },
-            {
-              "en": "It is imperative that every stakeholder remain cognizant of the regulatory constraints.",
-              "ua": "Вкрай важливо, щоб кожен стейкхолдер пам'ятав про регуляторні обмеження."
+              "en": "Had the executive board anticipated this, the merger would not have transpired.",
+              "ua": "Якби рада директорів передбачила це, злиття ніколи б не відбулося."
             }
           ]
         },
@@ -89,7 +50,7 @@
         },
         "reading": {
           "title": "The Architecture of Rhetorical Precision",
-          "text": "Navigating high-stakes strategic discourse demands not merely technical fluency, but an acute sensitivity to semantic nuance. Equivocal phraseology may occasionally serve as a deliberate tactic to preserve maneuverability during tense deliberations; however, habitual ambiguity risks eroding credibility and blunting an otherwise cogent thesis. Masterful rhetoricians elucidate intricate paradigms by delineating genuine dichotomies rather than manufacturing false ones. When every syllable carries diplomatic and systemic weight, calibrating register and tenor becomes an indispensable instrument of influence.",
+          "text": "Navigating high-stakes strategic discourse demands an acute sensitivity to semantic nuance. Equivocal phraseology may occasionally serve as a deliberate tactic to preserve maneuverability; however, habitual ambiguity risks eroding credibility and blunting an otherwise cogent thesis.",
           "questions": [
             {
               "question": "Why might a negotiator deliberately resort to equivocal phraseology?",
@@ -99,17 +60,17 @@
                 "To avoid engaging with regulatory frameworks",
                 "To truncate the duration of negotiations"
               ],
-              "correctAnswer": 1
+              "correctAnswer": "To preserve diplomatic flexibility and maneuverability"
             },
             {
-              "question": "According to the passage, what distinguishes masterful rhetoricians?",
+              "question": "What is the danger of habitual ambiguity according to the text?",
               "options": [
-                "They dispense with formal register entirely",
-                "They rely predominantly on ephemeral emotional appeals",
-                "They clarify complex paradigms and articulate genuine dichotomies",
-                "They prioritize absolute brevity above contextual nuance"
+                "It causes physical exhaustion",
+                "It risks eroding credibility and blunting a cogent thesis",
+                "It creates genuine dichotomies",
+                "It makes the negotiator too aggressive"
               ],
-              "correctAnswer": 2
+              "correctAnswer": "It risks eroding credibility and blunting a cogent thesis"
             }
           ]
         },
@@ -119,13 +80,8 @@
           "lines": [
             {
               "speaker": "Senior Envoy",
-              "text": "Were we to adopt an uncompromising posture, wouldn't we alienate our most valuable strategic partners?",
-              "translation": "Якби ми зайняли безкомпромісну позицію, хіба ми не відштовхнули б наших найцінніших стратегічних партнерів?"
-            },
-            {
-              "speaker": "You",
-              "text": "Precisely; hence, our imperative is to present a cogent framework that leaves no room for equivocal interpretations.",
-              "translation": "Саме так; тому наш імператив — представити переконливу концепцію, яка не залишає місця для двозначних тлумачень."
+              "text": "Were we to adopt an uncompromising posture, wouldn't we alienate our partners?",
+              "translation": "Якби ми зайняли безкомпромісну позицію, хіба ми не відштовхнули б наших партнерів?"
             }
           ]
         },
@@ -133,14 +89,14 @@
           {
             "question": "___ any dispute arise regarding treaty compliance, the tribunal shall convene immediately.",
             "options": ["Were", "Should", "Had", "Would"],
-            "correctAnswer": 1,
-            "explanation": "Інверсія першого умовного типу (First Conditional inversion) для малоймовірних подій у теперішньому/майбутньому часі утворюється за допомогою 'Should + Subject + V1'."
+            "correctAnswer": "Should",
+            "explanation": "Інверсія першого умовного типу утворюється за допомогою 'Should + Subject + V1'."
           },
           {
             "question": "The evidence presented was so ___ that even skeptical auditors retracted their initial objections.",
             "options": ["ephemeral", "equivocal", "cogent", "ubiquitous"],
-            "correctAnswer": 2,
-            "explanation": "'Cogent' означає переконливий, ясний, логічно обґрунтований та неспростовний."
+            "correctAnswer": "cogent",
+            "explanation": "'Cogent' означає переконливий, ясний, логічно обґрунтований."
           }
         ]
       }
