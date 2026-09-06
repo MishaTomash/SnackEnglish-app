@@ -39,7 +39,13 @@ export const UnitStepPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { units, completeStep } = useProgressStore();
-  const { incrementWordsLearned, level, updateLevel } = useUserStore();
+  // ВИДАЛЕНО: incrementWordsLearned — цей виклик безумовно додавав
+  // words.length щоразу при завершенні кроку vocabulary, навіть при
+  // повторному проходженні вже пройденого кроку. Саме це й накрутило
+  // "80 слів вивчено" при 8 реальних словах. Тепер wordsLearnedCount —
+  // виключно похідне з бекенду (UserProgress, через реальні SM-2 review),
+  // проходження кроку vocabulary більше на нього не впливає напряму.
+  const { level, updateLevel } = useUserStore();
 
   const unit = units.find((u) => u.id === unitId);
   const [words, setWords] = useState<Word[]>([]);
@@ -128,9 +134,6 @@ export const UnitStepPage = () => {
 
     try {
       await completeStep(unit.id, stepType);
-      if (stepType === "vocabulary") {
-        incrementWordsLearned(words.length);
-      }
       if (stepType === "test") {
         setIsUnitFinishedModalOpen(true);
       } else if (stepType === "warmup") {

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Word } from "../entities/word/types";
 import { getPracticeWordsApi, reviewWordApi } from "../entities/word/api";
+import { useUserStore } from "./userStore";
 
 type RequestStatus = "idle" | "loading" | "success" | "error";
 
@@ -70,7 +71,15 @@ export const useRepetitionStore = create<RepetitionState>((set, get) => ({
     if (!currentWord) return;
 
     try {
-      await reviewWordApi(currentWord.id, quality);
+      const response = await reviewWordApi(currentWord.id, quality);
+
+      // Джерело правди — бекенд: пишемо прийшле число напряму в userStore,
+      // без окремого forced fetchUser() і без локального інкременту.
+      if (typeof response.wordsLearnedCount === "number") {
+        useUserStore.setState({
+          wordsLearnedCount: response.wordsLearnedCount,
+        });
+      }
 
       const nextIndex = currentWordIndex + 1;
       if (nextIndex >= dailyQueue.length) {

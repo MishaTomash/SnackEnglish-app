@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { User } from "../models/User.js";
+import { getLearnedWordsCount } from "../services/progressStatsService.js";
 
 // Повністю описуємо структуру користувача, яку віддає Telegram
 export interface ExtendedTelegramUser {
@@ -46,7 +47,12 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    res.status(200).json(user);
+    // ДОДАНО: реальна кількість унікальних вивчених слів, рахується з
+    // UserProgress на бекенді — фронтенд більше НІКОЛИ не інкрементить
+    // це число сам, лише відображає те, що прийшло звідси.
+    const wordsLearnedCount = await getLearnedWordsCount(user._id);
+
+    res.status(200).json({ ...user.toObject(), wordsLearnedCount });
   } catch (error) {
     console.error("Error in getMe:", error);
     res.status(500).json({ error: "Failed to fetch user profile" });

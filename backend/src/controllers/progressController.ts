@@ -10,6 +10,7 @@ import {
 } from "../models/index.js";
 import { calculateSM2 } from "../utils/spacedRepetition.js";
 import { contentService } from "../services/contentService.js";
+import { getLearnedWordsCount } from "../services/progressStatsService.js";
 
 export const getUserUnits = async (
   req: Request,
@@ -268,7 +269,18 @@ export const reviewWord = async (
     progress.nextReviewDate = sm2Result.nextReviewDate;
 
     await progress.save();
-    res.status(200).json({ success: true, wordId: word.id, ...sm2Result });
+
+    // ДОДАНО: рахуємо свіжий wordsLearnedCount одразу тут і повертаємо в
+    // цій самій відповіді — щоб фронтенд (repetitionStore.ts) міг записати
+    // його напряму в userStore без окремого forced fetchUser().
+    const wordsLearnedCount = await getLearnedWordsCount(user._id);
+
+    res.status(200).json({
+      success: true,
+      wordId: word.id,
+      ...sm2Result,
+      wordsLearnedCount,
+    });
   } catch (error: unknown) {
     res
       .status(500)

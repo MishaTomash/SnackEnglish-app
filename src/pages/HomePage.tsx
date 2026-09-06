@@ -6,7 +6,7 @@ import {
   Sparkles,
   MoreVertical,
   User as UserIcon,
-  Trophy, // ДОДАНО
+  Trophy,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -31,7 +31,7 @@ export const HomePage = () => {
   const {
     level,
     streak,
-    totalScore, // ДОДАНО
+    totalScore,
     wordsLearnedCount,
     telegramFirstName,
     telegramPhotoUrl,
@@ -98,7 +98,8 @@ export const HomePage = () => {
               <h1 className="text-base font-black text-[var(--text-main)] leading-tight truncate max-w-[140px]">
                 {currentDisplayName}
               </h1>
-              <Badge className="px-1.5 py-0 font-bold text-[10px] tracking-wide bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] border border-[var(--accent-cta)]/20">
+              {/* ВИПРАВЛЕНО: text-[var(--text-main)] замість text-[var(--accent-cta)] */}
+              <Badge className="px-1.5 py-0 font-bold text-[10px] tracking-wide bg-[var(--accent-cta)]/10 text-[var(--text-main)] border border-[var(--accent-cta)]/20">
                 {level}
               </Badge>
             </div>
@@ -123,7 +124,6 @@ export const HomePage = () => {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* НОВИЙ БЕЙДЖ БАЛІВ */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cta)]/10 border border-[var(--accent-cta)]/20 text-[var(--accent-cta)] font-black text-sm shadow-sm">
             <Trophy className="w-4 h-4" />
             <span>{totalScore || 0}</span>

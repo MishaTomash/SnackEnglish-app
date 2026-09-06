@@ -45,12 +45,20 @@ export async function reviewWordApi(
   repetitions: number;
   interval: number;
   nextReviewDate: string;
+  /**
+   * Реальна кількість унікальних вивчених слів користувача, порахована
+   * на бекенді (UserProgress, repetitions >= LEARNED_MIN_REPETITIONS).
+   * Приходить одразу в цій відповіді, щоб не робити окремий forced
+   * fetchUser() після кожної картки в Практиці.
+   */
+  wordsLearnedCount: number;
 }> {
   const response = await apiClient.post<{
     success: boolean;
     repetitions: number;
     interval: number;
     nextReviewDate: string;
+    wordsLearnedCount: number;
   }>("/progress/review", {
     wordId,
     quality,

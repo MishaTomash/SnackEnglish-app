@@ -15,10 +15,23 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 export interface UserState {
   telegramId: number | null;
-  totalScore: number; // ДОДАНО
   level: EnglishLevel | null;
   onboardingCompleted: boolean;
   streak: number;
+  /**
+   * Загальний рахунок (бали за пройдені кроки/юніти). Джерело правди —
+   * бекенд (User.totalScore, рахується в progressController.completeStep).
+   * Так само як wordsLearnedCount — тільки перезаписується з fetchUser(),
+   * ніколи не інкрементується локально.
+   */
+  totalScore: number;
+  /**
+   * Кількість УНІКАЛЬНИХ вивчених слів. Джерело правди — бекенд
+   * (COUNT(DISTINCT wordId) зі статусом "learned" у прогресі користувача).
+   * Це поле НІКОЛИ не інкрементується локально — тільки перезаписується
+   * значенням з відповіді сервера в fetchUser(). Кешується в localStorage
+   * лише для миттєвого відображення до завершення першого fetchUser().
+   */
   wordsLearnedCount: number;
   isLoading: boolean;
   error: string | null;
@@ -33,7 +46,6 @@ export interface UserState {
 
   setLevel: (level: EnglishLevel) => void;
   incrementStreak: () => void;
-  incrementWordsLearned: (count?: number) => void;
   setLastActiveUnitId: (id: string | null) => void;
 
   updateLevel: (level: EnglishLevel) => Promise<boolean>;
@@ -53,10 +65,10 @@ export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       telegramId: null,
-      totalScore: 0, // ДОДАНО
       level: null,
       onboardingCompleted: false,
       streak: 1,
+      totalScore: 0,
       wordsLearnedCount: 0,
       isLoading: false,
       error: null,
@@ -71,10 +83,6 @@ export const useUserStore = create<UserState>()(
 
       setLevel: (level) => set({ level }),
       incrementStreak: () => set((state) => ({ streak: state.streak + 1 })),
-      incrementWordsLearned: (count = 1) =>
-        set((state) => ({
-          wordsLearnedCount: state.wordsLearnedCount + count,
-        })),
       setLastActiveUnitId: (id) => set({ lastActiveUnitId: id }),
 
       updateLevel: async (level: EnglishLevel) => {
@@ -105,10 +113,14 @@ export const useUserStore = create<UserState>()(
           const data = await res.json();
           set({
             telegramId: data.telegramId,
-            totalScore: data.totalScore || 0, // ДОДАНО
             level: data.level,
             onboardingCompleted: data.onboardingCompleted,
             streak: data.streak,
+            totalScore: data.totalScore ?? 0,
+            // ВИПРАВЛЕНО: раніше це поле взагалі не синхронізувалось з
+            // бекендом, тому показане число було виключно сумою локальних
+            // incrementWordsLearned() викликів і ніколи не звірялось з реальністю.
+            wordsLearnedCount: data.wordsLearnedCount ?? 0,
             telegramFirstName: data.telegramFirstName,
             telegramPhotoUrl: data.telegramPhotoUrl,
             customDisplayName: data.customDisplayName,
@@ -195,10 +207,12 @@ export const useUserStore = create<UserState>()(
       name: "snack_user_storage",
       partialize: (state) => ({
         telegramId: state.telegramId,
-        totalScore: state.totalScore, // ДОДАНО
         level: state.level,
         onboardingCompleted: state.onboardingCompleted,
         streak: state.streak,
+        totalScore: state.totalScore,
+        // Кешуємо ОСТАННЄ ВІДОМЕ серверне значення для миттєвого відображення
+        // до першого fetchUser() у новій сесії — не для накопичення локально.
         wordsLearnedCount: state.wordsLearnedCount,
         lastActiveUnitId: state.lastActiveUnitId,
         telegramFirstName: state.telegramFirstName,
