@@ -301,3 +301,26 @@ export const getMyFriends = async (
     res.status(500).json({ error: "Помилка при завантаженні друзів" });
   }
 };
+export const getMyProfileStats = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const currentUser = await getCurrentUser(req);
+    if (!currentUser) {
+      res.status(401).json({ error: "Неавторизовано" });
+      return;
+    }
+
+    const likesCount = await Like.countDocuments({ targetId: currentUser._id });
+    const friendsCount = await Friendship.countDocuments({
+      $or: [{ userId: currentUser._id }, { friendId: currentUser._id }],
+      status: "accepted",
+    });
+
+    res.status(200).json({ likesCount, friendsCount });
+  } catch (error) {
+    console.error("Помилка getMyProfileStats:", error);
+    res.status(500).json({ error: "Помилка при завантаженні статистики" });
+  }
+};

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen,
@@ -7,6 +7,8 @@ import {
   MoreVertical,
   User as UserIcon,
   Trophy,
+  Users,
+  Heart,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -18,12 +20,12 @@ import { useUserStore } from "../store/userStore";
 import { useProgressStore } from "../store/progressStore";
 import { useRepetitionStore } from "../store/repetitionStore";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
 const resolveAvatarUrl = (url: string | null) => {
   if (!url) return null;
   if (url.startsWith("http")) return url;
-  const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:3000")
-    .replace(/\/api$/, "")
-    .replace(/\/$/, "");
+  const apiBase = API_URL.replace(/\/api$/, "").replace(/\/$/, "");
   return `${apiBase}${url}?ngrok-skip-browser-warning=true`;
 };
 
@@ -51,6 +53,8 @@ export const HomePage = () => {
 
   const { dailyQueue, loadDailyWords, status } = useRepetitionStore();
 
+  const [stats, setStats] = useState({ likesCount: 0, friendsCount: 0 });
+
   useEffect(() => {
     if (status === "idle") {
       loadDailyWords();
@@ -62,6 +66,29 @@ export const HomePage = () => {
       loadUnits(level || "A1");
     }
   }, [units.length, loadUnits, level, lastFetchedLevel]);
+
+  // Завантаження статистики профілю
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const initData =
+          window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
+        const res = await fetch(`${API_URL}/profile/me/stats`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${initData}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile stats:", error);
+      }
+    };
+    if (nickname) fetchStats(); // Запитуємо тільки якщо юзер вже завершив онбординг (має нік)
+  }, [nickname]);
 
   const activeUnit = units.find((u) => u.id === currentUnitId) ?? units[0];
   const reviewWordsCount = dailyQueue.length;
@@ -98,7 +125,6 @@ export const HomePage = () => {
               <h1 className="text-base font-black text-[var(--text-main)] leading-tight truncate max-w-[140px]">
                 {currentDisplayName}
               </h1>
-              {/* ВИПРАВЛЕНО: text-[var(--text-main)] замість text-[var(--accent-cta)] */}
               <Badge className="px-1.5 py-0 font-bold text-[10px] tracking-wide bg-[var(--accent-cta)]/10 text-[var(--text-main)] border border-[var(--accent-cta)]/20">
                 {level}
               </Badge>
@@ -193,7 +219,7 @@ export const HomePage = () => {
         )}
       </Card>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 pb-4">
         <Card className="flex flex-col items-start gap-2 p-3.5 h-full">
           <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
@@ -241,6 +267,38 @@ export const HomePage = () => {
             </div>
           </Card>
         </Link>
+
+        {/* НОВИЙ БЛОК: Друзі */}
+        <Link to="/friends" className="block h-full">
+          <Card className="flex flex-col items-start gap-2 p-3.5 h-full transition-all active:scale-[0.98] border-[var(--border-color)] bg-[var(--bg-card)]">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-[var(--text-main)] leading-none">
+                {stats.friendsCount}
+              </div>
+              <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
+                друзів
+              </div>
+            </div>
+          </Card>
+        </Link>
+
+        {/* НОВИЙ БЛОК: Лайки */}
+        <Card className="flex flex-col items-start gap-2 p-3.5 h-full border-[var(--border-color)] bg-[var(--bg-card)]">
+          <div className="w-8 h-8 rounded-xl bg-red-500/15 text-red-500 flex items-center justify-center">
+            <Heart className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-[var(--text-main)] leading-none">
+              {stats.likesCount}
+            </div>
+            <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
+              вподобань
+            </div>
+          </div>
+        </Card>
       </div>
     </Screen>
   );

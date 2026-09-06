@@ -24,6 +24,7 @@ import { useProgressStore } from "../store/progressStore";
 import { GamesPage } from "../pages/GamesPage";
 import { GameRunnerPage } from "../pages/GameRunnerPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import { FriendsPage } from "../pages/FriendsPage";
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
@@ -82,6 +83,8 @@ const AppContent = () => {
         <Route path="/games/:gameId" element={<GameRunnerPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/profile/:userId" element={<ProfilePage />} />
+        <Route path="/profile/:userId" element={<ProfilePage />} />
+        <Route path="/friends" element={<FriendsPage />} />
         {/* ДОДАНО */}
       </Routes>
 
