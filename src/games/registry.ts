@@ -8,6 +8,9 @@ const WordMatch = lazy(() =>
 const Hangman = lazy(() =>
   import("./hangman").then((m) => ({ default: m.HangmanGame })),
 );
+const QuickPick = lazy(() =>
+  import("./quick-pick").then((m) => ({ default: m.QuickPickGame })),
+);
 
 export interface RegistryEntry extends GameConfig {
   component: React.ComponentType<any>;
@@ -19,7 +22,7 @@ export const GAME_REGISTRY: RegistryEntry[] = [
     title: "Слово-Пара",
     description: "З'єднай англійське слово з правильним перекладом на час.",
     isFree: true,
-    status: "coming_soon",
+    status: "available",
     component: WordMatch,
   },
   {
@@ -30,5 +33,14 @@ export const GAME_REGISTRY: RegistryEntry[] = [
     priceStars: 50,
     status: "coming_soon",
     component: Hangman,
+  },
+  {
+    id: "quick-pick",
+    title: "Швидкий вибір",
+    description:
+      "Обери правильний переклад на швидкість. Доступно одразу, без прогресу!",
+    isFree: true,
+    status: "available",
+    component: QuickPick,
   },
 ];
