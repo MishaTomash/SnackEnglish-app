@@ -282,7 +282,7 @@ export const UnitStepPage = () => {
         <SpeakingStep words={words} onComplete={handleComplete} />
       )}
       {stepType === "test" && (
-        <TestStep words={words} onComplete={handleComplete} />
+        <TestStep unit={unit} words={words} onComplete={handleComplete} />
       )}
     </Screen>
   );

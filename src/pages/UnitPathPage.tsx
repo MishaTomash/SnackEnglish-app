@@ -138,7 +138,7 @@ export const UnitPathPage = () => {
         status = "available";
         isNextAvailableFound = true; // Перший непройдений крок
       } else {
-        status = "locked"; // Наступні кроки
+        status = "locked";
       }
 
       return { ...step, status };
