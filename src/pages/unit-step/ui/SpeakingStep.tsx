@@ -1,7 +1,8 @@
+// src/pages/unit-step/ui/SpeakingStep.tsx
 import { useState } from "react";
-import { Button } from "../../../shared/ui/Button";
-import type { Word } from "../../../entities/word/types";
 import { SpeechPracticeBlock } from "../../../shared/lib/SpeechPracticeBlock";
+import { StepLayout } from "../../../shared/ui/StepLayout";
+import type { Word } from "../../../entities/word/types";
 
 export const SpeakingStep = ({
   words,
@@ -15,22 +16,13 @@ export const SpeakingStep = ({
     words[0]?.exampleSentence ?? "Hello, nice to meet you!";
 
   return (
-    <div className="space-y-4 my-auto">
+    <StepLayout onComplete={onComplete} isCompleteDisabled={!canProceed}>
       <SpeechPracticeBlock
         targetText={targetSentence}
         onStatusChange={setCanProceed}
         threshold={70}
-        maxAttempts={Infinity} // Speaking лишаємо безлімітним, або можеш поставити 3
+        maxAttempts={Infinity}
       />
-
-      <Button
-        onClick={onComplete}
-        variant="primary"
-        className="w-full"
-        disabled={!canProceed}
-      >
-        Продовжити
-      </Button>
-    </div>
+    </StepLayout>
   );
 };

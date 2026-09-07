@@ -1,6 +1,6 @@
 import { Card } from "../../../shared/ui/Card";
-import { Button } from "../../../shared/ui/Button";
 import { Badge } from "../../../shared/ui/Badge";
+import { StepLayout } from "../../../shared/ui/StepLayout";
 import type { Unit } from "../../../entities/unit/types";
 
 // Допоміжна функція для рендеру підсвітки
@@ -36,7 +36,7 @@ export const GrammarStep = ({
   const hasContent = !!title || !!explanation;
 
   return (
-    <div className="space-y-4 my-auto">
+    <StepLayout onComplete={onComplete} completeLabel="Зрозуміло, продовжити">
       <Card className="p-5 space-y-4">
         {hasContent ? (
           <>
@@ -81,10 +81,6 @@ export const GrammarStep = ({
           </div>
         )}
       </Card>
-
-      <Button onClick={onComplete} variant="primary" className="w-full">
-        Зрозуміло, продовжити
-      </Button>
-    </div>
+    </StepLayout>
   );
 };

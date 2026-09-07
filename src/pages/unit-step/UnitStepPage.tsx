@@ -138,12 +138,21 @@ export const UnitStepPage = () => {
     return <Navigate to={`/path/${unit.id}`} replace />;
   }
 
-  const handleComplete = async () => {
+  // Додаємо тип | any, щоб TypeScript не сварився на події від кнопок
+  const handleComplete = async (isRetry?: boolean | any) => {
     if (isCompleting) return;
     setIsCompleting(true);
 
     try {
-      await completeStep(unit.id, stepType);
+      // ЗАХИСТ: Перевіряємо, чи isRetry ДІЙСНО є булевим true,
+      // а не об'єктом MouseEvent, який прилітає від звичайного onClick
+      const isTrueRetry = isRetry === true;
+
+      // Якщо це НЕ повторна спроба, тоді викликаємо completeStep з бекендом
+      if (!isTrueRetry) {
+        await completeStep(unit.id, stepType);
+      }
+
       if (stepType === "test") {
         setIsUnitFinishedModalOpen(true);
       } else if (stepType === "warmup") {

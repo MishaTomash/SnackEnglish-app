@@ -1,6 +1,6 @@
 import { Sparkles } from "lucide-react";
 import { Card } from "../../../shared/ui/Card";
-import { Button } from "../../../shared/ui/Button";
+import { StepLayout } from "../../../shared/ui/StepLayout";
 import type { Unit } from "../../../entities/unit/types";
 
 export const WarmupStep = ({
@@ -10,7 +10,7 @@ export const WarmupStep = ({
   unit: Unit;
   onComplete: () => void;
 }) => (
-  <div className="space-y-4 my-auto">
+  <StepLayout onComplete={onComplete} completeLabel="Почати урок">
     <Card className="text-center p-6 space-y-3">
       <div className="w-14 h-14 bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] rounded-full flex items-center justify-center mx-auto">
         <Sparkles className="w-8 h-8" />
@@ -24,11 +24,8 @@ export const WarmupStep = ({
           «{unit.title}»
         </span>
         . Ви вивчите {unit.wordIds?.length || 0} нових слів та опануєте правило
-        «{unit.grammarTopic}».
+        «{unit.grammarTopic || unit.grammar?.title || "Граматика"}».
       </p>
     </Card>
-    <Button onClick={onComplete} variant="primary" className="w-full">
-      Почати урок
-    </Button>
-  </div>
+  </StepLayout>
 );
