@@ -7,8 +7,7 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-
-import { initTelegramApp, subscribeToTheme } from "../shared/lib/telegram";
+import { initTelegramApp } from "../shared/lib/telegram";
 import { useUserStore } from "../store/userStore";
 import { OnboardingPage } from "../pages/OnboardingPage";
 import { HomePage } from "../pages/HomePage";
@@ -26,37 +25,39 @@ import { GamesPage } from "../pages/GamesPage";
 import { GameRunnerPage } from "../pages/GameRunnerPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { FriendsPage } from "../pages/FriendsPage";
-import { DuelLobbyPage } from "../pages/DuelLobbyPage";
+import { DuelRoomPage } from "../pages/DuelRoomPage";
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
   const location = useLocation();
-  const navigate = useNavigate(); // ВИПРАВЛЕННЯ: надійний хук навігації
+  const navigate = useNavigate();
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // 1. ПАРСЕР ЗАПРОШЕНЬ (Перевіряємо і Telegram дані, і URL)
+  const [pendingRoom, setPendingRoom] = useState<string | null>(null);
+
+  // ЖОРСТКИЙ ПАРСЕР: Шукає ID кімнати будь-де в URL
   useEffect(() => {
     try {
       const tg = (window as any).Telegram?.WebApp;
-      const searchParams = new URLSearchParams(window.location.search);
+      let param = tg?.initDataUnsafe?.start_param;
 
-      // Читаємо параметр або з Telegram, або прямо з URL (куди веде кнопка)
-      const startParam =
-        tg?.initDataUnsafe?.start_param || searchParams.get("startapp");
+      if (!param) {
+        // Вириваємо за допомогою RegEx з усього URL
+        const match = window.location.href.match(/duel_([a-zA-Z0-9]+)/);
+        if (match) param = "duel_" + match[1];
+      }
 
-      if (startParam && startParam.startsWith("duel_")) {
-        const roomId = startParam.replace("duel_", "");
-        sessionStorage.setItem("pendingDuelRoute", `/duel/${roomId}`);
+      if (param && param.startsWith("duel_")) {
+        setPendingRoom(param.replace("duel_", ""));
       }
     } catch (e) {
-      console.error("Deep link error:", e);
+      console.error("Deep link parse error:", e);
     }
   }, []);
 
   useEffect(() => {
     const initApp = async () => {
       const cachedLevel = useUserStore.getState().level;
-
       if (cachedLevel) {
         await Promise.all([
           fetchUser(),
@@ -65,24 +66,22 @@ const AppContent = () => {
       } else {
         await fetchUser();
       }
-
       setIsInitializing(false);
     };
     void initApp();
   }, [fetchUser]);
 
-  // 2. БЕЗПЕЧНИЙ РЕДИРЕКТ НА ДУЕЛЬ (тільки після повного завантаження)
+  // ГАРАНТОВАНИЙ РЕДИРЕКТ
   useEffect(() => {
-    if (!isInitializing && onboardingCompleted) {
-      const pendingDuelRoute = sessionStorage.getItem("pendingDuelRoute");
-      if (pendingDuelRoute) {
-        sessionStorage.removeItem("pendingDuelRoute");
-        navigate(pendingDuelRoute, { replace: true });
-      }
+    if (!isInitializing && onboardingCompleted && pendingRoom) {
+      setTimeout(() => {
+        navigate(`/room/${pendingRoom}`, { replace: true });
+        setPendingRoom(null);
+      }, 50);
     }
-  }, [isInitializing, onboardingCompleted, navigate]);
+  }, [isInitializing, onboardingCompleted, pendingRoom, navigate]);
 
-  if (isInitializing) {
+  if (isInitializing || (pendingRoom && !onboardingCompleted)) {
     return (
       <Screen className="justify-center items-center">
         <CookieMascot state="thinking" size={64} className="animate-pulse" />
@@ -91,16 +90,12 @@ const AppContent = () => {
   }
 
   const isInsideStep = location.pathname.includes("/step/");
-  const isDuel = location.pathname.includes("/duel/"); // Щоб сховати меню
+  const isDuel = location.pathname.includes("/room/");
   const isOnboarding = location.pathname === "/onboarding";
 
-  if (!onboardingCompleted && !isOnboarding) {
+  if (!onboardingCompleted && !isOnboarding)
     return <Navigate to="/onboarding" replace />;
-  }
-
-  if (onboardingCompleted && isOnboarding) {
-    return <Navigate to="/" replace />;
-  }
+  if (onboardingCompleted && isOnboarding) return <Navigate to="/" replace />;
 
   return (
     <div className="relative min-h-[100dvh] bg-[var(--bg-app)] text-[var(--text-main)]">
@@ -117,10 +112,8 @@ const AppContent = () => {
         <Route path="/games/:gameId" element={<GameRunnerPage />} />
         <Route path="/profile/:userId" element={<ProfilePage />} />
         <Route path="/friends" element={<FriendsPage />} />
-        <Route path="/duel/:roomId" element={<DuelLobbyPage />} />
+        <Route path="/room/:roomId" element={<DuelRoomPage />} />
       </Routes>
-
-      {/* Якщо ми в дуелі — ховаємо нижнє меню */}
       {!isInsideStep && !isOnboarding && !isDuel && <BottomNav />}
     </div>
   );
@@ -136,24 +129,21 @@ export const App = () => {
         if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
         if (tg.setBackgroundColor) tg.setBackgroundColor("#241812");
         if (tg.setHeaderColor) tg.setHeaderColor("#241812");
-      } catch (err: unknown) {
-        console.warn("Помилка налаштування Telegram WebApp:", err);
-      }
+      } catch (e) {}
     }
+
+    // Блокуємо зміну кольору на рівні DOM
+    document.body.style.setProperty("background-color", "#241812", "important");
+    document.documentElement.style.setProperty(
+      "background-color",
+      "#241812",
+      "important",
+    );
+    document.documentElement.classList.add("dark");
 
     try {
       initTelegramApp();
-    } catch (err: unknown) {
-      console.warn("Помилка ініціалізації Telegram App:", err);
-    }
-
-    subscribeToTheme((isDark) => {
-      if (isDark) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    });
+    } catch (e) {}
   }, []);
 
   return (

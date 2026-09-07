@@ -325,20 +325,8 @@ export const ProfilePage = () => {
               )}
               {profile.friendStatus === "friends" && (
                 <Button
-                  onClick={async () => {
-                    try {
-                      const res = await fetch(`${API_URL}/duels/invite`, {
-                        method: "POST",
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({ targetUserId: userId }),
-                      });
-                      const data = await res.json();
-                      if (data.roomId) navigate(`/duel/${data.roomId}`);
-                    } catch (error) {
-                      console.error("Помилка виклику", error);
-                    }
-                  }}
-                  className="w-full flex items-center justify-center gap-2 bg-[var(--accent-cta)] font-bold text-white shadow-md border-none"
+                  onClick={() => navigate(`/room/new?targetId=${userId}`)}
+                  className="w-full flex items-center justify-center gap-2 bg-[var(--accent-cta)] font-bold text-white shadow-md border-none mt-4"
                 >
                   <Swords className="w-5 h-5" /> Викликати на дуель
                 </Button>

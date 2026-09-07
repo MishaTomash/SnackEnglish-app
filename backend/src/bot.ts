@@ -55,6 +55,26 @@ bot.start(async (ctx) => {
       return;
     }
 
+    const payload = ctx.payload; // Отримуємо параметр після /start
+
+    // 1. ЯКЩО ЦЕ ЗАПРОШЕННЯ НА ДУЕЛЬ
+    if (payload && payload.startsWith("duel_")) {
+      const roomId = payload.replace("duel_", "");
+      const webAppUrl = `${appUrl}?startapp=duel_${roomId}`;
+
+      await ctx.reply(
+        `⚔️ <b>${telegramUser.first_name}</b>, тебе викликали на дуель!\n\nТицяй кнопку нижче, щоб приєднатися та показати свої знання:`,
+        {
+          parse_mode: "HTML",
+          ...Markup.inlineKeyboard([
+            [Markup.button.webApp("Приєднатися 🚀", webAppUrl)],
+          ]),
+        },
+      );
+      return; // Завершуємо виконання, щоб не надсилати стандартне вітання
+    }
+
+    // 2. СТАНДАРТНЕ ВІТАННЯ (якщо просто відкрили бота)
     await ctx.reply(
       `Привіт, ${telegramUser.first_name}! 🍪\n\nЛаскаво просимо до SnackEnglish — твоїх щоденних швидких та смачних уроків англійської.\n\nНатискай кнопку нижче, щоб відкрити застосунок та спробувати свій перший снек!`,
       Markup.inlineKeyboard([

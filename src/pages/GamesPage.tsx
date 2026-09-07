@@ -12,10 +12,12 @@ import {
   Camera,
   CheckCircle2,
   Receipt,
+  Users,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
+import { DUEL_REGISTRY } from "../duels/registry";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -48,6 +50,9 @@ interface PaymentHistoryItem {
 }
 
 export const GamesPage = () => {
+  // ДОДАНО: Стейт для вкладок
+  const [activeTab, setActiveTab] = useState<"single" | "duel">("single");
+
   const [games, setGames] = useState<BackendGame[]>([]);
   const [payments, setPayments] = useState<PaymentHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -191,7 +196,7 @@ export const GamesPage = () => {
   const hasPendingPayments = payments.some((p) => p.status === "pending");
 
   return (
-    <Screen className="justify-start p-4 space-y-6 bg-[var(--bg-app)] pb-24 relative">
+    <Screen className="justify-start p-4 space-y-5 bg-[var(--bg-app)] pb-24 relative">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] rounded-2xl flex items-center justify-center">
@@ -210,11 +215,27 @@ export const GamesPage = () => {
         </button>
       </div>
 
+      {/* ДОДАНО: Перемикач вкладок */}
+      <div className="flex bg-[var(--bg-card)] p-1 rounded-xl border border-[var(--border-color)]">
+        <button
+          onClick={() => setActiveTab("single")}
+          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${activeTab === "single" ? "bg-[var(--accent-cta)] text-white shadow-sm" : "text-[var(--text-muted)]"}`}
+        >
+          Одиночні
+        </button>
+        <button
+          onClick={() => setActiveTab("duel")}
+          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${activeTab === "duel" ? "bg-blue-500 text-white shadow-sm" : "text-[var(--text-muted)]"}`}
+        >
+          <Users className="w-4 h-4" /> Дуелі
+        </button>
+      </div>
+
       {isLoading ? (
         <div className="text-center py-10 text-[var(--text-muted)] text-sm">
           Завантаження ігор...
         </div>
-      ) : (
+      ) : activeTab === "single" ? (
         <div className="space-y-4">
           {games.map((game) => (
             <Card
@@ -298,6 +319,59 @@ export const GamesPage = () => {
             </Card>
           ))}
         </div>
+      ) : (
+        /* ДОДАНО: Відображення дуелей */
+        <div className="space-y-4">
+          {DUEL_REGISTRY.length === 0 ? (
+            <Card className="p-8 text-center border-dashed border-[var(--border-color)] bg-transparent">
+              <div className="w-16 h-16 mx-auto bg-[var(--bg-card)] rounded-full flex items-center justify-center text-[var(--text-muted)] mb-4">
+                <Users className="w-8 h-8" />
+              </div>
+              <p className="text-base font-bold text-[var(--text-main)] mb-1">
+                Парні ігри готуються
+              </p>
+              <p className="text-sm text-[var(--text-muted)]">
+                Зовсім скоро ти зможеш викликати друзів на реал-тайм поєдинки!
+              </p>
+            </Card>
+          ) : (
+            DUEL_REGISTRY.map((duel) => (
+              <Card
+                key={duel.id}
+                className="p-4 flex flex-col gap-3 relative overflow-hidden"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-bold text-[var(--text-main)]">
+                      {duel.title}
+                    </h3>
+                    <p className="text-sm text-[var(--text-muted)] mt-1 leading-snug">
+                      {duel.description}
+                    </p>
+                  </div>
+                  {duel.status === "coming_soon" && (
+                    <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-lg shrink-0 ml-2">
+                      Скоро
+                    </div>
+                  )}
+                </div>
+                <div className="mt-1 pt-3 border-t border-[var(--border-color)] flex justify-between items-center">
+                  <span className="text-sm font-bold text-blue-500">
+                    Гра з другом
+                  </span>
+                  <Link to="/room/new">
+                    <Button
+                      variant="secondary"
+                      className="px-4 py-2 border-blue-500/30 text-blue-500 bg-blue-500/10"
+                    >
+                      Створити кімнату
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
       )}
 
       {/* Модалка Історії Платежів */}
@@ -315,7 +389,6 @@ export const GamesPage = () => {
               <X className="w-5 h-5" />
             </button>
           </div>
-
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {payments.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-70 mt-20">
@@ -333,7 +406,7 @@ export const GamesPage = () => {
                     </span>
                     {payment.status === "pending" && (
                       <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-lg">
-                        Очікує підтвердження
+                        Очікує
                       </span>
                     )}
                     {payment.status === "approved" && (
@@ -350,13 +423,7 @@ export const GamesPage = () => {
                   <div className="flex items-center justify-between text-xs text-[var(--text-muted)] font-medium">
                     <span>{payment.method}</span>
                     <span>
-                      {new Date(payment.date).toLocaleString("uk-UA", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {new Date(payment.date).toLocaleString("uk-UA")}
                     </span>
                   </div>
                 </Card>
@@ -370,6 +437,7 @@ export const GamesPage = () => {
       {manualModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <Card className="w-full max-w-sm p-5 space-y-5 animate-in fade-in zoom-in duration-200">
+            {/* Логіка модалки залишилася ідентичною до GamesPage_2.tsx */}
             {manualModal.step !== "success" && (
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
@@ -437,7 +505,7 @@ export const GamesPage = () => {
                     <div className="leading-snug">
                       Зробіть переказ та обов'язково вкажіть код{" "}
                       <b>{manualModal.uniqueCode}</b> у коментарі, після чого
-                      прикріпіть квитанцію на наступному кроці.
+                      прикріпіть квитанцію.
                     </div>
                   </div>
                 </div>
@@ -514,8 +582,7 @@ export const GamesPage = () => {
                     Квитанцію надіслано!
                   </h2>
                   <p className="text-sm text-[var(--text-muted)] mt-2">
-                    Адміністратор підтвердить оплату найближчим часом. А поки що
-                    можеш пограти в безкоштовні ігри 🍪
+                    Адміністратор підтвердить оплату найближчим часом.
                   </p>
                 </div>
                 <Button

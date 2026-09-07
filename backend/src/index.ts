@@ -21,6 +21,7 @@ import { seedGames } from "./services/gameService.js";
 import { contentService } from "./services/contentService.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import duelRoutes from "./routes/duelRoutes.js";
+import { initDuelSocketService } from "./services/duelSocketService.js";
 import { Server } from "http";
 
 const app = express();
@@ -70,7 +71,7 @@ async function bootstrap(): Promise<void> {
     });
 
     const server = http.createServer(app);
-    initSocket(server);
+    initDuelSocketService(server);
 
     server.listen(PORT, () => {
       console.log(`SnackEnglish server is running on http://localhost:${PORT}`);
