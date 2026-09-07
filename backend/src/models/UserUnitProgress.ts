@@ -27,6 +27,7 @@ const userUnitProgressSchema = new Schema<IUserUnitProgress>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      // Ми залишаємо тут index: true, це те саме що userUnitProgressSchema.index({ userId: 1 })
       index: true,
     },
     unitId: {
@@ -60,6 +61,7 @@ const userUnitProgressSchema = new Schema<IUserUnitProgress>(
   },
 );
 
+// ДОДАНО: Складений унікальний індекс для швидкого пошуку та запобігання дублікатам
 userUnitProgressSchema.index({ userId: 1, unitId: 1 }, { unique: true });
 
 export const UserUnitProgress = model<IUserUnitProgress>(

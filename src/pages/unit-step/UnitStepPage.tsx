@@ -1,4 +1,11 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import {
   useParams,
   useNavigate,
@@ -15,13 +22,27 @@ import { getWordsByIds } from "../../entities/word/api";
 import type { Word, EnglishLevel } from "../../entities/word/types";
 import type { UnitStepType } from "../../entities/unit/types";
 
-import { VocabularyStep } from "./ui/VocabularyStep";
-import { WarmupStep } from "./ui/WarmupStep";
-import { GrammarStep } from "./ui/GrammarStep";
-import { VideoStep } from "./ui/VideoStep";
-import { ReadingStep } from "./ui/ReadingStep";
-import { SpeakingStep } from "./ui/SpeakingStep";
-import { TestStep } from "./ui/TestStep";
+const WarmupStep = lazy(() =>
+  import("./ui/WarmupStep").then((m) => ({ default: m.WarmupStep })),
+);
+const VocabularyStep = lazy(() =>
+  import("./ui/VocabularyStep").then((m) => ({ default: m.VocabularyStep })),
+);
+const GrammarStep = lazy(() =>
+  import("./ui/GrammarStep").then((m) => ({ default: m.GrammarStep })),
+);
+const VideoStep = lazy(() =>
+  import("./ui/VideoStep").then((m) => ({ default: m.VideoStep })),
+);
+const ReadingStep = lazy(() =>
+  import("./ui/ReadingStep").then((m) => ({ default: m.ReadingStep })),
+);
+const SpeakingStep = lazy(() =>
+  import("./ui/SpeakingStep").then((m) => ({ default: m.SpeakingStep })),
+);
+const TestStep = lazy(() =>
+  import("./ui/TestStep").then((m) => ({ default: m.TestStep })),
+);
 
 // Допоміжна функція для визначення наступного рівня
 const getNextLevel = (current: EnglishLevel): EnglishLevel | null => {
@@ -267,32 +288,40 @@ export const UnitStepPage = () => {
         <Badge className="text-xs uppercase">{stepType}</Badge>
       </div>
 
-      {stepType === "warmup" && (
-        <WarmupStep unit={unit} onComplete={handleComplete} />
-      )}
-      {stepType === "vocabulary" && (
-        <VocabularyStep
-          words={words}
-          isLoading={isLoadingWords}
-          onComplete={handleComplete}
-          onRetry={fetchWords}
-        />
-      )}
-      {stepType === "grammar" && (
-        <GrammarStep unit={unit} onComplete={handleComplete} />
-      )}
-      {stepType === "video" && (
-        <VideoStep unit={unit} onComplete={handleComplete} />
-      )}
-      {stepType === "reading" && (
-        <ReadingStep unit={unit} onComplete={handleComplete} />
-      )}
-      {stepType === "speaking" && (
-        <SpeakingStep words={words} onComplete={handleComplete} />
-      )}
-      {stepType === "test" && (
-        <TestStep unit={unit} words={words} onComplete={handleComplete} />
-      )}
+      <Suspense
+        fallback={
+          <div className="m-auto text-sm text-[var(--text-muted)] animate-pulse">
+            Завантаження кроку...
+          </div>
+        }
+      >
+        {stepType === "warmup" && (
+          <WarmupStep unit={unit} onComplete={handleComplete} />
+        )}
+        {stepType === "vocabulary" && (
+          <VocabularyStep
+            words={words}
+            isLoading={isLoadingWords}
+            onComplete={handleComplete}
+            onRetry={fetchWords}
+          />
+        )}
+        {stepType === "grammar" && (
+          <GrammarStep unit={unit} onComplete={handleComplete} />
+        )}
+        {stepType === "video" && (
+          <VideoStep unit={unit} onComplete={handleComplete} />
+        )}
+        {stepType === "reading" && (
+          <ReadingStep unit={unit} onComplete={handleComplete} />
+        )}
+        {stepType === "speaking" && (
+          <SpeakingStep words={words} onComplete={handleComplete} />
+        )}
+        {stepType === "test" && (
+          <TestStep unit={unit} words={words} onComplete={handleComplete} />
+        )}
+      </Suspense>
     </Screen>
   );
 };

@@ -87,39 +87,51 @@ export const completeStep = async (
     const unit = contentService.getUnitById(unitId);
     if (!unit) return void res.status(404).json({ error: "Unit not found" });
 
-    let progress = await UserUnitProgress.findOne({
-      userId: user._id,
-      unitId: unit.id,
-    });
+    // 1. АТОМАРНЕ ОНОВЛЕННЯ ПРОГРЕСУ (UPSERT + $addToSet)
+    // Шукаємо запис і одразу додаємо крок в масив.
+    // { new: false } повертає СТАРУ версію документа, щоб ми знали, чи був крок новим.
+    const updateDoc: any = {
+      $addToSet: { completedSteps: stepType },
+    };
 
-    if (!progress) {
-      progress = new UserUnitProgress({
-        userId: user._id,
-        unitId: unit.id,
-        status: "available",
-        completedSteps: [],
-      });
+    if (stepType === "test") {
+      updateDoc.$set = { status: "completed" };
+    } else {
+      updateDoc.$setOnInsert = { status: "available" };
     }
 
-    let isNewStep = false;
-    let isNewlyFinished = false;
+    const oldProgress = await UserUnitProgress.findOneAndUpdate(
+      { userId: user._id, unitId: unit.id },
+      updateDoc,
+      { new: false, upsert: true },
+    );
 
-    // ПЕРЕВІРКА: чи проходив користувач цей крок раніше?
-    if (!progress.completedSteps.includes(stepType)) {
-      progress.completedSteps.push(stepType);
-      isNewStep = true;
-      // Нараховуємо +10 балів за кожен новий крок
-      (user as any).totalScore = ((user as any).totalScore || 0) + 10;
+    // 2. АНАЛІЗ: Чи потрібно нараховувати бали?
+    // Якщо oldProgress null (тільки-но створено) АБО кроку не було в масиві -> це новий крок!
+    const isNewStep =
+      !oldProgress || !oldProgress.completedSteps.includes(stepType);
+    const isNewlyFinished =
+      stepType === "test" &&
+      (!oldProgress || oldProgress.status !== "completed");
+
+    let scoreToAdd = 0;
+    if (isNewStep) scoreToAdd += 10;
+    if (isNewlyFinished) scoreToAdd += 50;
+
+    // 3. АТОМАРНЕ НАРАХУВАННЯ БАЛІВ ЮЗЕРУ
+    let finalTotalScore = (user as any).totalScore || 0;
+    if (scoreToAdd > 0) {
+      // $inc безпечно додає бали на рівні БД (без Race Conditions)
+      const updatedUser = await User.findByIdAndUpdate(
+        user._id,
+        { $inc: { totalScore: scoreToAdd } },
+        { new: true },
+      );
+      if (updatedUser) finalTotalScore = (updatedUser as any).totalScore;
     }
 
-    const isFinished = stepType === "test";
-    // ПЕРЕВІРКА: чи юніт завершується вперше?
-    if (isFinished && progress.status !== "completed") {
-      progress.status = "completed";
-      isNewlyFinished = true;
-      // Нараховуємо одноразовий бонус +50
-      (user as any).totalScore = ((user as any).totalScore || 0) + 50;
-
+    // 4. РОЗБЛОКУВАННЯ НАСТУПНОГО ЮНІТУ
+    if (isNewlyFinished) {
       const nextUnit = contentService.getUnitByOrder(
         unit.level,
         unit.order + 1,
@@ -143,19 +155,25 @@ export const completeStep = async (
       }
     }
 
-    // Зберігаємо зміни юзера ТІЛЬКИ якщо були нові бали
-    if (isNewStep || isNewlyFinished) {
-      await user.save();
-    }
-    await progress.save();
+    // 5. Формуємо актуальний стан для відповіді без зайвого SELECT з бази
+    const finalCompletedSteps = oldProgress
+      ? [...new Set([...oldProgress.completedSteps, stepType])]
+      : [stepType];
+    const finalStatus =
+      stepType === "test"
+        ? "completed"
+        : oldProgress
+          ? oldProgress.status
+          : "available";
 
     res.status(200).json({
       success: true,
-      status: progress.status,
-      completedSteps: progress.completedSteps,
-      totalScore: (user as any).totalScore,
+      status: finalStatus,
+      completedSteps: finalCompletedSteps,
+      totalScore: finalTotalScore,
     });
   } catch (error: unknown) {
+    console.error("[completeStep] Error:", error);
     res.status(500).json({ error: "Failed to complete step", details: error });
   }
 };
