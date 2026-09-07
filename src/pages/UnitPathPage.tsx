@@ -111,7 +111,11 @@ export const UnitPathPage = () => {
       if (unit.wordIds?.length > 0) dynamicSteps.push("vocabulary", "speaking");
       if (unit.grammarTopic || unit.grammar?.title)
         dynamicSteps.push("grammar");
-      if (unit.videoUrl) dynamicSteps.push("video");
+
+      // ОСЬ ТУТ ЗМІНА: додано (unit.steps as any)?.video
+      if (unit.videoUrl || (unit.steps as any)?.video)
+        dynamicSteps.push("video");
+
       if (unit.readingText) dynamicSteps.push("reading");
       dynamicSteps.push("test");
 

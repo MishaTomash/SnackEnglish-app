@@ -1,668 +1,95 @@
 {
-  "level": "A1",
-  "units": [
-    {
-      "id": "a1-u1",
-      "title": "My Day",
-      "description": "Базові слова для опису щоденної рутини та час Present Simple.",
-      "order": 1,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "wake up",
-            "transcription": "[weɪk ʌp]",
-            "translation": "прокидатися",
-            "exampleSentence": "I wake up at 7 AM every day.",
-            "exampleTranslation": "Я прокидаюся о 7 ранку щодня."
-          },
-          {
-            "text": "breakfast",
-            "transcription": "[ˈbrekfəst]",
-            "translation": "сніданок",
-            "exampleSentence": "I eat breakfast with my family.",
-            "exampleTranslation": "Я снідаю зі своєю сім'єю."
-          },
-          {
-            "text": "work",
-            "transcription": "[wɜːk]",
-            "translation": "працювати / робота",
-            "exampleSentence": "She works in an office.",
-            "exampleTranslation": "Вона працює в офісі."
-          }
-        ],
-        "grammar": {
-          "title": "Present Simple",
-          "explanation": "Використовується для дій, які відбуваються регулярно (звички, розклад). До дієслів з he/she/it додається закінчення -s або -es.",
-          "examples": [
-            {
-              "en": "I drink coffee in the morning.",
-              "ua": "Я п'ю каву вранці."
-            },
-            {
-              "en": "He goes to work by bus.",
-              "ua": "Він їздить на роботу автобусом."
-            }
-          ]
-        },
-        "video": {
-          "url": "https://www.youtube.com/watch?v=L9AWEucEda8"
-        },
-        "reading": {
-          "title": "Anna's Morning",
-          "text": "Anna wakes up at 6 AM. She drinks a cup of coffee and reads the news. Then, she goes to work. She works in a hospital as a nurse. Anna loves her job.",
-          "questions": [
-            {
-              "question": "What does Anna drink in the morning?",
-              "options": ["tea", "water", "coffee", "milk"],
-              "correctAnswer": "coffee"
-            },
-            {
-              "question": "Where does Anna work?",
-              "options": [
-                "in a school",
-                "in a hospital",
-                "in an office",
-                "in a bank"
-              ],
-              "correctAnswer": "in a hospital"
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Daily Routine",
-          "scenario": "Розкажи про свій ранок.",
-          "lines": [
-            {
-              "speaker": "You",
-              "text": "I wake up at seven and eat breakfast.",
-              "translation": "Я прокидаюся о сьомій і снідаю."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "He ___ to work by car.",
-            "options": ["go", "goes", "going", "went"],
-            "correctAnswer": "goes",
-            "explanation": "З he/she/it у Present Simple до дієслова додається закінчення -es (go -> goes)."
-          },
-          {
-            "question": "I usually ___ breakfast at 8 AM.",
-            "options": ["eat", "eats", "eating", "ate"],
-            "correctAnswer": "eat",
-            "explanation": "З займенником 'I' використовується базова форма дієслова."
-          }
-        ]
+  "id": "a1-unit-2",
+  "title": "Food and Drinks",
+  "description": "Вчимося замовляти їжу та говорити про свої вподобання.",
+  "order": 2,
+  "steps": {
+    "vocabulary": [
+      {
+        "text": "water",
+        "transcription": "[ˈwɔːtər]",
+        "translation": "вода",
+        "exampleSentence": "I drink water every morning.",
+        "exampleTranslation": "Я п'ю воду кожного ранку."
+      },
+      {
+        "text": "bread",
+        "transcription": "[bred]",
+        "translation": "хліб",
+        "exampleSentence": "We need some bread for sandwiches.",
+        "exampleTranslation": "Нам потрібен хліб для бутербродів."
+      },
+      {
+        "text": "apple",
+        "transcription": "[ˈæpl]",
+        "translation": "яблуко",
+        "exampleSentence": "She eats an apple a day.",
+        "exampleTranslation": "Вона їсть яблуко щодня."
       }
+    ],
+    "grammar": {
+      "title": "Like / Don't like",
+      "explanation": "Використовується для вираження вподобань. Зі словами I, you, we, they ми використовуємо like або don't like.",
+      "examples": [
+        {
+          "en": "I **like** fresh apples.",
+          "ua": "Я **люблю** свіжі яблука."
+        },
+        {
+          "en": "We **don't like** fast food.",
+          "ua": "Ми **не любимо** фастфуд."
+        }
+      ]
     },
-    {
-      "id": "a1-u2",
-      "title": "Family and Friends",
-      "description": "Слова для опису сім'ї та друзів, а також дієслово to be.",
-      "order": 2,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "parents",
-            "transcription": "[ˈpeərənts]",
-            "translation": "батьки",
-            "exampleSentence": "My parents live in a big house.",
-            "exampleTranslation": "Мої батьки живуть у великому будинку."
-          },
-          {
-            "text": "friend",
-            "transcription": "[frend]",
-            "translation": "друг / подруга",
-            "exampleSentence": "This is my best friend, Tom.",
-            "exampleTranslation": "Це мій найкращий друг, Том."
-          },
-          {
-            "text": "children",
-            "transcription": "[ˈtʃɪldrən]",
-            "translation": "діти",
-            "exampleSentence": "They have two children.",
-            "exampleTranslation": "У них двоє дітей."
-          }
-        ],
-        "grammar": {
-          "title": "Verb 'to be'",
-          "explanation": "Дієслово 'бути'. Має три форми в теперішньому часі: am (для I), is (для he/she/it), are (для we/you/they).",
-          "examples": [
-            {
-              "en": "I am a student.",
-              "ua": "Я студент."
-            },
-            {
-              "en": "She is my sister.",
-              "ua": "Вона моя сестра."
-            },
-            {
-              "en": "We are friends.",
-              "ua": "Ми друзі."
-            }
-          ]
-        },
-        "video": {
-          "url": "https://www.youtube.com/watch?v=FHaObkHEkHQ"
-        },
-        "reading": {
-          "title": "My Family",
-          "text": "My name is Mark. I have a big family. My father is a doctor and my mother is a teacher. I have one brother and two sisters. We are very happy together.",
-          "questions": [
-            {
-              "question": "What is Mark's father's job?",
-              "options": ["teacher", "doctor", "driver", "pilot"],
-              "correctAnswer": "doctor"
-            },
-            {
-              "question": "How many sisters does Mark have?",
-              "options": ["one", "two", "three", "none"],
-              "correctAnswer": "two"
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Meet my friend",
-          "scenario": "Представ свого друга комусь іншому.",
-          "lines": [
-            {
-              "speaker": "You",
-              "text": "Hello! This is my friend, Sarah. She is a student.",
-              "translation": "Привіт! Це моя подруга Сара. Вона студентка."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "They ___ from Ukraine.",
-            "options": ["am", "is", "are", "be"],
-            "correctAnswer": "are",
-            "explanation": "З займенником they використовується форма 'are'."
-          },
-          {
-            "question": "My brother ___ 20 years old.",
-            "options": ["am", "is", "are", "has"],
-            "correctAnswer": "is",
-            "explanation": "My brother (він/he), тому використовується 'is'."
-          }
-        ]
-      }
+    "video": {
+      "url": "https://youtube.com/watch?v=твій_ідентифікатор",
+      "caption": "Зверни увагу, як у відео говорять 'bought', а не 'buy' — це і є Past Simple."
     },
-    {
-      "id": "a1-u3",
-      "title": "Food and Drinks",
-      "description": "Назви продуктів харчування, напоїв та використання some/any.",
-      "order": 3,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "bread",
-            "transcription": "[bred]",
-            "translation": "хліб",
-            "exampleSentence": "I need to buy some bread.",
-            "exampleTranslation": "Мені потрібно купити трохи хліба."
-          },
-          {
-            "text": "water",
-            "transcription": "[ˈwɔːtə]",
-            "translation": "вода",
-            "exampleSentence": "Can I have a glass of water, please?",
-            "exampleTranslation": "Можна мені склянку води, будь ласка?"
-          },
-          {
-            "text": "apple",
-            "transcription": "[ˈæpl]",
-            "translation": "яблуко",
-            "exampleSentence": "She eats an apple every day.",
-            "exampleTranslation": "Вона їсть яблуко щодня."
-          }
-        ],
-        "grammar": {
-          "title": "Some / Any",
-          "explanation": "Some використовується у стверджувальних реченнях, Any — у заперечних та питальних реченнях для позначення невизначеної кількості.",
-          "examples": [
-            {
-              "en": "I have some apples.",
-              "ua": "У мене є кілька яблук."
-            },
-            {
-              "en": "Do you have any milk?",
-              "ua": "У тебе є (хоч трохи) молоко?"
-            },
-            {
-              "en": "We don't have any bread.",
-              "ua": "У нас немає хліба."
-            }
-          ]
-        },
-        "video": {
-          "url": "https://www.youtube.com/watch?v=QQm4N-T6VUE"
-        },
-        "reading": {
-          "title": "A Healthy Breakfast",
-          "text": "A healthy breakfast is very important. John usually eats eggs and tomatoes for breakfast. He doesn't drink tea. He drinks orange juice or milk. Today, he has some bread and cheese, too.",
-          "questions": [
-            {
-              "question": "What does John usually eat for breakfast?",
-              "options": ["cake", "eggs and tomatoes", "pizza", "fish"],
-              "correctAnswer": "eggs and tomatoes"
-            },
-            {
-              "question": "What does John NOT drink in the morning?",
-              "options": ["milk", "orange juice", "water", "tea"],
-              "correctAnswer": "tea"
-            }
-          ]
-        },
-        "speaking": {
-          "title": "At the cafe",
-          "scenario": "Замов їжу та напій у кафе.",
-          "lines": [
-            {
-              "speaker": "You",
-              "text": "I would like a sandwich and some coffee, please.",
-              "translation": "Я б хотів сендвіч та каву, будь ласка."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "Are there ___ apples in the fridge?",
-            "options": ["some", "any", "a", "an"],
-            "correctAnswer": "any",
-            "explanation": "У питальних реченнях використовуємо 'any'."
-          },
-          {
-            "question": "I want to make a sandwich, but we don't have ___ bread.",
-            "options": ["some", "any", "a", "an"],
-            "correctAnswer": "any",
-            "explanation": "У заперечних реченнях використовуємо 'any'."
-          }
-        ]
-      }
+    "reading": {
+      "title": "My Favorite Breakfast",
+      "text": "I always eat a good breakfast. I like bread with cheese. I do not like milk. I drink black tea with sugar.",
+      "translation": "Я завжди добре снідаю. Я люблю хліб із сиром. Я не люблю молоко. Я п'ю чорний чай із цукром.",
+      "questions": [
+        {
+          "question": "What does the person drink for breakfast?",
+          "options": ["Milk", "Black tea", "Coffee", "Water"],
+          "correctAnswer": 1
+        }
+      ]
     },
-    {
-      "id": "a1-u4",
-      "title": "My Home",
-      "description": "Кімнати, меблі та конструкція There is / There are.",
-      "order": 4,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "kitchen",
-            "transcription": "[ˈkɪtʃɪn]",
-            "translation": "кухня",
-            "exampleSentence": "My mother is cooking in the kitchen.",
-            "exampleTranslation": "Моя мама готує на кухні."
-          },
-          {
-            "text": "bed",
-            "transcription": "[bed]",
-            "translation": "ліжко",
-            "exampleSentence": "This bed is very comfortable.",
-            "exampleTranslation": "Це ліжко дуже зручне."
-          },
-          {
-            "text": "window",
-            "transcription": "[ˈwɪndəʊ]",
-            "translation": "вікно",
-            "exampleSentence": "Please, open the window.",
-            "exampleTranslation": "Будь ласка, відкрий вікно."
-          }
-        ],
-        "grammar": {
-          "title": "There is / There are",
-          "explanation": "Використовується, щоб сказати про наявність або місцезнаходження чогось. 'There is' — для однини, 'There are' — для множини.",
-          "examples": [
-            {
-              "en": "There is a book on the table.",
-              "ua": "На столі лежить книга."
-            },
-            {
-              "en": "There are two windows in the room.",
-              "ua": "У кімнаті два вікна."
-            }
-          ]
+    "speaking": {
+      "title": "At the cafe",
+      "scenario": "Ти робиш замовлення у кав'ярні.",
+      "lines": [
+        {
+          "speaker": "Waiter",
+          "text": "Hello! Are you ready to order?",
+          "translation": "Привіт! Ви готові зробити замовлення?"
         },
-        "video": {
-          "url": "https://www.youtube.com/watch?v=mYn_hFqQ0m8"
-        },
-        "reading": {
-          "title": "My Bedroom",
-          "text": "My bedroom is small but cozy. There is a big bed near the wall. Next to the bed, there is a small lamp. There are two posters on the wall. I love my room because it is very quiet.",
-          "questions": [
-            {
-              "question": "Is the bedroom big or small?",
-              "options": ["big", "small", "very big", "huge"],
-              "correctAnswer": "small"
-            },
-            {
-              "question": "How many posters are there on the wall?",
-              "options": ["one", "two", "three", "four"],
-              "correctAnswer": "two"
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Describe your room",
-          "scenario": "Опиши, що є у твоїй кімнаті.",
-          "lines": [
-            {
-              "speaker": "You",
-              "text": "There is a bed and a table in my room. There are also two chairs.",
-              "translation": "У моїй кімнаті є ліжко і стіл. Також там є два стільці."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "___ a cat under the sofa.",
-            "options": ["There is", "There are", "Is there", "Are there"],
-            "correctAnswer": "There is",
-            "explanation": "'a cat' — це однина, тому використовуємо 'There is'."
-          },
-          {
-            "question": "___ three chairs in the kitchen.",
-            "options": ["There is", "There are", "They are", "It is"],
-            "correctAnswer": "There are",
-            "explanation": "'three chairs' — це множина, тому використовуємо 'There are'."
-          }
-        ]
-      }
+        {
+          "speaker": "You",
+          "text": "Yes, I would like a green tea and a sandwich, please.",
+          "translation": "Так, я б хотів зелений чай та сендвіч, будь ласка."
+        }
+      ]
     },
-    {
-      "id": "a1-u5",
-      "title": "Hobbies and Free Time",
-      "description": "Слова для опису захоплень, вільного часу та конструкція like / don't like.",
-      "order": 5,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "read",
-            "transcription": "[riːd]",
-            "translation": "читати",
-            "exampleSentence": "I read books in the evening.",
-            "exampleTranslation": "Я читаю книги ввечері."
-          },
-          {
-            "text": "play",
-            "transcription": "[pleɪ]",
-            "translation": "грати",
-            "exampleSentence": "They play football on Sundays.",
-            "exampleTranslation": "Вони грають у футбол по неділях."
-          },
-          {
-            "text": "listen",
-            "transcription": "[ˈlɪsn]",
-            "translation": "слухати",
-            "exampleSentence": "She likes to listen to music.",
-            "exampleTranslation": "Їй подобається слухати музику."
-          }
+    "test": [
+      {
+        "question": "Як правильно сказати 'Я не люблю каву'?",
+        "options": [
+          "I no like coffee.",
+          "I doesn't like coffee.",
+          "I don't like coffee."
         ],
-        "grammar": {
-          "title": "Like + V-ing",
-          "explanation": "Після дієслова like (подобатися) наступне дієслово часто вживається із закінченням -ing, щоб показати захоплення процесом.",
-          "examples": [
-            {
-              "en": "I like reading books.",
-              "ua": "Мені подобається читати книги."
-            },
-            {
-              "en": "He doesn't like playing tennis.",
-              "ua": "Йому не подобається грати в теніс."
-            }
-          ]
-        },
-        "video": {
-          "url": "https://www.youtube.com/watch?v=N1o4oOX5Zg8"
-        },
-        "reading": {
-          "title": "Weekend Activities",
-          "text": "On weekends, David has a lot of free time. He likes playing chess with his brother. He doesn't like watching TV. In the afternoon, he often listens to podcasts and rides his bike in the park.",
-          "questions": [
-            {
-              "question": "What does David like doing with his brother?",
-              "options": [
-                "watching TV",
-                "playing chess",
-                "riding a bike",
-                "listening to podcasts"
-              ],
-              "correctAnswer": "playing chess"
-            },
-            {
-              "question": "Does David like watching TV?",
-              "options": [
-                "Yes, he does.",
-                "No, he doesn't.",
-                "Sometimes.",
-                "He loves it."
-              ],
-              "correctAnswer": "No, he doesn't."
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Your hobbies",
-          "scenario": "Розкажи про те, що тобі подобається і не подобається робити у вільний час.",
-          "lines": [
-            {
-              "speaker": "You",
-              "text": "In my free time, I like playing video games, but I don't like reading.",
-              "translation": "У свій вільний час я люблю грати у відеоігри, але не люблю читати."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "She likes ___ music in her car.",
-            "options": ["listen", "listens", "listening", "listened"],
-            "correctAnswer": "listening",
-            "explanation": "Після дієслова 'like' для опису хобі додаємо до наступного дієслова закінчення -ing."
-          },
-          {
-            "question": "Do you like ___ photos?",
-            "options": ["take", "takes", "taking", "took"],
-            "correctAnswer": "taking",
-            "explanation": "Словосполучення 'take photos' після 'like' перетворюється на 'taking'."
-          }
-        ]
+        "correctAnswer": 2,
+        "explanation": "З займенником 'I' для заперечення в теперішньому часі використовується допоміжне дієслово 'don't' (do not)."
+      },
+      {
+        "question": "Обери правильний переклад: 'хліб'",
+        "options": ["apple", "bread", "water", "cheese"],
+        "correctAnswer": 1,
+        "explanation": "Bread перекладається як 'хліб'."
       }
-    },
-    {
-      "id": "a1-u6",
-      "title": "Clothes and Colors",
-      "description": "Назви одягу, кольорів та використання часу Present Continuous.",
-      "order": 6,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "t-shirt",
-            "transcription": "[ˈtiː ʃɜːt]",
-            "translation": "футболка",
-            "exampleSentence": "He is wearing a blue t-shirt.",
-            "exampleTranslation": "На ньому синя футболка."
-          },
-          {
-            "text": "shoes",
-            "transcription": "[ʃuːz]",
-            "translation": "взуття / туфлі",
-            "exampleSentence": "I need new shoes for the winter.",
-            "exampleTranslation": "Мені потрібне нове взуття на зиму."
-          },
-          {
-            "text": "wear",
-            "transcription": "[weə]",
-            "translation": "носити (одяг) / бути одягненим",
-            "exampleSentence": "She always wears black.",
-            "exampleTranslation": "Вона завжди носить чорне."
-          }
-        ],
-        "grammar": {
-          "title": "Present Continuous",
-          "explanation": "Використовується для опису дій, які відбуваються прямо зараз. Утворюється за допомогою дієслова to be (am/is/are) + дієслово з закінченням -ing.",
-          "examples": [
-            {
-              "en": "I am wearing a red jacket now.",
-              "ua": "Зараз на мені червона куртка."
-            },
-            {
-              "en": "They are playing in the park.",
-              "ua": "Вони грають у парку (в даний момент)."
-            }
-          ]
-        },
-        "video": {
-          "url": "https://www.youtube.com/watch?v=KFQxCGYjzQ"
-        },
-        "reading": {
-          "title": "Shopping for Clothes",
-          "text": "Lisa is at the shopping mall. She is looking for a new dress for a party. Right now, she is trying on a red dress, but it is too small. Her friend, Mary, is buying a white t-shirt and black jeans.",
-          "questions": [
-            {
-              "question": "What is Lisa looking for?",
-              "options": ["a t-shirt", "black jeans", "a dress", "new shoes"],
-              "correctAnswer": "a dress"
-            },
-            {
-              "question": "What colour are the jeans Mary is buying?",
-              "options": ["blue", "black", "white", "red"],
-              "correctAnswer": "black"
-            }
-          ]
-        },
-        "speaking": {
-          "title": "What are you wearing?",
-          "scenario": "Опиши, у що ти зараз одягнений(-а).",
-          "lines": [
-            {
-              "speaker": "You",
-              "text": "Right now, I am wearing a white t-shirt, blue jeans, and grey shoes.",
-              "translation": "Прямо зараз я одягнений у білу футболку, сині джинси та сіре взуття."
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "Look! The baby ___.",
-            "options": ["sleeps", "is sleeping", "sleep", "sleeping"],
-            "correctAnswer": "is sleeping",
-            "explanation": "Дія відбувається прямо зараз (Look!), тому використовуємо Present Continuous: is + дієслово з -ing."
-          },
-          {
-            "question": "I ___ wearing a coat because it's warm.",
-            "options": ["am not", "don't", "isn't", "aren't"],
-            "correctAnswer": "am not",
-            "explanation": "Для 'I' в Present Continuous використовується форма 'am'. Заперечення — 'am not'."
-          }
-        ]
-      }
-    },
-    {
-      "id": "a1-u7",
-      "title": "Places in the City",
-      "description": "Місця в місті, заклади та прийменники місця (Prepositions of place).",
-      "order": 7,
-      "steps": {
-        "warmup": {},
-        "vocabulary": [
-          {
-            "text": "supermarket",
-            "transcription": "[ˈsuːpəmɑːkɪt]",
-            "translation": "супермаркет",
-            "exampleSentence": "I buy food at the supermarket.",
-            "exampleTranslation": "Я купую їжу в супермаркеті."
-          },
-          {
-            "text": "street",
-            "transcription": "[striːt]",
-            "translation": "вулиця",
-            "exampleSentence": "The bank is on this street.",
-            "exampleTranslation": "Банк знаходиться на цій вулиці."
-          },
-          {
-            "text": "park",
-            "transcription": "[pɑːk]",
-            "translation": "парк",
-            "exampleSentence": "Let's go for a walk in the park.",
-            "exampleTranslation": "Ходімо на прогулянку в парк."
-          }
-        ],
-        "grammar": {
-          "title": "Prepositions of Place",
-          "explanation": "Прийменники місця допомагають вказати, де знаходиться предмет або місце. Основні: in (в), on (на), under (під), next to (поруч з), opposite (навпроти).",
-          "examples": [
-            {
-              "en": "The bank is next to the supermarket.",
-              "ua": "Банк знаходиться поруч із супермаркетом."
-            },
-            {
-              "en": "There is a cat on the roof.",
-              "ua": "На даху сидить кіт."
-            }
-          ]
-        },
-        "video": {
-          "url": "https://www.youtube.com/watch?v=O1Wsc0h-x8o"
-        },
-        "reading": {
-          "title": "My Town",
-          "text": "I live in a small town. There is a beautiful park in the centre. Next to the park, there is a big supermarket. My school is opposite the park. It is a very nice place to live.",
-          "questions": [
-            {
-              "question": "Where is the supermarket?",
-              "options": [
-                "in the park",
-                "next to the park",
-                "opposite the school",
-                "far from the town"
-              ],
-              "correctAnswer": "next to the park"
-            },
-            {
-              "question": "What is opposite the park?",
-              "options": [
-                "the supermarket",
-                "the bank",
-                "the school",
-                "the street"
-              ],
-              "correctAnswer": "the school"
-            }
-          ]
-        },
-        "speaking": {
-          "title": "Asking for directions",
-          "scenario": "Запитай, де знаходиться певне місце у місті.",
-          "lines": [
-            {
-              "speaker": "You",
-              "text": "Excuse me, where is the nearest supermarket?",
-              "translation": "Перепрошую, де знаходиться найближчий супермаркет?"
-            }
-          ]
-        },
-        "test": [
-          {
-            "question": "The cafe is ___ to the cinema.",
-            "options": ["in", "on", "next", "under"],
-            "correctAnswer": "next",
-            "explanation": "Правильний прийменник — 'next to' (поруч з)."
-          },
-          {
-            "question": "My keys are ___ the table.",
-            "options": ["on", "next", "in", "opposite"],
-            "correctAnswer": "on",
-            "explanation": "Ключі зазвичай лежать 'на' столі, тому використовуємо 'on'."
-          }
-        ]
-      }
-    }
-  ]
+    ]
+  }
 }

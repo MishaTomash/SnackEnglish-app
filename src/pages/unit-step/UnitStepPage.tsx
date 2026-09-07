@@ -82,9 +82,13 @@ export const UnitStepPage = () => {
 
   const stepsList = useMemo(() => {
     if (!unit) return [];
+
+    // 1. Якщо кроки прийшли як масив
     if (Array.isArray(unit.steps) && unit.steps.length > 0) {
       return unit.steps.map((s: any) => s.type);
     }
+
+    // 2. Якщо бекенд віддав JSON-об'єкт (наш поточний робочий варіант)
     if (
       unit.steps &&
       typeof unit.steps === "object" &&
@@ -92,12 +96,18 @@ export const UnitStepPage = () => {
     ) {
       return Object.keys(unit.steps) as UnitStepType[];
     }
+
+    // 3. Динамічний фоллбек
     const dynamicSteps: UnitStepType[] = ["warmup"];
     if (unit.wordIds?.length > 0) dynamicSteps.push("vocabulary", "speaking");
     if (unit.grammarTopic || unit.grammar?.title) dynamicSteps.push("grammar");
-    if (unit.videoUrl) dynamicSteps.push("video");
+
+    // ОНОВЛЕНА перевірка для відео (враховує і старий videoUrl, і новий об'єкт video)
+    if (unit.videoUrl || (unit.steps as any)?.video) dynamicSteps.push("video");
+
     if (unit.readingText) dynamicSteps.push("reading");
     dynamicSteps.push("test");
+
     return dynamicSteps;
   }, [unit]);
 

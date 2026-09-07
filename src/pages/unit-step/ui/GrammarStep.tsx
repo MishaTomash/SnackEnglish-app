@@ -3,6 +3,25 @@ import { Button } from "../../../shared/ui/Button";
 import { Badge } from "../../../shared/ui/Badge";
 import type { Unit } from "../../../entities/unit/types";
 
+// Допоміжна функція для рендеру підсвітки
+const renderWithHighlight = (text: string) => {
+  if (!text) return null;
+  const parts = text.split(/\*\*(.*?)\*\*/g);
+
+  return parts.map((part, index) =>
+    index % 2 === 1 ? (
+      <span
+        key={index}
+        className="font-bold text-[var(--tg-theme-button-color)]"
+      >
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  );
+};
+
 export const GrammarStep = ({
   unit,
   onComplete,
@@ -10,7 +29,6 @@ export const GrammarStep = ({
   unit: Unit;
   onComplete: () => void;
 }) => {
-  // Адаптація до нової (unit.grammar) та старої (unit.grammarTopic) структури
   const title = unit.grammar?.title || unit.grammarTopic;
   const explanation = unit.grammar?.explanation || unit.grammarExplanation;
   const examples = unit.grammar?.examples || [];
@@ -42,9 +60,11 @@ export const GrammarStep = ({
                 <div className="p-3 bg-[var(--tg-theme-secondary-bg-color)] rounded-2xl space-y-2 text-sm text-[var(--tg-theme-text-color)]">
                   {examples.map((ex: any, idx: number) => (
                     <div key={idx} className="space-y-0.5">
-                      <p className="font-semibold">• {ex.en}</p>
+                      <p className="font-semibold">
+                        • {renderWithHighlight(ex.en)}
+                      </p>
                       <p className="text-xs text-[var(--tg-theme-hint-color)] pl-3">
-                        {ex.ua}
+                        {renderWithHighlight(ex.ua)}
                       </p>
                     </div>
                   ))}
