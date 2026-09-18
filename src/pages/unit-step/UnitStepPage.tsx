@@ -257,11 +257,11 @@ export const UnitStepPage = () => {
           </p>
         </div>
         <Button
-          onClick={() => navigate(returnPath === "/" ? "/" : "/path")}
+          onClick={() => navigate("/")}
           variant="primary"
           className="w-full"
         >
-          {returnPath === "/" ? "На Головну" : "На Карту"}
+          На Головну
         </Button>
       </Screen>
     );

@@ -69,7 +69,7 @@ export const UnitPathPage = () => {
   const location = useLocation();
   const { units, currentUnitId, loadUnits } = useProgressStore();
 
-  const returnPath = location.state?.from || "/path";
+  const returnPath = location.state?.from || "/";
 
   useEffect(() => {
     if (units.length === 0) {

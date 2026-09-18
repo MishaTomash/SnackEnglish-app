@@ -11,7 +11,7 @@ import { initTelegramApp } from "../shared/lib/telegram";
 import { useUserStore } from "../store/userStore";
 import { OnboardingPage } from "../pages/OnboardingPage";
 import { HomePage } from "../pages/HomePage";
-import { PathMapPage } from "../pages/path/PathMapPage";
+import { PathPage } from "../pages/PathPage";
 import { UnitPathPage } from "../pages/UnitPathPage";
 import { UnitStepPage } from "../pages/unit-step/UnitStepPage";
 import { PracticePage } from "../pages/PracticePage";
@@ -35,14 +35,12 @@ const AppContent = () => {
 
   const [pendingRoom, setPendingRoom] = useState<string | null>(null);
 
-  // ЖОРСТКИЙ ПАРСЕР: Шукає ID кімнати будь-де в URL
   useEffect(() => {
     try {
       const tg = (window as any).Telegram?.WebApp;
       let param = tg?.initDataUnsafe?.start_param;
 
       if (!param) {
-        // Вириваємо за допомогою RegEx з усього URL
         const match = window.location.href.match(/duel_([a-zA-Z0-9]+)/);
         if (match) param = "duel_" + match[1];
       }
@@ -71,7 +69,6 @@ const AppContent = () => {
     void initApp();
   }, [fetchUser]);
 
-  // ГАРАНТОВАНИЙ РЕДИРЕКТ
   useEffect(() => {
     if (!isInitializing && onboardingCompleted && pendingRoom) {
       setTimeout(() => {
@@ -103,7 +100,7 @@ const AppContent = () => {
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/" element={<HomePage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/path" element={<PathMapPage />} />
+        <Route path="/path" element={<PathPage />} />
         <Route path="/path/:unitId" element={<UnitPathPage />} />
         <Route path="/unit/:unitId/step/:stepType" element={<UnitStepPage />} />
         <Route path="/practice" element={<PracticePage />} />
@@ -132,7 +129,6 @@ export const App = () => {
       } catch (e) {}
     }
 
-    // Блокуємо зміну кольору на рівні DOM
     document.body.style.setProperty("background-color", "#241812", "important");
     document.documentElement.style.setProperty(
       "background-color",

@@ -1,12 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { Home, Map, Dumbbell, Trophy, Gamepad2 } from "lucide-react";
+import { Home, Dumbbell, Trophy, Gamepad2 } from "lucide-react";
 
 export const BottomNav = () => {
   const navItems = [
     { path: "/leaderboard", label: "Топ", icon: Trophy },
     { path: "/games", label: "Ігри", icon: Gamepad2 },
     { path: "/", label: "Головна", icon: Home },
-    { path: "/path", label: "Карта", icon: Map },
     { path: "/practice", label: "Практика", icon: Dumbbell },
   ];
 
@@ -17,7 +16,7 @@ export const BottomNav = () => {
           key={path}
           to={path}
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center w-1/5 space-y-1 transition-colors ${
+            `flex flex-col items-center justify-center w-1/4 space-y-1 transition-colors ${
               isActive ? "text-[var(--accent-cta)]" : "text-[var(--text-muted)]"
             }`
           }
