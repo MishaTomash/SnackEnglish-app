@@ -11,7 +11,6 @@ import { initTelegramApp } from "../shared/lib/telegram";
 import { useUserStore } from "../store/userStore";
 import { OnboardingPage } from "../pages/OnboardingPage";
 import { HomePage } from "../pages/HomePage";
-import { PathPage } from "../pages/PathPage";
 import { UnitPathPage } from "../pages/UnitPathPage";
 import { UnitStepPage } from "../pages/unit-step/UnitStepPage";
 import { PracticePage } from "../pages/PracticePage";
@@ -26,6 +25,10 @@ import { GameRunnerPage } from "../pages/GameRunnerPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { FriendsPage } from "../pages/FriendsPage";
 import { DuelRoomPage } from "../pages/DuelRoomPage";
+
+import { LearningHubPage } from "../pages/learning/LearningHubPage";
+import { CategoryPathPage } from "../pages/learning/CategoryPathPage";
+import { LessonRunner } from "../pages/learning/LessonRunner";
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
@@ -87,6 +90,7 @@ const AppContent = () => {
   }
 
   const isInsideStep = location.pathname.includes("/step/");
+  const isInsideLesson = location.pathname.startsWith("/learning/unit/");
   const isDuel = location.pathname.includes("/room/");
   const isOnboarding = location.pathname === "/onboarding";
 
@@ -100,9 +104,20 @@ const AppContent = () => {
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/" element={<HomePage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/path" element={<PathPage />} />
+
+        {/* Legacy: залишається для HomePage CTA «Продовжити урок» */}
+        <Route path="/path" element={<Navigate to="/learning" replace />} />
         <Route path="/path/:unitId" element={<UnitPathPage />} />
         <Route path="/unit/:unitId/step/:stepType" element={<UnitStepPage />} />
+
+        {/* New: Learning Hub (без бекенду) */}
+        <Route path="/learning" element={<LearningHubPage />} />
+        <Route
+          path="/learning/category/:categoryId"
+          element={<CategoryPathPage />}
+        />
+        <Route path="/learning/unit/:unitId" element={<LessonRunner />} />
+
         <Route path="/practice" element={<PracticePage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/games" element={<GamesPage />} />
@@ -111,7 +126,9 @@ const AppContent = () => {
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/room/:roomId" element={<DuelRoomPage />} />
       </Routes>
-      {!isInsideStep && !isOnboarding && !isDuel && <BottomNav />}
+      {!isInsideStep && !isInsideLesson && !isOnboarding && !isDuel && (
+        <BottomNav />
+      )}
     </div>
   );
 };
