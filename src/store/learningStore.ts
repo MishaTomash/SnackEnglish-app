@@ -15,8 +15,6 @@ const getAuthHeaders = () => {
   };
 };
 
-export const DAILY_GOAL = 4;
-
 export const dateKey = (d: Date): string => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -53,7 +51,10 @@ interface UnitProgress {
 }
 
 interface LearningState {
-  categories: Category[]; // ДИНАМІЧНІ ДАНІ
+  categories: Category[];
+  noMoreDays: boolean;
+  currentPlanId: string | null;
+  currentDayTitle: string | null;
   isLoading: boolean;
 
   progress: Record<string, UnitProgress>;
@@ -72,14 +73,17 @@ interface LearningState {
     earnedXp: number,
   ) => void;
   markCelebrated: () => void;
-  recordGoalReached: () => void;
+  recordGoalReached: () => Promise<void>; // Тепер асинхронна
   resetAll: () => void;
 }
 
 export const useLearningStore = create<LearningState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       categories: [],
+      noMoreDays: false,
+      currentPlanId: null,
+      currentDayTitle: null,
       isLoading: false,
       progress: {},
       xp: 0,
@@ -93,13 +97,17 @@ export const useLearningStore = create<LearningState>()(
         try {
           const res = await fetch(
             `${API_URL}/progress/categories?level=${level}`,
-            {
-              headers: getAuthHeaders(),
-            },
+            { headers: getAuthHeaders() },
           );
           if (res.ok) {
             const data = await res.json();
-            set({ categories: data, isLoading: false });
+            set({
+              categories: data.categories || [],
+              noMoreDays: data.noMoreDays || false,
+              currentPlanId: data.planId || null,
+              currentDayTitle: data.dayTitle || null,
+              isLoading: false,
+            });
           } else {
             set({ isLoading: false });
           }
@@ -114,13 +122,11 @@ export const useLearningStore = create<LearningState>()(
           const today = todayKey();
           const dailyCats =
             state.dailyDate === today ? state.dailyCompletedCategories : [];
-
           const existing = state.progress[unitId];
           const isFirstTime = !existing?.completed;
           const awarded = isFirstTime
             ? earnedXp
             : Math.round(earnedXp * REPEAT_XP_MULTIPLIER);
-
           const newDaily = dailyCats.includes(categoryId)
             ? dailyCats
             : [...dailyCats, categoryId];
@@ -142,14 +148,27 @@ export const useLearningStore = create<LearningState>()(
 
       markCelebrated: () => set({ celebratedDayKey: todayKey() }),
 
-      recordGoalReached: () =>
-        set((state) => {
-          const key = todayKey();
-          if (state.goalCompletedDates.includes(key)) return state;
-          return {
-            goalCompletedDates: [...state.goalCompletedDates, key],
-          };
-        }),
+      recordGoalReached: async () => {
+        const state = get();
+        const key = todayKey();
+
+        if (!state.goalCompletedDates.includes(key)) {
+          set({ goalCompletedDates: [...state.goalCompletedDates, key] });
+        }
+
+        // ДОДАНО: Сповіщаємо бекенд, що день повністю завершено
+        if (state.currentPlanId) {
+          try {
+            await fetch(`${API_URL}/progress/categories/complete-day`, {
+              method: "POST",
+              headers: getAuthHeaders(),
+              body: JSON.stringify({ planId: state.currentPlanId }),
+            });
+          } catch (error) {
+            console.error("Failed to complete day on backend", error);
+          }
+        }
+      },
 
       resetAll: () =>
         set({
@@ -170,7 +189,7 @@ export const useLearningStore = create<LearningState>()(
         dailyCompletedCategories: state.dailyCompletedCategories,
         celebratedDayKey: state.celebratedDayKey,
         goalCompletedDates: state.goalCompletedDates,
-      }), // Категорії не кешуємо, щоб вони оновлювались
+      }),
     },
   ),
 );

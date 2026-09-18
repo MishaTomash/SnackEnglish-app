@@ -1,28 +1,24 @@
 import { Request, Response } from "express";
 import { DailyPlan } from "../models/DailyPlan.js";
+import { UserUnitProgress } from "../models/UserUnitProgress.js";
+import { User } from "../models/User.js";
 import crypto from "crypto";
 
 const genId = (prefix: string) =>
   `${prefix}_${crypto.randomBytes(4).toString("hex")}`;
 
-// НОВИЙ ЕНДПОІНТ: Отримання наступного вільного дня для рівня
 export const getNextDayNumber = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const level = (req.query.level as string) || "A1";
-
-    // Шукаємо план з найбільшим dayNumber для цього рівня
     const lastPlan = await DailyPlan.findOne({ level })
-      .sort({ dayNumber: -1 }) // Сортування за спаданням
+      .sort({ dayNumber: -1 })
       .lean();
-
     const nextDay = lastPlan ? lastPlan.dayNumber + 1 : 1;
-
     res.status(200).json({ nextDay });
   } catch (error) {
-    console.error("Next day fetch error:", error);
     res.status(500).json({ error: "Failed to fetch next day number" });
   }
 };
@@ -33,8 +29,40 @@ export const getLearningCategories = async (
 ): Promise<void> => {
   try {
     const level = (req.query.level as string) || "A1";
-    const plans = await DailyPlan.find({ level }).sort({ dayNumber: 1 }).lean();
+    const telegramId = req.user?.id;
 
+    // 1. Отримуємо список ID всіх пройдених планів для цього користувача
+    let completedPlanIds: string[] = [];
+    if (telegramId) {
+      const user = await User.findOne({ telegramId });
+      if (user) {
+        const completedProgresses = await UserUnitProgress.find({
+          userId: user._id,
+          unitId: { $regex: /^day_/ },
+          status: "completed",
+        }).lean();
+        completedPlanIds = completedProgresses.map((p) =>
+          p.unitId.replace("day_", ""),
+        );
+      }
+    }
+
+    // 2. Шукаємо ПЕРШИЙ ПЛАН, який ще не пройдено
+    const nextPlan = await DailyPlan.findOne({
+      level,
+      _id: { $nin: completedPlanIds },
+    })
+      .sort({ dayNumber: 1 })
+      .lean();
+
+    if (!nextPlan) {
+      res
+        .status(200)
+        .json({ categories: [], noMoreDays: true, planId: null, dayTitle: "" });
+      return;
+    }
+
+    // 3. Формуємо масив категорій тільки для цього єдиного плану
     const categories: any[] = [
       {
         id: "vocabulary",
@@ -70,48 +98,88 @@ export const getLearningCategories = async (
       },
     ];
 
-    plans.forEach((plan) => {
-      if (plan.words && plan.words.length > 0) {
-        categories[0].units.push({
-          id: `voc-${plan._id}`,
-          title: `День ${plan.dayNumber}: ${plan.title}`,
-          description: "Нові слова дня",
-          emoji: "📚",
-          steps: [{ kind: "learn", cards: plan.words }],
-        });
-      }
-      if (plan.quizzes && plan.quizzes.length > 0) {
-        categories[1].units.push({
-          id: `test-${plan._id}`,
-          title: `День ${plan.dayNumber}: ${plan.title}`,
-          description: "Перевірка знань",
-          emoji: "🧩",
-          steps: [{ kind: "quiz", items: plan.quizzes }],
-        });
-      }
-      if (plan.listening && plan.listening.length > 0) {
-        categories[2].units.push({
-          id: `lis-${plan._id}`,
-          title: `День ${plan.dayNumber}: ${plan.title}`,
-          description: "Слухай та обирай",
-          emoji: "☕",
-          steps: [{ kind: "listening", items: plan.listening }],
-        });
-      }
-      if (plan.speaking && plan.speaking.length > 0) {
-        categories[3].units.push({
-          id: `spk-${plan._id}`,
-          title: `День ${plan.dayNumber}: ${plan.title}`,
-          description: "Повторюй за диктором",
-          emoji: "🗣",
-          steps: [{ kind: "speak", items: plan.speaking }],
-        });
-      }
-    });
+    if (nextPlan.words?.length) {
+      categories[0].units.push({
+        id: `voc-${nextPlan._id}`,
+        title: `День ${nextPlan.dayNumber}`,
+        description: nextPlan.title,
+        emoji: "📚",
+        steps: [{ kind: "learn", cards: nextPlan.words }],
+      });
+    }
+    if (nextPlan.quizzes?.length) {
+      categories[1].units.push({
+        id: `test-${nextPlan._id}`,
+        title: `День ${nextPlan.dayNumber}`,
+        description: nextPlan.title,
+        emoji: "🧩",
+        steps: [{ kind: "quiz", items: nextPlan.quizzes }],
+      });
+    }
+    if (nextPlan.listening?.length) {
+      categories[2].units.push({
+        id: `lis-${nextPlan._id}`,
+        title: `День ${nextPlan.dayNumber}`,
+        description: nextPlan.title,
+        emoji: "☕",
+        steps: [{ kind: "listening", items: nextPlan.listening }],
+      });
+    }
+    if (nextPlan.speaking?.length) {
+      categories[3].units.push({
+        id: `spk-${nextPlan._id}`,
+        title: `День ${nextPlan.dayNumber}`,
+        description: nextPlan.title,
+        emoji: "🗣",
+        steps: [{ kind: "speak", items: nextPlan.speaking }],
+      });
+    }
 
-    res.status(200).json(categories);
+    const activeCategories = categories.filter((c) => c.units.length > 0);
+
+    res.status(200).json({
+      categories: activeCategories,
+      noMoreDays: false,
+      planId: nextPlan._id.toString(),
+      dayTitle: `День ${nextPlan.dayNumber}: ${nextPlan.title}`,
+    });
   } catch (error) {
+    console.error("Categories fetch error:", error);
     res.status(500).json({ error: "Failed to fetch categories" });
+  }
+};
+
+// НОВИЙ ЕНДПОІНТ: Збереження проходження дня
+export const completeDailyPlan = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const telegramId = req.user?.id;
+    const { planId } = req.body;
+
+    if (!telegramId || !planId) {
+      res.status(400).json({ error: "Missing data" });
+      return;
+    }
+
+    const user = await User.findOne({ telegramId });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Записуємо проходження дня у UserUnitProgress
+    await UserUnitProgress.findOneAndUpdate(
+      { userId: user._id, unitId: `day_${planId}` },
+      { status: "completed", completedSteps: ["test"] }, // 'test' як технічний маркер для enum
+      { upsert: true },
+    );
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Complete daily plan error:", error);
+    res.status(500).json({ error: "Failed to complete daily plan" });
   }
 };
 

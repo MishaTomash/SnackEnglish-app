@@ -18,7 +18,6 @@ import { DailyCookie } from "../../shared/ui/DailyCookie";
 import { CookieMascot } from "../../shared/ui/CookieMascot";
 import {
   computeStreak,
-  DAILY_GOAL,
   todayKey,
   useLearningStore,
 } from "../../store/learningStore";
@@ -60,11 +59,8 @@ const DayCompletedOverlay = ({
   onDismiss,
   onGoGames,
   onGoFriends,
-}: {
-  onDismiss: () => void;
-  onGoGames: () => void;
-  onGoFriends: () => void;
-}) => (
+  dailyGoal,
+}: any) => (
   <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
     <Card className="max-w-sm w-full text-center p-6 space-y-5 relative overflow-hidden">
       <div className="relative z-10 space-y-4">
@@ -74,7 +70,7 @@ const DayCompletedOverlay = ({
             Ти впорався на сьогодні! 🎉
           </h2>
           <p className="text-sm text-[var(--text-muted)]">
-            Пройшов усі {DAILY_GOAL} категорії. Печиво з'їдено.
+            Пройшов усі {dailyGoal} категорії. Печиво з'їдено.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 pt-1">
@@ -98,6 +94,8 @@ export const LearningHubPage = () => {
   const { telegramId, level } = useUserStore();
   const {
     categories,
+    noMoreDays,
+    currentDayTitle,
     isLoading,
     fetchCategories,
     xp,
@@ -113,6 +111,9 @@ export const LearningHubPage = () => {
 
   const adminId = Number(import.meta.env.VITE_ADMIN_ID || "0");
   const isAdmin = telegramId === adminId;
+
+  // ДИНАМІЧНА ЦІЛЬ: залежить від того, скільки категорій (блоків) є в поточному дні
+  const dailyGoal = categories.length || 1;
 
   useEffect(() => {
     if (level) fetchCategories(level);
@@ -136,7 +137,8 @@ export const LearningHubPage = () => {
   };
 
   const todayCount = categories.filter(isCategoryDoneToday).length;
-  const goalReached = todayCount >= DAILY_GOAL;
+  const goalReached =
+    !noMoreDays && todayCount >= dailyGoal && categories.length > 0;
   const streak = useMemo(
     () => computeStreak(goalCompletedDates),
     [goalCompletedDates],
@@ -144,7 +146,9 @@ export const LearningHubPage = () => {
   const today = todayKey();
 
   useEffect(() => {
-    if (goalReached) recordGoalReached();
+    if (goalReached) {
+      recordGoalReached();
+    }
   }, [goalReached, recordGoalReached]);
 
   useEffect(() => {
@@ -168,6 +172,7 @@ export const LearningHubPage = () => {
     <>
       {overlayOpen && (
         <DayCompletedOverlay
+          dailyGoal={dailyGoal}
           onDismiss={dismissOverlay}
           onGoGames={() => {
             dismissOverlay();
@@ -212,9 +217,11 @@ export const LearningHubPage = () => {
             <h1 className="text-[26px] leading-none font-black tracking-tight text-[var(--text-main)]">
               Навчання
             </h1>
-            <p className="text-[11px] text-[var(--text-muted)] mt-1.5 font-medium tracking-wide uppercase">
-              {completedUnits} з {totalUnits} тем пройдено
-            </p>
+            {!noMoreDays && (
+              <p className="text-[11px] text-[var(--text-muted)] mt-1.5 font-medium tracking-wide uppercase">
+                {completedUnits} з {totalUnits} тем пройдено
+              </p>
+            )}
           </div>
           <div className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cta)]/10 border border-[var(--accent-cta)]/25 text-[var(--accent-cta)] font-black text-sm shadow-[0_2px_12px_rgba(232,163,61,0.15)]">
             <Trophy className="w-4 h-4" />
@@ -222,151 +229,161 @@ export const LearningHubPage = () => {
           </div>
         </div>
 
-        <Card className="relative overflow-hidden !p-4">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-90"
-            style={{
-              backgroundImage:
-                "radial-gradient(120% 80% at 0% 0%, rgba(232,163,61,0.12) 0%, transparent 55%)",
-            }}
-          />
-          <div className="relative flex items-center gap-4">
-            <div className="shrink-0 drop-shadow-[0_0_18px_rgba(232,163,61,0.15)]">
-              <DailyCookie eaten={todayCount} total={DAILY_GOAL} size={84} />
+        {noMoreDays ? (
+          <Card className="text-center p-8 space-y-4 border-dashed border-emerald-500/50 bg-emerald-500/5 mt-6">
+            <div className="w-16 h-16 mx-auto bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center">
+              <PartyPopper className="w-8 h-8" />
             </div>
-            <div className="flex-1 min-w-0">
-              {goalReached ? (
-                <>
-                  <div className="inline-flex items-center gap-1.5 text-emerald-400 font-black text-[13px]">
-                    <PartyPopper className="w-4 h-4" />
-                    Ціль виконана!
-                  </div>
-                  <p className="text-[11px] text-[var(--text-muted)] mt-1.5 leading-relaxed">
-                    О 00:00 — новий набір.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="inline-flex items-center gap-1.5 text-[var(--accent-cta)] font-black text-[13px]">
-                    <Flame className="w-4 h-4" />
-                    Ціль на сьогодні
-                  </div>
-                  <p className="text-[11px] text-[var(--text-muted)] mt-1.5 leading-relaxed">
-                    Заверши уроки у {DAILY_GOAL} категоріях
-                  </p>
-                  <div className="mt-2.5 flex items-center gap-2.5">
-                    <span className="text-xs font-black text-[var(--text-main)] tabular-nums min-w-[28px]">
-                      {todayCount}/{DAILY_GOAL}
-                    </span>
-                    <div className="flex-1">
-                      <ProgressBar
-                        progress={(todayCount / DAILY_GOAL) * 100}
-                        className="!h-1.5"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
+            <div>
+              <h2 className="text-xl font-black text-[var(--text-main)] mb-2">
+                Всі дні пройдено!
+              </h2>
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                Ти успішно завершив усі доступні завдання для поточного рівня.
+                Ми вже готуємо нові матеріали, а поки ти можеш змінити рівень у
+                налаштуваннях!
+              </p>
             </div>
-          </div>
-        </Card>
-
-        {isLoading ? (
-          <div className="text-center text-sm text-[var(--text-muted)] py-10 animate-pulse">
-            Завантаження уроків...
-          </div>
+          </Card>
         ) : (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[var(--accent-cta)]" />
-                <h2 className="text-[12px] font-black uppercase tracking-[0.12em] text-[var(--text-main)]">
-                  План на сьогодні
-                </h2>
-              </div>
-              <div className="flex items-center gap-2">
-                {streak > 0 && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-full">
-                    <Flame className="w-3 h-3" />
-                    {streak} дн.
-                  </span>
-                )}
-                <span className="text-[11px] font-bold text-[var(--text-muted)] tabular-nums">
-                  {todayCount}/{DAILY_GOAL}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {categories.map((cat) => {
-                const completed = cat.units.filter(
-                  (u) => progress[u.id]?.completed,
-                ).length;
-                const total = cat.units.length;
-                const percent =
-                  total > 0 ? Math.round((completed / total) * 100) : 0;
-                const done = isCategoryDoneToday(cat);
-                const isNext = !done && cat.id === nextCategoryId;
-
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => navigate(`/learning/category/${cat.id}`)}
-                    className={`group relative aspect-square rounded-3xl p-3.5 text-left bg-[var(--bg-card)] border overflow-hidden transition-all duration-200 active:scale-[0.97] flex flex-col ${
-                      done
-                        ? "border-emerald-500/25 opacity-75"
-                        : isNext
-                          ? `border-[var(--accent-cta)]/45 ${accentGlow[cat.accent]}`
-                          : "border-[var(--border-color)] hover:border-[var(--border-color)]/80"
-                    }`}
-                  >
-                    <span
-                      aria-hidden
-                      className={`pointer-events-none absolute inset-0 ${accentTint[cat.accent]}`}
-                    />
-                    <div className="relative flex items-start justify-between">
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${accentBadge[cat.accent]} shadow-inner`}
-                      >
-                        {cat.emoji}
+          <>
+            <Card className="relative overflow-hidden !p-4">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-90"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(120% 80% at 0% 0%, rgba(232,163,61,0.12) 0%, transparent 55%)",
+                }}
+              />
+              <div className="relative flex items-center gap-4">
+                <div className="shrink-0 drop-shadow-[0_0_18px_rgba(232,163,61,0.15)]">
+                  <DailyCookie eaten={todayCount} total={dailyGoal} size={84} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  {goalReached ? (
+                    <>
+                      <div className="inline-flex items-center gap-1.5 text-emerald-400 font-black text-[13px]">
+                        <PartyPopper className="w-4 h-4" />
+                        Ціль виконана!
                       </div>
-                      {done ? (
-                        <span className="w-6 h-6 rounded-full bg-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0">
-                          <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                        </span>
-                      ) : isNext ? (
-                        <span className="text-[9px] font-black uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-md bg-[var(--accent-cta)] text-[var(--text-accent)] shadow-sm shrink-0">
-                          next
-                        </span>
-                      ) : (
-                        <span className="w-6 h-6 shrink-0" />
-                      )}
-                    </div>
-                    <div className="relative mt-auto space-y-1.5">
-                      <h3
-                        className={`text-[13px] font-black leading-tight tracking-tight line-clamp-2 min-h-[2.2em] ${
-                          done
-                            ? "text-[var(--text-muted)] line-through"
-                            : "text-[var(--text-main)]"
-                        }`}
-                      >
-                        {cat.title}
-                      </h3>
-                      <p className="text-[10px] text-[var(--text-muted)] tabular-nums font-semibold">
-                        {completed}/{total} юнітів
+                      <p className="text-[11px] text-[var(--text-muted)] mt-1.5 leading-relaxed">
+                        О 00:00 — новий набір.
                       </p>
-                      <ProgressBar
-                        progress={percent}
-                        className="!h-1.5"
-                        accent={accentProgress[cat.accent]}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="inline-flex items-center gap-1.5 text-[var(--accent-cta)] font-black text-[13px]">
+                        <Flame className="w-4 h-4" />
+                        Ціль на сьогодні
+                      </div>
+                      <p className="text-[11px] text-[var(--text-muted)] mt-1.5 leading-relaxed">
+                        Заверши уроки у {dailyGoal} категоріях
+                      </p>
+                      <div className="mt-2.5 flex items-center gap-2.5">
+                        <span className="text-xs font-black text-[var(--text-main)] tabular-nums min-w-[28px]">
+                          {todayCount}/{dailyGoal}
+                        </span>
+                        <div className="flex-1">
+                          <ProgressBar
+                            progress={(todayCount / dailyGoal) * 100}
+                            className="!h-1.5"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {isLoading ? (
+              <div className="text-center text-sm text-[var(--text-muted)] py-10 animate-pulse">
+                Завантаження уроків...
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[var(--accent-cta)]" />
+                    <h2 className="text-[12px] font-black uppercase tracking-[0.12em] text-[var(--text-main)]">
+                      {currentDayTitle || "План на сьогодні"}
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {streak > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-full">
+                        <Flame className="w-3 h-3" />
+                        {streak} дн.
+                      </span>
+                    )}
+                    <span className="text-[11px] font-bold text-[var(--text-muted)] tabular-nums">
+                      {todayCount}/{dailyGoal}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {categories.map((cat) => {
+                    const completed = cat.units.filter(
+                      (u) => progress[u.id]?.completed,
+                    ).length;
+                    const total = cat.units.length;
+                    const percent =
+                      total > 0 ? Math.round((completed / total) * 100) : 0;
+                    const done = isCategoryDoneToday(cat);
+                    const isNext = !done && cat.id === nextCategoryId;
+
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => navigate(`/learning/category/${cat.id}`)}
+                        className={`group relative aspect-square rounded-3xl p-3.5 text-left bg-[var(--bg-card)] border overflow-hidden transition-all duration-200 active:scale-[0.97] flex flex-col ${done ? "border-emerald-500/25 opacity-75" : isNext ? `border-[var(--accent-cta)]/45 ${accentGlow[cat.accent]}` : "border-[var(--border-color)] hover:border-[var(--border-color)]/80"}`}
+                      >
+                        <span
+                          aria-hidden
+                          className={`pointer-events-none absolute inset-0 ${accentTint[cat.accent]}`}
+                        />
+                        <div className="relative flex items-start justify-between">
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${accentBadge[cat.accent]} shadow-inner`}
+                          >
+                            {cat.emoji}
+                          </div>
+                          {done ? (
+                            <span className="w-6 h-6 rounded-full bg-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0">
+                              <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                            </span>
+                          ) : isNext ? (
+                            <span className="text-[9px] font-black uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-md bg-[var(--accent-cta)] text-[var(--text-accent)] shadow-sm shrink-0">
+                              next
+                            </span>
+                          ) : (
+                            <span className="w-6 h-6 shrink-0" />
+                          )}
+                        </div>
+                        <div className="relative mt-auto space-y-1.5">
+                          <h3
+                            className={`text-[13px] font-black leading-tight tracking-tight line-clamp-2 min-h-[2.2em] ${done ? "text-[var(--text-muted)] line-through" : "text-[var(--text-main)]"}`}
+                          >
+                            {cat.title}
+                          </h3>
+                          <p className="text-[10px] text-[var(--text-muted)] tabular-nums font-semibold">
+                            {completed}/{total} юнітів
+                          </p>
+                          <ProgressBar
+                            progress={percent}
+                            className="!h-1.5"
+                            accent={accentProgress[cat.accent]}
+                          />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </Screen>
     </>
