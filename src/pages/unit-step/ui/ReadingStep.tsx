@@ -19,37 +19,46 @@ export const ReadingStep = ({
   const readingBlock = unitData.steps?.reading || unitData.reading || {};
 
   const title = readingBlock.title || "Прочитайте текст:";
-  const text = readingBlock.text || unitData.readingText || "";
-  const translation = readingBlock.translation || unitData.readingTranslation;
+  const lines = readingBlock.lines || [];
 
-  // Розбиваємо текст на речення за розділовими знаками
   const sentences = useMemo(() => {
-    if (!text) return [];
-    const matched = text.match(/[^.!?]+[.!?]+["']?/g);
-    if (matched && matched.length > 0) {
-      return matched.map((s: string) => s.trim()).filter(Boolean);
-    }
-    return [text.trim()]; // Фолбек, якщо немає розділових знаків
-  }, [text]);
+    if (lines.length > 0) return lines;
 
-  const currentSentence = sentences[currentSentenceIdx];
+    // Фолбек для старого формату (якщо text - рядок)
+    const oldText = readingBlock.text || unitData.readingText || "";
+    const matched = oldText.match(/[^.!?]+[.!?]+["']?/g);
+    if (matched && matched.length > 0) {
+      return matched.map((s: string) => ({ text: s.trim(), translation: "" }));
+    }
+    if (oldText) return [{ text: oldText.trim(), translation: "" }];
+
+    return [];
+  }, [lines, readingBlock.text, unitData.readingText]);
+
+  const currentSentenceObj = sentences[currentSentenceIdx];
 
   const handleNext = () => {
     if (currentSentenceIdx < sentences.length - 1) {
       setCurrentSentenceIdx((p) => p + 1);
       setCanProceed(false);
+      setShowTranslation(false);
     } else {
       onComplete();
     }
   };
 
-  if (!currentSentence) {
+  if (!currentSentenceObj) {
     return (
       <Button onClick={onComplete} variant="primary" className="w-full">
         Завершити читання
       </Button>
     );
   }
+
+  const globalTranslation =
+    readingBlock.translation || unitData.readingTranslation;
+  const displayTranslation =
+    currentSentenceObj.translation || globalTranslation;
 
   return (
     <div className="space-y-4 my-auto pb-4">
@@ -62,7 +71,7 @@ export const ReadingStep = ({
         </div>
 
         <p className="text-base leading-relaxed tracking-wide text-[var(--text-muted)]">
-          {sentences.map((s: string, idx: number) => (
+          {sentences.map((s: any, idx: number) => (
             <span
               key={idx}
               className={
@@ -71,17 +80,17 @@ export const ReadingStep = ({
                   : ""
               }
             >
-              {s}{" "}
+              {s.text}{" "}
             </span>
           ))}
         </p>
 
-        {showTranslation && translation && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-sm leading-relaxed">
-            {translation}
+        {showTranslation && displayTranslation && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-sm leading-relaxed animate-in fade-in">
+            {displayTranslation}
           </div>
         )}
-        {translation && (
+        {displayTranslation && (
           <Button
             variant="secondary"
             onClick={() => setShowTranslation(!showTranslation)}
@@ -93,7 +102,7 @@ export const ReadingStep = ({
       </Card>
 
       <SpeechPracticeBlock
-        targetText={currentSentence}
+        targetText={currentSentenceObj.text}
         onStatusChange={setCanProceed}
         threshold={70}
         maxAttempts={3}

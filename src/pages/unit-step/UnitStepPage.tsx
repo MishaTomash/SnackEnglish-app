@@ -316,7 +316,7 @@ export const UnitStepPage = () => {
           <ReadingStep unit={unit} onComplete={handleComplete} />
         )}
         {stepType === "speaking" && (
-          <SpeakingStep words={words} onComplete={handleComplete} />
+          <SpeakingStep unit={unit} onComplete={handleComplete} />
         )}
         {stepType === "test" && (
           <TestStep unit={unit} words={words} onComplete={handleComplete} />

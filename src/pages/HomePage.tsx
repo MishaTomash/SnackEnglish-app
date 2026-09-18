@@ -31,15 +31,16 @@ const resolveAvatarUrl = (url: string | null) => {
 
 export const HomePage = () => {
   const {
+    telegramId,
     level,
     streak,
     totalScore,
     wordsLearnedCount,
     telegramFirstName,
+    telegramUsername,
     telegramPhotoUrl,
     customDisplayName,
     customAvatarUrl,
-    nickname,
   } = useUserStore();
 
   const {
@@ -67,7 +68,7 @@ export const HomePage = () => {
     }
   }, [units.length, loadUnits, level, lastFetchedLevel]);
 
-  // Завантаження статистики профілю
+  // Статистику тягнемо після того, як бекенд підтвердив існування юзера
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -87,8 +88,8 @@ export const HomePage = () => {
         console.error("Failed to fetch profile stats:", error);
       }
     };
-    if (nickname) fetchStats(); // Запитуємо тільки якщо юзер вже завершив онбординг (має нік)
-  }, [nickname]);
+    if (telegramId) fetchStats();
+  }, [telegramId]);
 
   const activeUnit = units.find((u) => u.id === currentUnitId) ?? units[0];
   const reviewWordsCount = dailyQueue.length;
@@ -129,22 +130,10 @@ export const HomePage = () => {
                 {level}
               </Badge>
             </div>
-
-            {nickname ? (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[11px] font-bold text-[var(--accent-cta)]">
-                  Топ:
-                </span>
-                <span className="text-[10px] font-medium text-[var(--text-muted)]">
-                  @{nickname}
-                </span>
-              </div>
-            ) : (
-              <Link to="/settings" className="mt-0.5">
-                <span className="text-[11px] font-semibold text-amber-500 underline underline-offset-2 active:opacity-70">
-                  Додай нікнейм і потрап у Топ
-                </span>
-              </Link>
+            {telegramUsername && (
+              <span className="text-[11px] font-medium text-[var(--text-muted)] mt-0.5 truncate max-w-[160px]">
+                @{telegramUsername}
+              </span>
             )}
           </div>
         </div>
@@ -268,7 +257,6 @@ export const HomePage = () => {
           </Card>
         </Link>
 
-        {/* НОВИЙ БЛОК: Друзі */}
         <Link to="/friends" className="block h-full">
           <Card className="flex flex-col items-start gap-2 p-3.5 h-full transition-all active:scale-[0.98] border-[var(--border-color)] bg-[var(--bg-card)]">
             <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center">
@@ -285,7 +273,6 @@ export const HomePage = () => {
           </Card>
         </Link>
 
-        {/* НОВИЙ БЛОК: Лайки */}
         <Card className="flex flex-col items-start gap-2 p-3.5 h-full border-[var(--border-color)] bg-[var(--bg-card)]">
           <div className="w-8 h-8 rounded-xl bg-red-500/15 text-red-500 flex items-center justify-center">
             <Heart className="w-4 h-4" />

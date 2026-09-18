@@ -127,7 +127,7 @@ export const uploadPaymentReceipt = async (
         adminId,
         { source: req.file.path },
         {
-          caption: `📝 Новий ручний платіж (з додатку)!\nКористувач: @${user?.nickname || telegramId}\nГра: ${game?.title}\nКод: ${uniqueCode}`,
+          caption: `📝 Новий ручний платіж (з додатку)!\nКористувач: @${user?.username || user?.telegramFirstName || telegramId}\nГра: ${game?.title}\nКод: ${uniqueCode}`,
           reply_markup: {
             inline_keyboard: [
               [

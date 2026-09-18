@@ -1,0 +1,8 @@
+   node_modules/
+   dist/
+   build/
+   .git/
+   src/assets/
+   *.png
+   *.jpg
+   content/lessons/**/*.json.bak

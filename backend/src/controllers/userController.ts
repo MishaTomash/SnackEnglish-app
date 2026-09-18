@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { User } from "../models/User.js";
 import { getLearnedWordsCount } from "../services/progressStatsService.js";
 
-// Повністю описуємо структуру користувача, яку віддає Telegram
 export interface ExtendedTelegramUser {
   id: number;
   first_name: string;
@@ -38,6 +37,10 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         user.telegramFirstName = telegramUser.first_name;
         needsUpdate = true;
       }
+      if (!user.username && telegramUser.username) {
+        user.username = telegramUser.username;
+        needsUpdate = true;
+      }
       if (!user.telegramPhotoUrl && telegramUser.photo_url) {
         user.telegramPhotoUrl = telegramUser.photo_url;
         needsUpdate = true;
@@ -47,12 +50,15 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    // ДОДАНО: реальна кількість унікальних вивчених слів, рахується з
-    // UserProgress на бекенді — фронтенд більше НІКОЛИ не інкрементить
-    // це число сам, лише відображає те, що прийшло звідси.
     const wordsLearnedCount = await getLearnedWordsCount(user._id);
 
-    res.status(200).json({ ...user.toObject(), wordsLearnedCount });
+    res.status(200).json({
+      ...user.toObject(),
+      // Обчислюване поле для сумісності з фронтом/лідербордом.
+      // Джерело істини — Telegram: username має пріоритет, інакше first_name.
+      nickname: user.username || user.telegramFirstName || "User",
+      wordsLearnedCount,
+    });
   } catch (error) {
     console.error("Error in getMe:", error);
     res.status(500).json({ error: "Failed to fetch user profile" });
@@ -80,7 +86,7 @@ export const completeOnboarding = async (
     const user = await User.findOneAndUpdate(
       { telegramId },
       { level, onboardingCompleted: true },
-      { returnDocument: "after" }, // ВИПРАВЛЕНО
+      { returnDocument: "after" },
     );
 
     if (!user) {
@@ -116,7 +122,7 @@ export const updateLevel = async (
     const user = await User.findOneAndUpdate(
       { telegramId },
       { level },
-      { returnDocument: "after" }, // ВИПРАВЛЕНО
+      { returnDocument: "after" },
     );
 
     if (!user) {
@@ -149,20 +155,17 @@ export const updateProfile = async (
       updateData.customDisplayName = customDisplayName;
     }
 
-    // Якщо multer успішно зберіг файл, записуємо шлях у БД
     if (req.file) {
       updateData.customAvatarUrl = `/uploads/avatars/${req.file.filename}`;
       console.log(
         "[Profile] Файл успішно збережено:",
         updateData.customAvatarUrl,
-      ); // ЛОГ ДОДАНО
+      );
     }
 
-    const user = await User.findOneAndUpdate(
-      { telegramId },
-      updateData,
-      { returnDocument: "after" }, // ВИПРАВЛЕНО
-    );
+    const user = await User.findOneAndUpdate({ telegramId }, updateData, {
+      returnDocument: "after",
+    });
 
     if (!user) {
       res.status(404).json({ error: "User not found" });
@@ -173,61 +176,5 @@ export const updateProfile = async (
   } catch (error) {
     console.error("Error in updateProfile:", error);
     res.status(500).json({ error: "Failed to update profile" });
-  }
-};
-
-export const updateNickname = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    if (!req.user?.id) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-
-    const telegramId = req.user.id;
-    let { nickname } = req.body;
-
-    if (!nickname || typeof nickname !== "string") {
-      res.status(400).json({ error: "Nickname is required" });
-      return;
-    }
-
-    nickname = nickname.trim();
-
-    const existingUser = await User.findOne({
-      nickname: { $regex: new RegExp(`^${nickname}$`, "i") },
-      telegramId: { $ne: telegramId },
-    });
-
-    if (existingUser) {
-      res
-        .status(400)
-        .json({ error: "Цей нікнейм вже зайнято. Будь ласка, оберіть інший." });
-      return;
-    }
-
-    const user = await User.findOneAndUpdate(
-      { telegramId },
-      { nickname },
-      { returnDocument: "after" }, // ВИПРАВЛЕНО
-    );
-
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    res.status(200).json(user);
-  } catch (error: any) {
-    if (error.code === 11000) {
-      res
-        .status(400)
-        .json({ error: "Цей нікнейм вже зайнято. Будь ласка, оберіть інший." });
-      return;
-    }
-    console.error("Error in updateNickname:", error);
-    res.status(500).json({ error: "Failed to update nickname" });
   }
 };

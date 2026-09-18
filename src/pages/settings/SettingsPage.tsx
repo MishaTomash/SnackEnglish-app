@@ -7,7 +7,6 @@ import { LevelPlacementTest } from "../../shared/ui/LevelPlacementTest";
 
 import { SettingsList } from "./ui/SettingsList";
 import { EditProfile } from "./ui/EditProfile";
-import { EditNickname } from "./ui/EditNickname";
 import { ConfirmLevel } from "./ui/ConfirmLevel";
 import { TestResult } from "./ui/TestResult";
 
@@ -16,8 +15,7 @@ export type SettingsStep =
   | "choice"
   | "test"
   | "result"
-  | "edit_profile"
-  | "edit_nickname";
+  | "edit_profile";
 
 export const SettingsPage = () => {
   const navigate = useNavigate();
@@ -50,8 +48,6 @@ export const SettingsPage = () => {
 
   if (step === "edit_profile")
     return <EditProfile onBack={() => setStep("list")} />;
-  if (step === "edit_nickname")
-    return <EditNickname onBack={() => setStep("list")} />;
   if (step === "test") {
     return (
       <LevelPlacementTest

@@ -47,7 +47,7 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
       socket.data.user = {
         userId: user._id.toString(),
         telegramId,
-        nickname: user.nickname || "Користувач",
+        nickname: user.username || user.telegramFirstName || "Користувач",
         avatar: user.customAvatarUrl || user.telegramPhotoUrl || null,
         level: user.level || "A1",
       };
@@ -168,12 +168,10 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
             const newRound = await game.adapter.generateRound([]);
             gameState.customData = { ...newRound, answers: {} };
             const { correctAnswer, ...clientRoundData } = newRound;
-            duelNamespace
-              .to(roomCode)
-              .emit("duel:round_start", {
-                round: gameState.currentRound,
-                data: clientRoundData,
-              });
+            duelNamespace.to(roomCode).emit("duel:round_start", {
+              round: gameState.currentRound,
+              data: clientRoundData,
+            });
           }, 4000);
         }
       }

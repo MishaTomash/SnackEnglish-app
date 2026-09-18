@@ -42,7 +42,7 @@ export const inviteToDuel = async (req: Request, res: Response) => {
     try {
       await bot.telegram.sendMessage(
         targetUser.telegramId,
-        `⚔️ <b>${sender.nickname || sender.telegramFirstName || "Твій друг"}</b> викликає тебе на дуель!\n\nТицяй кнопку нижче, щоб приєднатись:`,
+        `⚔️ <b>${sender.username || sender.telegramFirstName || "Твій друг"}</b> викликає тебе на дуель!\n\nТицяй кнопку нижче, щоб приєднатись:`,
         {
           parse_mode: "HTML",
           reply_markup: {

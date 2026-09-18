@@ -18,7 +18,21 @@ export const VideoStep = ({
     videoData.caption ||
     "Подивіться це короткохвилинне відео для закріплення правильної артикуляції та темпу мови.";
 
-  const getEmbedUrl = (url: string) => url.replace("watch?v=", "embed/");
+  // --- ОНОВЛЕНА ФУНКЦІЯ ---
+  const getEmbedUrl = (url: string) => {
+    if (!url) return "";
+    if (url.includes("/embed/")) return url;
+
+    // Витягуємо унікальний ID з будь-якого формату YouTube посилання
+    const regExp =
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+
+    return match && match[2].length === 11
+      ? `https://www.youtube.com/embed/${match[2]}`
+      : url;
+  };
+  // ------------------------
 
   if (!rawUrl) {
     return (

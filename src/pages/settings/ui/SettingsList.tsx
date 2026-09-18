@@ -8,12 +8,11 @@ import {
 } from "lucide-react";
 import { Screen } from "../../../shared/ui/Screen";
 import { Card } from "../../../shared/ui/Card";
-import { Button } from "../../../shared/ui/Button";
 import { useUserStore } from "../../../store/userStore";
 import { useProgressStore } from "../../../store/progressStore";
 import type { EnglishLevel } from "../../../entities/word/types";
 import type { SettingsStep } from "../SettingsPage";
-import { LEVELS, resolveAvatarUrl } from "../constants"; // ДОДАНО ІМПОРТ
+import { LEVELS, resolveAvatarUrl } from "../constants";
 
 interface Props {
   error: string | null;
@@ -37,15 +36,12 @@ export const SettingsList = ({
     telegramPhotoUrl,
     customDisplayName,
     customAvatarUrl,
-    nickname,
   } = useUserStore();
   const { units } = useProgressStore();
 
   const completedCount = units.filter((u) => u.status === "completed").length;
   const currentDisplayName =
     customDisplayName || telegramFirstName || "Користувач";
-
-  // Використовуємо універсальну функцію
   const currentPhotoUrl = resolveAvatarUrl(customAvatarUrl) || telegramPhotoUrl;
 
   return (
@@ -101,24 +97,6 @@ export const SettingsList = ({
               </button>
             </div>
           </div>
-        </div>
-        <div className="pt-3 border-t border-[var(--border-color)] flex items-center justify-between">
-          <div>
-            <div className="text-sm font-medium text-[var(--text-main)] flex items-center gap-1">
-              Нікнейм для Топу
-              {!nickname && <AlertCircle className="w-4 h-4 text-amber-500" />}
-            </div>
-            <div className="text-xs text-[var(--text-muted)] mt-1">
-              {nickname ? `@${nickname}` : "Не встановлено"}
-            </div>
-          </div>
-          <Button
-            variant={nickname ? "secondary" : "primary"}
-            size="sm"
-            onClick={() => onNavigate("edit_nickname")}
-          >
-            {nickname ? "Змінити" : "Встановити"}
-          </Button>
         </div>
       </Card>
 

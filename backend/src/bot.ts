@@ -25,18 +25,26 @@ bot.start(async (ctx) => {
     if (!telegramUser) return;
 
     // Перевіряємо чи створюємо користувача в базі
-    let user = await User.findOne({ telegramId: telegramUser.id });
-
-    if (!user) {
-      user = await User.create({
-        telegramId: telegramUser.id,
-        username: telegramUser.username ?? undefined,
-        level: null,
-        weakAreas: [],
-        streak: 1,
-        onboardingCompleted: false,
-      });
-    }
+    // Безпечний атомарний Upsert
+    const user = await User.findOneAndUpdate(
+      { telegramId: telegramUser.id }, // Шукаємо за цим полем
+      {
+        $setOnInsert: {
+          // Ці поля запишуться ТІЛЬКИ якщо користувач новий.
+          // Якщо він вже є в базі, вони не перезапишуться!
+          username: telegramUser.username ?? undefined,
+          level: null,
+          weakAreas: [],
+          streak: 1,
+          onboardingCompleted: false,
+        },
+      },
+      {
+        upsert: true, // Створити, якщо не знайдено
+        new: true, // Повернути документ після створення/знаходження
+        setDefaultsOnInsert: true, // Застосувати дефолтні значення зі схеми Mongoose
+      },
+    );
 
     const appUrl = process.env.VITE_APP_URL?.trim();
     console.log(
@@ -182,7 +190,7 @@ bot.on("photo", async (ctx) => {
       const game = await Game.findOne({ gameId: targetRequest.gameId });
 
       await ctx.telegram.sendPhoto(adminId, fileId, {
-        caption: `📝 Новий ручний платіж!\nКористувач: @${user?.nickname || ctx.from.username}\nГра: ${game?.title}\nКод: ${targetRequest.uniqueCode}`,
+        caption: `📝 Новий ручний платіж!\nКористувач: @${user?.username || user?.telegramFirstName || ctx.from.username}\nГра: ${game?.title}\nКод: ${targetRequest.uniqueCode}`,
         reply_markup: {
           inline_keyboard: [
             [

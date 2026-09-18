@@ -66,7 +66,8 @@ export const getProfile = async (
 
     res.status(200).json({
       _id: targetUser._id,
-      nickname: targetUser.nickname,
+      telegramId: targetUser.telegramId, // ← ДОДАНО
+      nickname: targetUser.username || targetUser.telegramFirstName || "User",
       avatar: targetUser.customAvatarUrl || targetUser.telegramPhotoUrl,
       level: targetUser.level,
       rank,
@@ -99,7 +100,6 @@ export const toggleLike = async (
       return;
     }
 
-    // ВИПРАВЛЕННЯ TYPESCRIPT: Явно перетворюємо рядок параметру на ObjectId для суворої типізації
     const targetObjectId = new Types.ObjectId(targetUserId);
 
     const existingLike = await Like.findOne({
@@ -108,7 +108,6 @@ export const toggleLike = async (
     });
 
     if (existingLike) {
-      // Лайк ставиться тільки один раз, фармінг заблоковано
       res.status(200).json({ liked: true });
       return;
     }
@@ -184,7 +183,6 @@ export const sendFriendRequest = async (
       senderName = `ID: ${tgId}`;
     }
 
-    // Екрануємо спецсимволи для HTML-розмітки Telegram
     const safeName = senderName
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -286,7 +284,7 @@ export const getMyFriends = async (
       status: "accepted",
     }).populate(
       "userId friendId",
-      "nickname customAvatarUrl telegramPhotoUrl totalScore level",
+      "username telegramFirstName customAvatarUrl telegramPhotoUrl totalScore level",
     );
 
     const friendsList = friendships.map((f) => {
@@ -301,6 +299,7 @@ export const getMyFriends = async (
     res.status(500).json({ error: "Помилка при завантаженні друзів" });
   }
 };
+
 export const getMyProfileStats = async (
   req: Request,
   res: Response,

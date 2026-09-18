@@ -71,6 +71,7 @@ const UserAvatar = ({
 
 interface ProfileData {
   _id: string;
+  telegramId: number;
   nickname: string;
   avatar: string | null;
   level: string | null;
@@ -85,7 +86,7 @@ interface ProfileData {
 export const ProfilePage = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { nickname: myNickname } = useUserStore();
+  const { telegramId } = useUserStore();
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,7 +110,7 @@ export const ProfilePage = () => {
     fetchProfile();
   }, [userId]);
 
-  const isMe = profile?.nickname === myNickname;
+  const isMe = !!profile && profile.telegramId === telegramId;
 
   const handleLike = async () => {
     if (!profile || isMe) return;

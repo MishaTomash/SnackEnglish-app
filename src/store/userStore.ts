@@ -8,6 +8,8 @@ const getAuthHeaders = () => {
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${initData}`,
+    "ngrok-skip-browser-warning": "true",
+    "Bypass-Tunnel-Reminder": "true",
   };
 };
 
@@ -21,16 +23,10 @@ export interface UserState {
   /**
    * Загальний рахунок (бали за пройдені кроки/юніти). Джерело правди —
    * бекенд (User.totalScore, рахується в progressController.completeStep).
-   * Так само як wordsLearnedCount — тільки перезаписується з fetchUser(),
-   * ніколи не інкрементується локально.
    */
   totalScore: number;
   /**
-   * Кількість УНІКАЛЬНИХ вивчених слів. Джерело правди — бекенд
-   * (COUNT(DISTINCT wordId) зі статусом "learned" у прогресі користувача).
-   * Це поле НІКОЛИ не інкрементується локально — тільки перезаписується
-   * значенням з відповіді сервера в fetchUser(). Кешується в localStorage
-   * лише для миттєвого відображення до завершення першого fetchUser().
+   * Кількість УНІКАЛЬНИХ вивчених слів. Джерело правди — бекенд.
    */
   wordsLearnedCount: number;
   isLoading: boolean;
@@ -39,10 +35,10 @@ export interface UserState {
   lastActiveUnitId: string | null;
 
   telegramFirstName: string | null;
+  telegramUsername: string | null;
   telegramPhotoUrl: string | null;
   customDisplayName: string | null;
   customAvatarUrl: string | null;
-  nickname: string | null;
 
   setLevel: (level: EnglishLevel) => void;
   incrementStreak: () => void;
@@ -56,9 +52,6 @@ export interface UserState {
     displayName: string | null,
     avatarFile: File | null,
   ) => Promise<boolean>;
-  updateNickname: (
-    nickname: string,
-  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useUserStore = create<UserState>()(
@@ -76,10 +69,10 @@ export const useUserStore = create<UserState>()(
       lastActiveUnitId: null,
 
       telegramFirstName: null,
+      telegramUsername: null,
       telegramPhotoUrl: null,
       customDisplayName: null,
       customAvatarUrl: null,
-      nickname: null,
 
       setLevel: (level) => set({ level }),
       incrementStreak: () => set((state) => ({ streak: state.streak + 1 })),
@@ -117,15 +110,12 @@ export const useUserStore = create<UserState>()(
             onboardingCompleted: data.onboardingCompleted,
             streak: data.streak,
             totalScore: data.totalScore ?? 0,
-            // ВИПРАВЛЕНО: раніше це поле взагалі не синхронізувалось з
-            // бекендом, тому показане число було виключно сумою локальних
-            // incrementWordsLearned() викликів і ніколи не звірялось з реальністю.
             wordsLearnedCount: data.wordsLearnedCount ?? 0,
             telegramFirstName: data.telegramFirstName,
+            telegramUsername: data.username ?? null,
             telegramPhotoUrl: data.telegramPhotoUrl,
             customDisplayName: data.customDisplayName,
             customAvatarUrl: data.customAvatarUrl,
-            nickname: data.nickname,
             hasLoadedProfile: true,
             isLoading: false,
           });
@@ -182,26 +172,6 @@ export const useUserStore = create<UserState>()(
           return false;
         }
       },
-
-      updateNickname: async (nickname: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const res = await fetch(`${API_URL}/user/nickname`, {
-            method: "PATCH",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ nickname }),
-          });
-          if (!res.ok) {
-            const data = await res.json();
-            throw new Error(data.error || "Помилка оновлення нікнейму");
-          }
-          set({ nickname, isLoading: false });
-          return { success: true };
-        } catch (error: any) {
-          set({ isLoading: false });
-          return { success: false, error: error.message };
-        }
-      },
     }),
     {
       name: "snack_user_storage",
@@ -211,15 +181,13 @@ export const useUserStore = create<UserState>()(
         onboardingCompleted: state.onboardingCompleted,
         streak: state.streak,
         totalScore: state.totalScore,
-        // Кешуємо ОСТАННЄ ВІДОМЕ серверне значення для миттєвого відображення
-        // до першого fetchUser() у новій сесії — не для накопичення локально.
         wordsLearnedCount: state.wordsLearnedCount,
         lastActiveUnitId: state.lastActiveUnitId,
         telegramFirstName: state.telegramFirstName,
+        telegramUsername: state.telegramUsername,
         telegramPhotoUrl: state.telegramPhotoUrl,
         customDisplayName: state.customDisplayName,
         customAvatarUrl: state.customAvatarUrl,
-        nickname: state.nickname,
       }),
     },
   ),

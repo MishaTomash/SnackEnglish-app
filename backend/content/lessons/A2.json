@@ -3,95 +3,1294 @@
   "units": [
     {
       "id": "a2-u1",
-      "title": "Travel & Holidays",
-      "description": "Словник для подорожей та використання Past Simple для розповідей про минуле.",
+      "title": "Hello, I'm...",
+      "description": "Learn basic greetings, introducing yourself, and using 'to be' (I am / You are).",
       "order": 1,
       "steps": {
-        "warmup": {},
         "vocabulary": [
           {
-            "text": "ticket",
-            "transcription": "[ˈtɪkɪt]",
-            "translation": "квиток",
-            "exampleSentence": "I bought a plane ticket to Rome.",
-            "exampleTranslation": "Я купив квиток на літак до Риму."
+            "text": "hello",
+            "transcription": "[həˈloʊ]",
+            "translation": "привіт",
+            "exampleSentence": "Hello, my friend!",
+            "exampleTranslation": "Привіт, мій друже!",
+            "audioUrl": null
           },
           {
-            "text": "luggage",
-            "transcription": "[ˈlʌɡɪdʒ]",
-            "translation": "багаж",
-            "exampleSentence": "We lost our luggage at the airport.",
-            "exampleTranslation": "Ми загубили наш багаж в аеропорту."
+            "text": "hi",
+            "transcription": "[haɪ]",
+            "translation": "привіт",
+            "exampleSentence": "Hi, I am Anna.",
+            "exampleTranslation": "Привіт, я Анна.",
+            "audioUrl": null
           },
           {
-            "text": "sightseeing",
-            "transcription": "[ˈsaɪtsiːɪŋ]",
-            "translation": "огляд визначних місць",
-            "exampleSentence": "They went sightseeing in Paris.",
-            "exampleTranslation": "Вони пішли оглядати визначні місця в Парижі."
+            "text": "name",
+            "transcription": "[neɪm]",
+            "translation": "ім'я",
+            "exampleSentence": "My name is Anna.",
+            "exampleTranslation": "Моє ім'я — Анна.",
+            "audioUrl": null
+          },
+          {
+            "text": "country",
+            "transcription": "[ˈkʌntri]",
+            "translation": "країна",
+            "exampleSentence": "Ukraine is my country.",
+            "exampleTranslation": "Україна — моя країна.",
+            "audioUrl": null
+          },
+          {
+            "text": "city",
+            "transcription": "[ˈsɪti]",
+            "translation": "місто",
+            "exampleSentence": "Kyiv is a big city.",
+            "exampleTranslation": "Київ — велике місто.",
+            "audioUrl": null
+          },
+          {
+            "text": "student",
+            "transcription": "[ˈstuːdnt]",
+            "translation": "студент",
+            "exampleSentence": "I am a student.",
+            "exampleTranslation": "Я студент.",
+            "audioUrl": null
+          },
+          {
+            "text": "friend",
+            "transcription": "[frend]",
+            "translation": "друг",
+            "exampleSentence": "You are my friend.",
+            "exampleTranslation": "Ти мій друг.",
+            "audioUrl": null
+          },
+          {
+            "text": "nice",
+            "transcription": "[naɪs]",
+            "translation": "приємний",
+            "exampleSentence": "It is nice today.",
+            "exampleTranslation": "Сьогодні приємно.",
+            "audioUrl": null
+          },
+          {
+            "text": "meet",
+            "transcription": "[miːt]",
+            "translation": "знайомитися",
+            "exampleSentence": "Nice to meet you.",
+            "exampleTranslation": "Приємно познайомитися з тобою.",
+            "audioUrl": null
+          },
+          {
+            "text": "from",
+            "transcription": "[frʌm]",
+            "translation": "з",
+            "exampleSentence": "I am from Ukraine.",
+            "exampleTranslation": "Я з України.",
+            "audioUrl": null
           }
         ],
         "grammar": {
-          "title": "Past Simple",
-          "explanation": "Використовується для дій, які завершилися в минулому. Правильні дієслова отримують закінчення -ed, неправильні — змінюють форму (buy -> bought).",
+          "title": "Verb To Be: I am / You are",
+          "explanation": "В англійській мові дієслово 'to be' означає 'бути', 'є'. Для займенника 'I' ми вживаємо форму 'am' (скорочено I'm). Для займенника 'You' ми вживаємо форму 'are' (скорочено You're).",
           "examples": [
             {
-              "en": "We visited a museum yesterday.",
-              "ua": "Вчора ми відвідали музей."
+              "en": "I **am** Anna.",
+              "ua": "Я **є** Анна.",
+              "highlightWord": "am"
             },
             {
-              "en": "I did not (didn't) see him at the hotel.",
-              "ua": "Я не бачив його в готелі."
+              "en": "I **am** from Ukraine.",
+              "ua": "Я **з** України.",
+              "highlightWord": "am"
+            },
+            {
+              "en": "You **are** a student.",
+              "ua": "Ти **є** студент.",
+              "highlightWord": "are"
+            },
+            {
+              "en": "You **are** my friend.",
+              "ua": "Ти **мій** друг.",
+              "highlightWord": "are"
             }
           ]
         },
         "video": {
-          "url": "https://www.youtube.com/watch?v=12345travel"
+          "url": "https://youtu.be/t5f0pve-OaQ",
+          "caption": "Подивіться відео про те, як вітатися, називати своє ім'я та країну.",
+          "notebookSourceText": "Unit 1: Hello, I'm... Словник: hello (привіт), hi (привіт), name (ім'я), country (країна), city (місто), student (студент), friend (друг), nice (приємний), meet (знайомитися), from (з). Граматика: Дієслово to be у формах I am (I'm) та You are (You're). Приклади: I am Anna. You are my friend. Текст: Hello! My name is Anna. I am from Ukraine. Ukraine is my country. Kyiv is my city. I am a student. You are a student, and you are my friend. Nice to meet you!",
+          "notebookFocusPrompt": "Поясни базові привітання та форми I am і You are. УВАГА: Відео для рівня A1. Використовуй виключно базову, дуже просту лексику та повільний темп. Уникай складних зворотів і довгих речень.",
+          "youtubeTitle": "🇬🇧 Дієслово To Be (I am / You are) та Знайомство | Англійська з нуля A1 | SnackEnglish",
+          "youtubeDescription": "Перший урок курсу англійської для початківців (A1). Вчимося вітатися, розповідати про себе та правильно вживати I am і You are. #англійська #snackenglish #англійськазнуля #a1"
         },
         "reading": {
-          "title": "A Trip to London",
-          "text": "Last summer, Tom and Mary went to London. They stayed in a small hotel near the center. They visited the British Museum and saw Big Ben. The weather was rainy, but they enjoyed their holiday.",
-          "questions": [
+          "title": "Anna Introduces Herself",
+          "lines": [
             {
-              "question": "Where did Tom and Mary stay?",
-              "options": [
-                "in a big hotel",
-                "in a small hotel",
-                "with friends",
-                "in a hostel"
-              ],
-              "correctAnswer": "in a small hotel"
+              "text": "Hello! My name is Anna.",
+              "translation": "Привіт! Моє ім'я — Анна."
             },
             {
-              "question": "What was the weather like?",
-              "options": ["sunny", "snowy", "rainy", "hot"],
-              "correctAnswer": "rainy"
+              "text": "I am from Ukraine.",
+              "translation": "Я з України."
+            },
+            {
+              "text": "Ukraine is my country.",
+              "translation": "Україна — моя країна."
+            },
+            {
+              "text": "Kyiv is my city.",
+              "translation": "Київ — моє місто."
+            },
+            {
+              "text": "I am a student.",
+              "translation": "Я студентка."
+            },
+            {
+              "text": "You are a student, and you are my friend.",
+              "translation": "Ти студент, і ти мій друг."
+            },
+            {
+              "text": "Nice to meet you!",
+              "translation": "Приємно познайомитися!"
+            }
+          ],
+          "questions": [
+            {
+              "type": "reading",
+              "question": "З якої країни Анна?",
+              "options": ["Ukraine", "Poland", "USA"],
+              "correctAnswer": "Ukraine",
+              "skillTag": "reading:details",
+              "explanation": "У тексті зазначено: 'I am from Ukraine'."
+            },
+            {
+              "type": "reading",
+              "question": "Хто така Анна за родом занять?",
+              "options": ["student", "teacher", "doctor"],
+              "correctAnswer": "student",
+              "skillTag": "reading:details",
+              "explanation": "У тексті Анна прямо говорить: 'I am a student'."
+            },
+            {
+              "type": "reading",
+              "question": "Яке місто згадує Анна?",
+              "options": ["Lviv", "Odesa", "Kyiv"],
+              "correctAnswer": "Kyiv",
+              "skillTag": "reading:details",
+              "explanation": "Анна каже: 'Kyiv is my city'."
             }
           ]
         },
         "speaking": {
-          "title": "At the Airport",
-          "scenario": "Реєстрація на рейс.",
+          "title": "First Meeting",
+          "scenario": "Ти знайомишся з одногрупницею на першому занятті в мовній школі.",
           "lines": [
             {
+              "speaker": "Anna",
+              "text": "Hello! My name is Anna. What is your name?",
+              "translation": "Привіт! Моє ім'я — Анна. Як тебе звати?"
+            },
+            {
               "speaker": "You",
-              "text": "Here is my ticket and passport.",
-              "translation": "Ось мій квиток та паспорт."
+              "text": "Hi! My name is Alex.",
+              "translation": "Привіт! Моє ім'я — Алекс.",
+              "expectedPhrase": "hi my name is alex"
+            },
+            {
+              "speaker": "Anna",
+              "text": "Nice to meet you, Alex! I am from Ukraine. Where are you from?",
+              "translation": "Приємно познайомитися, Алексе! Я з України. Звідки ти?"
+            },
+            {
+              "speaker": "You",
+              "text": "I am from Ukraine too. Kyiv is my city.",
+              "translation": "Я теж з України. Київ — моє місто.",
+              "expectedPhrase": "i am from ukraine too kyiv is my city"
+            },
+            {
+              "speaker": "Anna",
+              "text": "Great! I am a student here. Are you a student?",
+              "translation": "Чудово! Я тут студентка. Ти студент?"
+            },
+            {
+              "speaker": "You",
+              "text": "Yes, I am a student and you are my friend now.",
+              "translation": "Так, я студент, і ти тепер мій друг.",
+              "expectedPhrase": "yes i am a student and you are my friend now"
             }
           ]
         },
         "test": [
           {
-            "question": "They ___ a great time on holiday last week.",
-            "options": ["have", "has", "had", "having"],
-            "correctAnswer": "had",
-            "explanation": "Минулий час від неправильного дієслова have — had."
+            "type": "quiz",
+            "question": "Обери правильний переклад: 'місто'",
+            "options": ["country", "city", "friend"],
+            "correctAnswer": "city",
+            "skillTag": "vocab:city",
+            "explanation": "'City' перекладається як 'місто'."
           },
           {
-            "question": "Did you ___ the museum?",
-            "options": ["visited", "visit", "visits", "visiting"],
-            "correctAnswer": "visit",
-            "explanation": "У питаннях Past Simple після 'did' використовується базова форма дієслова (visit)."
+            "type": "grammar",
+            "question": "Обери правильну форму: 'I ___ from Ukraine.'",
+            "options": ["am", "are", "is"],
+            "correctAnswer": "am",
+            "skillTag": "grammar:to_be:i_am",
+            "explanation": "З займенником 'I' вживається форма 'am'."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильну форму: 'You ___ a student.'",
+            "options": ["is", "am", "are"],
+            "correctAnswer": "are",
+            "skillTag": "grammar:to_be:you_are",
+            "explanation": "З займенником 'You' вживається форма 'are'."
+          },
+          {
+            "type": "quiz",
+            "question": "Як сказати англійською: 'Приємно познайомитися'?",
+            "options": ["Nice to meet you", "Hello my friend", "I am student"],
+            "correctAnswer": "Nice to meet you",
+            "skillTag": "vocab:nice_to_meet_you",
+            "explanation": "Сталий вираз ввічливості при знайомстві — 'Nice to meet you'."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською слово: 'країна'",
+            "correctAnswer": "country",
+            "skillTag": "vocab:country:active",
+            "explanation": "Англійський переклад слова 'країна' — country."
+          },
+          {
+            "type": "type-answer",
+            "question": "Встав пропущене дієслово: 'I ___ Anna.'",
+            "correctAnswer": "am",
+            "skillTag": "grammar:to_be:i_am:active",
+            "explanation": "Для першої особи однини використовується форма 'am'."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською слово: 'друг'",
+            "correctAnswer": "friend",
+            "skillTag": "vocab:friend:active",
+            "explanation": "Англійський відповідник слова 'друг' — friend."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "My name is Anna.",
+            "translation": "Моє ім'я — Анна.",
+            "skillTag": "grammar:syntax:introductions",
+            "explanation": "Правильний порядок слів: підмет (My name) + дієслово (is) + власна назва (Anna)."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "I am from Ukraine.",
+            "translation": "Я з України.",
+            "skillTag": "grammar:syntax:to_be",
+            "explanation": "Порядок слів: підмет (I) + дієслово (am) + прийменник (from) + країна (Ukraine)."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "You are my friend.",
+            "translation": "Ти мій друг.",
+            "skillTag": "grammar:syntax:you_are",
+            "explanation": "Порядок слів: підмет (You) + дієслово (are) + додаток (my friend)."
+          }
+        ]
+      }
+    },
+    {
+      "id": "a2-u2",
+      "title": "What's Your Name?",
+      "description": "Learn how to ask questions about personal details, contact information, and spelling using the verb 'to be'.",
+      "order": 2,
+      "steps": {
+        "vocabulary": [
+          {
+            "text": "first name",
+            "transcription": "[fɜːrst neɪm]",
+            "translation": "ім'я",
+            "exampleSentence": "My first name is David.",
+            "exampleTranslation": "Моє ім'я — Девід.",
+            "audioUrl": null
+          },
+          {
+            "text": "last name",
+            "transcription": "[læst neɪm]",
+            "translation": "прізвище",
+            "exampleSentence": "My last name is Brown.",
+            "exampleTranslation": "Моє прізвище — Браун.",
+            "audioUrl": null
+          },
+          {
+            "text": "age",
+            "transcription": "[eɪdʒ]",
+            "translation": "вік",
+            "exampleSentence": "What is your age?",
+            "exampleTranslation": "Який твій вік?",
+            "audioUrl": null
+          },
+          {
+            "text": "phone number",
+            "transcription": "[foʊn ˈnʌmbər]",
+            "translation": "номер телефону",
+            "exampleSentence": "This is my phone number.",
+            "exampleTranslation": "Це мій номер телефону.",
+            "audioUrl": null
+          },
+          {
+            "text": "email",
+            "transcription": "[ˈiːmeɪl]",
+            "translation": "електронна пошта",
+            "exampleSentence": "Send it to my email.",
+            "exampleTranslation": "Надішли це на мою електронну пошту.",
+            "audioUrl": null
+          },
+          {
+            "text": "address",
+            "transcription": "[əˈdres]",
+            "translation": "адреса",
+            "exampleSentence": "What is your address?",
+            "exampleTranslation": "Яка твоя адреса?",
+            "audioUrl": null
+          },
+          {
+            "text": "spell",
+            "transcription": "[spel]",
+            "translation": "вимовляти по буквах",
+            "exampleSentence": "Can you spell your name?",
+            "exampleTranslation": "Ти можеш вимовити своє ім'я по буквах?",
+            "audioUrl": null
+          },
+          {
+            "text": "question",
+            "transcription": "[ˈkwestʃən]",
+            "translation": "запитання",
+            "exampleSentence": "I have a question.",
+            "exampleTranslation": "У мене є запитання.",
+            "audioUrl": null
+          },
+          {
+            "text": "information",
+            "transcription": "[ˌɪnfərˈmeɪʃn]",
+            "translation": "інформація",
+            "exampleSentence": "This is my contact information.",
+            "exampleTranslation": "Це моя контактна інформація.",
+            "audioUrl": null
+          },
+          {
+            "text": "number",
+            "transcription": "[ˈnʌmbər]",
+            "translation": "номер",
+            "exampleSentence": "What is this number?",
+            "exampleTranslation": "Що це за номер?",
+            "audioUrl": null
+          }
+        ],
+        "grammar": {
+          "title": "Questions with To Be",
+          "explanation": "Щоб утворити запитання з дієсловом 'to be', ми виносимо форму дієслова (am, is, are) перед підметом. Якщо в запитанні є питальне слово (What, Where, How old), воно завжди стоїть на першому місці перед дієсловом.",
+          "examples": [
+            {
+              "en": "What **is** your name?",
+              "ua": "Як твоє ім'я?",
+              "highlightWord": "is"
+            },
+            {
+              "en": "Where **are** you from?",
+              "ua": "Звідки ти?",
+              "highlightWord": "are"
+            },
+            {
+              "en": "How old **are** you?",
+              "ua": "Скільки тобі років?",
+              "highlightWord": "are"
+            },
+            {
+              "en": "**Is** this your address?",
+              "ua": "Це твоя адреса?",
+              "highlightWord": "Is"
+            },
+            {
+              "en": "**Are** you a student?",
+              "ua": "Ти студент?",
+              "highlightWord": "Are"
+            }
+          ]
+        },
+        "video": {
+          "url": "https://youtu.be/qSkP-8QO8zI",
+          "caption": "Послухайте, як ставити базові запитання співрозмовнику та називати контактні дані.",
+          "notebookSourceText": "Unit 2: What's Your Name? Словник: first name (ім'я), last name (прізвище), age (вік), phone number (номер телефону), email (електронна пошта), address (адреса), spell (вимовляти по буквах), question (запитання), information (інформація), number (номер). Граматика: Питальні речення з дієсловом to be (What is your name? Where are you from? How old are you? Are you a student?). Текст: This is a student form for personal information. What is your first name and last name? Can you spell your name, please? What is your age? What is your phone number and your email? What is your address in this city? Please answer every question.",
+          "notebookFocusPrompt": "Поясни тему запитань із дієсловом to be та базові слова для анкети й знайомства. УВАГА: Відео для рівня A1. Використовуй виключно базову, просту лексику та спокійний, повільний темп. Уникай складних граматичних термінів.",
+          "youtubeTitle": "🇬🇧 Запитання з To Be: What's your name? | Англійська рівень A1 | SnackEnglish",
+          "youtubeDescription": "Вчимося ставити базові питання англійською: ім'я, вік, контакти та походження. Розбір форми дієслова to be у запитаннях для початківців. #англійська #snackenglish #англійськазнуля #граматикаa1"
+        },
+        "reading": {
+          "title": "Student Registration Form",
+          "lines": [
+            {
+              "text": "This form is for your personal information.",
+              "translation": "Ця форма призначена для вашої особистої інформації."
+            },
+            {
+              "text": "What is your first name and last name?",
+              "translation": "Яке ваше ім'я та прізвище?"
+            },
+            {
+              "text": "Can you spell your name, please?",
+              "translation": "Чи можете ви вимовити своє ім'я по буквах, будь ласка?"
+            },
+            {
+              "text": "What is your age?",
+              "translation": "Який ваш вік?"
+            },
+            {
+              "text": "What is your phone number and your email?",
+              "translation": "Який ваш номер телефону та електронна пошта?"
+            },
+            {
+              "text": "What is your address in the city?",
+              "translation": "Яка ваша адреса в місті?"
+            },
+            {
+              "text": "Please write the number and answer every question.",
+              "translation": "Будь ласка, напишіть номер і дайте відповідь на кожне запитання."
+            }
+          ],
+          "questions": [
+            {
+              "type": "reading",
+              "question": "Для чого призначена ця форма?",
+              "options": [
+                "personal information",
+                "hotel booking",
+                "plane ticket"
+              ],
+              "correctAnswer": "personal information",
+              "skillTag": "reading:details",
+              "explanation": "У першому реченні тексту сказано: 'This form is for your personal information'."
+            },
+            {
+              "type": "reading",
+              "question": "Що просять зробити з ім'ям?",
+              "options": ["change", "spell", "forget"],
+              "correctAnswer": "spell",
+              "skillTag": "reading:vocab:spell",
+              "explanation": "У тексті є запитання: 'Can you spell your name, please?'."
+            },
+            {
+              "type": "reading",
+              "question": "Які контактні дані запитуються в тексті?",
+              "options": [
+                "phone number and your email",
+                "car number and passport",
+                "bank account and card"
+              ],
+              "correctAnswer": "phone number and your email",
+              "skillTag": "reading:details",
+              "explanation": "У тексті прямо запитують: 'What is your phone number and your email?'."
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Asking for Contact Details",
+          "scenario": "Ти реєструєш нового студента на курсі та запитуєш його контактні дані.",
+          "lines": [
+            {
+              "speaker": "You",
+              "text": "Hello! What is your first name?",
+              "translation": "Привіт! Яке твоє ім'я?",
+              "expectedPhrase": "hello what is your first name"
+            },
+            {
+              "speaker": "David",
+              "text": "Hi! My first name is David.",
+              "translation": "Привіт! Моє ім'я — Девід."
+            },
+            {
+              "speaker": "You",
+              "text": "Can you spell your last name, please?",
+              "translation": "Ти можеш вимовити своє прізвище по буквах, будь ласка?",
+              "expectedPhrase": "can you spell your last name please"
+            },
+            {
+              "speaker": "David",
+              "text": "Yes, it is B-R-O-W-N, Brown.",
+              "translation": "Так, це B-R-O-W-N, Браун."
+            },
+            {
+              "speaker": "You",
+              "text": "Where are you from and what is your address?",
+              "translation": "Звідки ти і яка твоя адреса?",
+              "expectedPhrase": "where are you from and what is your address"
+            },
+            {
+              "speaker": "David",
+              "text": "I am from Canada. My address is 10 Park Street.",
+              "translation": "Я з Канади. Моя адреса — Парк Стріт, 10."
+            },
+            {
+              "speaker": "You",
+              "text": "What is your phone number and email?",
+              "translation": "Який твій номер телефону та пошта?",
+              "expectedPhrase": "what is your phone number and email"
+            },
+            {
+              "speaker": "David",
+              "text": "My email is david@mail.com. Thank you!",
+              "translation": "Моя пошта — david@mail.com. Дякую!"
+            }
+          ]
+        },
+        "test": [
+          {
+            "type": "quiz",
+            "question": "Обери правильний переклад: 'прізвище'",
+            "options": ["first name", "last name", "address"],
+            "correctAnswer": "last name",
+            "skillTag": "vocab:last_name",
+            "explanation": "'Last name' перекладається як 'прізвище'."
+          },
+          {
+            "type": "quiz",
+            "question": "Що означає слово 'spell'?",
+            "options": [
+              "писати швидко",
+              "вимовляти по буквах",
+              "читати вголос"
+            ],
+            "correctAnswer": "вимовляти по буквах",
+            "skillTag": "vocab:spell",
+            "explanation": "'Spell' означає називати або вимовляти слово по буквах."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильний порядок слів для запитання:",
+            "options": [
+              "Where you are from?",
+              "Where are you from?",
+              "Where from you are?"
+            ],
+            "correctAnswer": "Where are you from?",
+            "skillTag": "grammar:questions:to_be",
+            "explanation": "У спеціальному запитанні форма дієслова 'are' стоїть перед підметом 'you'."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильну форму: 'What ___ your phone number?'",
+            "options": ["is", "are", "am"],
+            "correctAnswer": "is",
+            "skillTag": "grammar:questions:to_be:is",
+            "explanation": "'Phone number' — це однина (it), тому використовуємо 'is'."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильну форму: 'How old ___ you?'",
+            "options": ["is", "am", "are"],
+            "correctAnswer": "are",
+            "skillTag": "grammar:questions:to_be:are",
+            "explanation": "З займенником 'you' використовується форма 'are'."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською фразу: 'номер телефону'",
+            "correctAnswer": "phone number",
+            "skillTag": "vocab:phone_number:active",
+            "explanation": "Англійський переклад — phone number."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською слово: 'адреса'",
+            "correctAnswer": "address",
+            "skillTag": "vocab:address:active",
+            "explanation": "Англійське слово — address."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською слово: 'вік'",
+            "correctAnswer": "age",
+            "skillTag": "vocab:age:active",
+            "explanation": "Слово 'вік' англійською — age."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "What is your name?",
+            "translation": "Як твоє ім'я?",
+            "skillTag": "grammar:syntax:questions",
+            "explanation": "Питальне слово (What) + дієслово (is) + підмет (your name)."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "Where are you from?",
+            "translation": "Звідки ти?",
+            "skillTag": "grammar:syntax:questions",
+            "explanation": "Питальне слово (Where) + дієслово (are) + підмет (you) + прийменник (from)."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "How old are you?",
+            "translation": "Скільки тобі років?",
+            "skillTag": "grammar:syntax:questions",
+            "explanation": "Питальна фраза (How old) + дієслово (are) + підмет (you)."
+          }
+        ]
+      }
+    },
+    {
+      "id": "a2-u3",
+      "title": "Where Are You From?",
+      "description": "Learn how to talk about other people, their countries, nationalities, and the languages they speak using 'he is', 'she is', 'we are', and 'they are'.",
+      "order": 3,
+      "steps": {
+        "vocabulary": [
+          {
+            "text": "live",
+            "transcription": "[lɪv]",
+            "translation": "жити",
+            "exampleSentence": "We live in a big city.",
+            "exampleTranslation": "Ми живемо у великому місті.",
+            "audioUrl": null
+          },
+          {
+            "text": "speak",
+            "transcription": "[spiːk]",
+            "translation": "говорити",
+            "exampleSentence": "They speak English.",
+            "exampleTranslation": "Вони говорять англійською.",
+            "audioUrl": null
+          },
+          {
+            "text": "language",
+            "transcription": "[ˈlæŋɡwɪdʒ]",
+            "translation": "мова",
+            "exampleSentence": "English is a global language.",
+            "exampleTranslation": "Англійська — світова мова.",
+            "audioUrl": null
+          },
+          {
+            "text": "nationality",
+            "transcription": "[ˌnæʃəˈnæləti]",
+            "translation": "національність",
+            "exampleSentence": "What is your nationality?",
+            "exampleTranslation": "Яка твоя національність?",
+            "audioUrl": null
+          },
+          {
+            "text": "Poland",
+            "transcription": "[ˈpoʊlənd]",
+            "translation": "Польща",
+            "exampleSentence": "Pavel is from Poland.",
+            "exampleTranslation": "Павел з Польщі.",
+            "audioUrl": null
+          },
+          {
+            "text": "Polish",
+            "transcription": "[ˈpoʊlɪʃ]",
+            "translation": "польська",
+            "exampleSentence": "He can speak Polish.",
+            "exampleTranslation": "Він розмовляє польською.",
+            "audioUrl": null
+          },
+          {
+            "text": "Spain",
+            "transcription": "[speɪn]",
+            "translation": "Іспанія",
+            "exampleSentence": "Maria is from Spain.",
+            "exampleTranslation": "Марія з Іспанії.",
+            "audioUrl": null
+          },
+          {
+            "text": "Spanish",
+            "transcription": "[ˈspænɪʃ]",
+            "translation": "іспанська",
+            "exampleSentence": "She is Spanish.",
+            "exampleTranslation": "Вона іспанка.",
+            "audioUrl": null
+          },
+          {
+            "text": "English",
+            "transcription": "[ˈɪŋɡlɪʃ]",
+            "translation": "англійська",
+            "exampleSentence": "We learn English together.",
+            "exampleTranslation": "Ми вивчаємо англійську разом.",
+            "audioUrl": null
+          },
+          {
+            "text": "people",
+            "transcription": "[ˈpiːpl]",
+            "translation": "люди",
+            "exampleSentence": "These people are very friendly.",
+            "exampleTranslation": "Ці люди дуже дружні.",
+            "audioUrl": null
+          },
+          {
+            "text": "together",
+            "transcription": "[təˈɡeðər]",
+            "translation": "разом",
+            "exampleSentence": "We study together.",
+            "exampleTranslation": "Ми навчаємося разом.",
+            "audioUrl": null
+          }
+        ],
+        "grammar": {
+          "title": "Verb To Be: He is, She is, We are, They are",
+          "explanation": "Для займенників третьої особи однини he (він), she (вона), it (воно) використовується форма дієслова to be — 'is' (скорочено he's, she's). Для множини we (ми) та they (вони) використовується форма — 'are' (скорочено we're, they're). При розповіді про мови дієслово 'speak' (говорити) використовується у формі без закінчення для we / they (they speak).",
+          "examples": [
+            {
+              "en": "He **is** from Poland.",
+              "ua": "Він **з** Польщі.",
+              "highlightWord": "is"
+            },
+            {
+              "en": "She **is** Spanish.",
+              "ua": "Вона **є** іспанка.",
+              "highlightWord": "is"
+            },
+            {
+              "en": "We **are** from Ukraine.",
+              "ua": "Ми **з** України.",
+              "highlightWord": "are"
+            },
+            {
+              "en": "They **are** friends.",
+              "ua": "Вони **є** друзі.",
+              "highlightWord": "are"
+            },
+            {
+              "en": "They **speak** English.",
+              "ua": "Вони **говорять** англійською.",
+              "highlightWord": "speak"
+            }
+          ]
+        },
+        "video": {
+          "url": "https://youtu.be/QgqCjwRp1gk",
+          "caption": "Подивіться, як описувати інших людей, їхнє походження та мови, якими вони володіють.",
+          "notebookSourceText": "Unit 3: Where Are You From? Словник: live (жити), speak (говорити), language (мова), nationality (національність), Poland (Польща), Polish (польська), Spain (Іспанія), Spanish (іспанська), English (англійська), people (люди), together (разом). Граматика: He is, She is, We are, They are. Текст: We are friends from different countries. She is from Spain, and she is Spanish. He is from Poland, and his nationality is Polish. They speak English and Polish. We live in this city. These people study every language together. They are happy students.",
+          "notebookFocusPrompt": "Поясни вживання займенників He, She, We, They з формами дієслова to be (is/are), а також прості фрази про країни та мови. УВАГА: Відео для початківців рівня A1. Говори чітко, повільно та використовуй виключно елементарні приклади.",
+          "youtubeTitle": "🇬🇧 He is, She is, They are | Країни та мови | Англійська з нуля A1 | SnackEnglish",
+          "youtubeDescription": "Вчимося розповідати про друзів та знайомих: звідки вони родом, яка їхня національність і якими мовами вони говорять. #англійська #snackenglish #англійськазнуля #рівеньa1"
+        },
+        "reading": {
+          "title": "International Students",
+          "lines": [
+            {
+              "text": "We are friends from different countries.",
+              "translation": "Ми друзі з різних країн."
+            },
+            {
+              "text": "She is from Spain, and she is Spanish.",
+              "translation": "Вона з Іспанії, і вона іспанка."
+            },
+            {
+              "text": "He is from Poland, and his nationality is Polish.",
+              "translation": "Він з Польщі, і його національність — поляк."
+            },
+            {
+              "text": "They speak English and Polish.",
+              "translation": "Вони говорять англійською та польською."
+            },
+            {
+              "text": "We live in this city.",
+              "translation": "Ми живемо в цьому місті."
+            },
+            {
+              "text": "These people study every language together.",
+              "translation": "Ці люди вивчають кожну мову разом."
+            },
+            {
+              "text": "They are happy students.",
+              "translation": "Вони щасливі студенти."
+            }
+          ],
+          "questions": [
+            {
+              "type": "reading",
+              "question": "З якої країни дівчина?",
+              "options": ["Spain", "Poland", "Ukraine"],
+              "correctAnswer": "Spain",
+              "skillTag": "reading:details",
+              "explanation": "У тексті чітко зазначено: 'She is from Spain, and she is Spanish'."
+            },
+            {
+              "type": "reading",
+              "question": "Яка національність хлопця?",
+              "options": ["Spanish", "Polish", "English"],
+              "correctAnswer": "Polish",
+              "skillTag": "reading:details",
+              "explanation": "У тексті написано: 'his nationality is Polish'."
+            },
+            {
+              "type": "reading",
+              "question": "Якими мовами вони говорять у тексті?",
+              "options": [
+                "English and Polish",
+                "Spanish and French",
+                "German and Polish"
+              ],
+              "correctAnswer": "English and Polish",
+              "skillTag": "reading:details",
+              "explanation": "У четвертому реченні сказано: 'They speak English and Polish'."
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Introducing New Friends",
+          "scenario": "Ти розповідаєш колезі про нових студентів у вашій групі.",
+          "lines": [
+            {
+              "speaker": "Mark",
+              "text": "Who is that girl over there?",
+              "translation": "Хто та дівчина он там?"
+            },
+            {
+              "speaker": "You",
+              "text": "She is from Spain and she is Spanish.",
+              "translation": "Вона з Іспанії і вона іспанка.",
+              "expectedPhrase": "she is from spain and she is spanish"
+            },
+            {
+              "speaker": "Mark",
+              "text": "Nice! What languages does she speak?",
+              "translation": "Чудово! Якими мовами вона говорить?"
+            },
+            {
+              "speaker": "You",
+              "text": "She can speak Spanish and English.",
+              "translation": "Вона вміє говорити іспанською та англійською.",
+              "expectedPhrase": "she can speak spanish and english"
+            },
+            {
+              "speaker": "Mark",
+              "text": "And who is that boy near the window?",
+              "translation": "А хто той хлопець біля вікна?"
+            },
+            {
+              "speaker": "You",
+              "text": "He is from Poland and his nationality is Polish.",
+              "translation": "Він з Польщі і його національність — поляк.",
+              "expectedPhrase": "he is from poland and his nationality is polish"
+            },
+            {
+              "speaker": "Mark",
+              "text": "Do they live in this city now?",
+              "translation": "Вони зараз живуть у цьому місті?"
+            },
+            {
+              "speaker": "You",
+              "text": "Yes, they live here and we study together.",
+              "translation": "Так, вони живуть тут і ми навчаємося разом.",
+              "expectedPhrase": "yes they live here and we study together"
+            }
+          ]
+        },
+        "test": [
+          {
+            "type": "quiz",
+            "question": "Обери правильний переклад: 'національність'",
+            "options": ["country", "nationality", "language"],
+            "correctAnswer": "nationality",
+            "skillTag": "vocab:nationality",
+            "explanation": "'Nationality' перекладається як 'національність'."
+          },
+          {
+            "type": "quiz",
+            "question": "Обери правильний переклад: 'говорити'",
+            "options": ["live", "speak", "meet"],
+            "correctAnswer": "speak",
+            "skillTag": "vocab:speak",
+            "explanation": "Дієслово 'speak' означає 'говорити'."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильну форму: 'She ___ from Poland.'",
+            "options": ["is", "are", "am"],
+            "correctAnswer": "is",
+            "skillTag": "grammar:to_be:she_is",
+            "explanation": "З займенником однини 'she' вживається форма 'is'."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильну форму: 'They ___ students.'",
+            "options": ["is", "am", "are"],
+            "correctAnswer": "are",
+            "skillTag": "grammar:to_be:they_are",
+            "explanation": "З займенником множини 'they' вживається форма 'are'."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильну форму: 'He ___ Spanish.'",
+            "options": ["are", "is", "am"],
+            "correctAnswer": "is",
+            "skillTag": "grammar:to_be:he_is",
+            "explanation": "З займенником 'he' використовується дієслово 'is'."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською слово: 'жити'",
+            "correctAnswer": "live",
+            "skillTag": "vocab:live:active",
+            "explanation": "Англійський переклад дієслова 'жити' — live."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською слово: 'мова'",
+            "correctAnswer": "language",
+            "skillTag": "vocab:language:active",
+            "explanation": "Слово 'мова' англійською — language."
+          },
+          {
+            "type": "type-answer",
+            "question": "Встав правильну форму дієслова to be: 'We ___ from Ukraine.'",
+            "correctAnswer": "are",
+            "skillTag": "grammar:to_be:we_are:active",
+            "explanation": "З займенником множини 'we' вживається форма 'are'."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "She is from Poland.",
+            "translation": "Вона з Польщі.",
+            "skillTag": "grammar:syntax:she_is",
+            "explanation": "Правильний порядок: підмет (She) + дієслово (is) + прийменник (from) + країна (Poland)."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "They speak English.",
+            "translation": "Вони говорять англійською.",
+            "skillTag": "grammar:syntax:present_simple",
+            "explanation": "Правильний порядок: підмет (They) + дія (speak) + додаток (English)."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "We live together.",
+            "translation": "Ми живемо разом.",
+            "skillTag": "grammar:syntax:we_live",
+            "explanation": "Правильний порядок: підмет (We) + дієслово (live) + прислівник (together)."
+          }
+        ]
+      }
+    },
+    {
+      "id": "a2-u4",
+      "title": "Numbers, Dates & Basic Information",
+      "description": "Learn numbers from zero to hundred, how to say your age, birthday, date, and dictate phone numbers using the verb 'to be'.",
+      "order": 4,
+      "steps": {
+        "vocabulary": [
+          {
+            "text": "number",
+            "transcription": "[ˈnʌmbər]",
+            "translation": "число",
+            "exampleSentence": "Seven is my lucky number.",
+            "exampleTranslation": "Сім — моє щасливе число.",
+            "audioUrl": null
+          },
+          {
+            "text": "phone number",
+            "transcription": "[foʊn ˈnʌmbər]",
+            "translation": "номер телефону",
+            "exampleSentence": "My phone number is on the card.",
+            "exampleTranslation": "Мій номер телефону на картці.",
+            "audioUrl": null
+          },
+          {
+            "text": "age",
+            "transcription": "[eɪdʒ]",
+            "translation": "вік",
+            "exampleSentence": "Her age is twenty.",
+            "exampleTranslation": "Її вік — двадцять років.",
+            "audioUrl": null
+          },
+          {
+            "text": "date",
+            "transcription": "[deɪt]",
+            "translation": "дата",
+            "exampleSentence": "What is the date today?",
+            "exampleTranslation": "Яка сьогодні дата?",
+            "audioUrl": null
+          },
+          {
+            "text": "birthday",
+            "transcription": "[ˈbɜːrθdeɪ]",
+            "translation": "день народження",
+            "exampleSentence": "My birthday is in May.",
+            "exampleTranslation": "Мій день народження у травні.",
+            "audioUrl": null
+          },
+          {
+            "text": "zero",
+            "transcription": "[ˈzɪroʊ]",
+            "translation": "нуль",
+            "exampleSentence": "The code starts with zero.",
+            "exampleTranslation": "Код починається з нуля.",
+            "audioUrl": null
+          },
+          {
+            "text": "eighteen",
+            "transcription": "[ˌeɪˈtiːn]",
+            "translation": "вісімнадцять",
+            "exampleSentence": "I am eighteen years old.",
+            "exampleTranslation": "Мені вісімнадцять років.",
+            "audioUrl": null
+          },
+          {
+            "text": "twenty",
+            "transcription": "[ˈtwenti]",
+            "translation": "двадцять",
+            "exampleSentence": "Room twenty is ready.",
+            "exampleTranslation": "Кімната двадцять готова.",
+            "audioUrl": null
+          },
+          {
+            "text": "hundred",
+            "transcription": "[ˈhʌndrəd]",
+            "translation": "сто",
+            "exampleSentence": "One hundred people are here.",
+            "exampleTranslation": "Сто людей тут.",
+            "audioUrl": null
+          },
+          {
+            "text": "today",
+            "transcription": "[təˈdeɪ]",
+            "translation": "сьогодні",
+            "exampleSentence": "Today is a good day.",
+            "exampleTranslation": "Сьогодні гарний день.",
+            "audioUrl": null
+          },
+          {
+            "text": "year",
+            "transcription": "[jɪr]",
+            "translation": "рік",
+            "exampleSentence": "This year is very important.",
+            "exampleTranslation": "Цей рік дуже важливий.",
+            "audioUrl": null
+          }
+        ],
+        "grammar": {
+          "title": "Numbers, Age, and Contact Info with To Be",
+          "explanation": "В англійській мові вік виражається за допомогою дієслова 'to be' (am / is / are), а не дієслова 'мати'. Наприклад: 'I am eighteen', 'He is twenty'. Для номера телефону та дат також використовується форма 'is' (My phone number is..., The date is...). При диктуванні телефонних номерів цифри називають окремо одна за одною, а нуль зазвичай вимовляють як 'zero' або 'oh'.",
+          "examples": [
+            {
+              "en": "I **am** eighteen.",
+              "ua": "Мені **є** вісімнадцять років.",
+              "highlightWord": "am"
+            },
+            {
+              "en": "My phone number **is** zero nine five.",
+              "ua": "Мій номер телефону — **є** нуль дев'ять п'ять.",
+              "highlightWord": "is"
+            },
+            {
+              "en": "My birthday **is** today.",
+              "ua": "Мій день народження **є** сьогодні.",
+              "highlightWord": "is"
+            },
+            {
+              "en": "He **is** twenty.",
+              "ua": "Йому **є** двадцять.",
+              "highlightWord": "is"
+            },
+            {
+              "en": "The date **is** October twenty.",
+              "ua": "Дата **є** двадцяте жовтня.",
+              "highlightWord": "is"
+            }
+          ]
+        },
+        "video": {
+          "url": "https://youtu.be/u_-BvxJyBpw",
+          "caption": "Подивіться, як правильно називати свій вік, диктувати номер телефону, дату та день народження англійською.",
+          "notebookSourceText": "Unit 4: Numbers, Dates & Basic Information. Словник: number (число/номер), phone number (номер телефону), age (вік), date (дата), birthday (день народження), zero (нуль), eighteen (вісімнадцять), twenty (двадцять), hundred (сто), today (сьогодні), year (рік). Граматика: використання дієслова to be для позначення віку (I am eighteen, he is twenty), номерів телефонів (My phone number is...) та дат (Today is... My birthday is...). Текст: Today is a special date. Today is my birthday. My age is eighteen. I am eighteen this year. My friend is twenty. We count from zero to one hundred. My phone number has each number clearly written.",
+          "notebookFocusPrompt": "Поясни числа від нуля до ста, структуру позначення віку через дієслово to be (I am eighteen) та диктування телефонних номерів. УВАГА: Відео для рівня A1. Говори дуже повільно, чітко вимовляй кожну цифру та використовуй лише прості конструкції.",
+          "youtubeTitle": "🇬🇧 Числа, вік та дати англійською | Рівень A1 | SnackEnglish",
+          "youtubeDescription": "Вчимося називати свій вік, номер телефону, дату та день народження англійською мовою. Розбираємо числа від 0 до 100 та конструкції з дієсловом to be. #англійська #snackenglish #англійськазнуля #рівеньa1"
+        },
+        "reading": {
+          "title": "My Birthday Form",
+          "lines": [
+            {
+              "text": "Today is a special date.",
+              "translation": "Сьогодні особлива дата."
+            },
+            {
+              "text": "Today is my birthday.",
+              "translation": "Сьогодні мій день народження."
+            },
+            {
+              "text": "My age is eighteen.",
+              "translation": "Мій вік — вісімнадцять років."
+            },
+            {
+              "text": "I am eighteen this year.",
+              "translation": "Цього року мені вісімнадцять."
+            },
+            {
+              "text": "My friend is twenty.",
+              "translation": "Моєму другові двадцять."
+            },
+            {
+              "text": "We count from zero to one hundred.",
+              "translation": "Ми рахуємо від нуля до ста."
+            },
+            {
+              "text": "My phone number has each number clearly written.",
+              "translation": "Мій номер телефону містить кожну чітко написану цифру."
+            }
+          ],
+          "questions": [
+            {
+              "type": "reading",
+              "question": "Скільки років автору тексту?",
+              "options": ["eighteen", "twenty", "hundred"],
+              "correctAnswer": "eighteen",
+              "skillTag": "reading:details",
+              "explanation": "У тексті двічі підтверджено вік: 'My age is eighteen' та 'I am eighteen this year'."
+            },
+            {
+              "type": "reading",
+              "question": "Яка особлива подія сьогодні у автора?",
+              "options": ["birthday", "exam", "trip"],
+              "correctAnswer": "birthday",
+              "skillTag": "reading:details",
+              "explanation": "У другому реченні автор стверджує: 'Today is my birthday'."
+            },
+            {
+              "type": "reading",
+              "question": "Скільки років другові автора?",
+              "options": ["eighteen", "twenty", "zero"],
+              "correctAnswer": "twenty",
+              "skillTag": "reading:details",
+              "explanation": "У п'ятому реченні тексту чітко сказано: 'My friend is twenty'."
+            }
+          ]
+        },
+        "speaking": {
+          "title": "Sharing Personal Details",
+          "scenario": "Ти оформлюєш клубну картку в спортзалі та диктуєш адміністратору свої дані.",
+          "lines": [
+            {
+              "speaker": "Admin",
+              "text": "Hello! What is your age?",
+              "translation": "Привіт! Який твій вік?"
+            },
+            {
+              "speaker": "You",
+              "text": "I am eighteen.",
+              "translation": "Мені вісімнадцять.",
+              "expectedPhrase": "i am eighteen"
+            },
+            {
+              "speaker": "Admin",
+              "text": "When is your birthday?",
+              "translation": "Коли твій день народження?"
+            },
+            {
+              "speaker": "You",
+              "text": "My birthday is today.",
+              "translation": "Мій день народження сьогодні.",
+              "expectedPhrase": "my birthday is today"
+            },
+            {
+              "speaker": "Admin",
+              "text": "Happy birthday! What is your phone number?",
+              "translation": "З днем народження! Який твій номер телефону?"
+            },
+            {
+              "speaker": "You",
+              "text": "My phone number is zero nine five twenty.",
+              "translation": "Мій номер телефону — нуль дев'ять п'ять двадцять.",
+              "expectedPhrase": "my phone number is zero nine five twenty"
+            }
+          ]
+        },
+        "test": [
+          {
+            "type": "quiz",
+            "question": "Як правильно сказати 'Мені вісімнадцять років' англійською?",
+            "options": [
+              "I am eighteen",
+              "I have eighteen",
+              "My age have eighteen"
+            ],
+            "correctAnswer": "I am eighteen",
+            "skillTag": "grammar:age:to_be",
+            "explanation": "В англійській мові вік вказують через дієслово to be: I am eighteen (а не have)."
+          },
+          {
+            "type": "quiz",
+            "question": "Обери правильний переклад: 'день народження'",
+            "options": ["birthday", "date", "year"],
+            "correctAnswer": "birthday",
+            "skillTag": "vocab:birthday",
+            "explanation": "'Birthday' перекладається як 'день народження'."
+          },
+          {
+            "type": "quiz",
+            "question": "Яке число означає слово 'twenty'?",
+            "options": ["20", "12", "2"],
+            "correctAnswer": "20",
+            "skillTag": "vocab:numbers:twenty",
+            "explanation": "'Twenty' — це число 20."
+          },
+          {
+            "type": "quiz",
+            "question": "Обери правильний переклад слова: 'hundred'",
+            "options": ["сто", "тисяча", "десять"],
+            "correctAnswer": "сто",
+            "skillTag": "vocab:numbers:hundred",
+            "explanation": "'Hundred' означає 'сто'."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильну форму: 'My phone number ___ zero five zero.'",
+            "options": ["is", "are", "am"],
+            "correctAnswer": "is",
+            "skillTag": "grammar:to_be:phone_number",
+            "explanation": "'Phone number' — це іменник третьої особи в однині (it), тому вживається 'is'."
+          },
+          {
+            "type": "grammar",
+            "question": "Обери правильну форму: 'He ___ twenty this year.'",
+            "options": ["is", "are", "have"],
+            "correctAnswer": "is",
+            "skillTag": "grammar:age:he_is",
+            "explanation": "Для займенника 'he' при позначенні віку вживається форма дієслова 'is'."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською слово: 'нуль'",
+            "correctAnswer": "zero",
+            "skillTag": "vocab:zero:active",
+            "explanation": "Слово 'нуль' англійською мовою пишеться як zero."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською слово: 'дата'",
+            "correctAnswer": "date",
+            "skillTag": "vocab:date:active",
+            "explanation": "Слово 'дата' англійською — date."
+          },
+          {
+            "type": "type-answer",
+            "question": "Напиши англійською число: 'вісімнадцять'",
+            "correctAnswer": "eighteen",
+            "skillTag": "vocab:eighteen:active",
+            "explanation": "Число 18 англійською пишеться як eighteen."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "I am eighteen.",
+            "translation": "Мені вісімнадцять років.",
+            "skillTag": "grammar:syntax:age",
+            "explanation": "Правильний прямий порядок слів: підмет (I) + дієслово (am) + число (eighteen)."
+          },
+          {
+            "type": "sentence-scramble",
+            "sentence": "My birthday is today.",
+            "translation": "Мій день народження сьогодні.",
+            "skillTag": "grammar:syntax:birthday",
+            "explanation": "Порядок слів: підмет (My birthday) + дієслово (is) + обставина часу (today)."
           }
         ]
       }

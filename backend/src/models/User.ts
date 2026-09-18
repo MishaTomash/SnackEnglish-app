@@ -9,7 +9,6 @@ export interface IUser extends Document {
   telegramPhotoUrl?: string;
   customDisplayName?: string;
   customAvatarUrl?: string;
-  nickname?: string;
   level: UserEnglishLevel;
   weakAreas: string[];
   streak: number;
@@ -49,12 +48,6 @@ const userSchema = new Schema<IUser>(
       type: String,
       trim: true,
       default: null,
-    },
-    nickname: {
-      type: String,
-      trim: true,
-      unique: true,
-      sparse: true, // Дозволяє кільком документам не мати цього поля (без конфлікту унікальності)
     },
     level: {
       type: String,
