@@ -4,7 +4,6 @@ import { Screen } from "../../shared/ui/Screen";
 import { Card } from "../../shared/ui/Card";
 import { Button } from "../../shared/ui/Button";
 import { ProgressBar } from "../../shared/ui/ProgressBar";
-import { LEARNING_CATEGORIES } from "../../mocks/learningData";
 import { useLearningStore } from "../../store/learningStore";
 import type { Accent } from "../../entities/learning/types";
 
@@ -42,9 +41,9 @@ const buildUnitStates = (
 export const CategoryPathPage = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
-  const { progress } = useLearningStore();
+  const { progress, categories } = useLearningStore();
 
-  const category = LEARNING_CATEGORIES.find((c) => c.id === categoryId);
+  const category = categories.find((c) => c.id === categoryId);
 
   if (!category) {
     return (
@@ -98,6 +97,11 @@ export const CategoryPathPage = () => {
       </div>
 
       <div className="px-4 pt-6 pb-4 space-y-5">
+        {category.units.length === 0 && (
+          <div className="text-center text-[var(--text-muted)] text-sm mt-10">
+            Тут поки немає уроків
+          </div>
+        )}
         {category.units.map((unit, i) => {
           const state = unitStates[i];
           const isLocked = state === "locked";

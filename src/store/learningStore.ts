@@ -1,6 +1,19 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CategoryId } from "../entities/learning/types";
+import type { CategoryId, Category } from "../entities/learning/types";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
+const getAuthHeaders = () => {
+  const initData =
+    window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${initData}`,
+    "ngrok-skip-browser-warning": "true",
+    "Bypass-Tunnel-Reminder": "true",
+  };
+};
 
 export const DAILY_GOAL = 4;
 
@@ -13,7 +26,6 @@ export const dateKey = (d: Date): string => {
 
 export const todayKey = (): string => dateKey(new Date());
 
-/** Скільки днів поспіль підряд (включно з сьогодні або вчора) було закрито ціль. */
 export const computeStreak = (dates: string[]): number => {
   if (dates.length === 0) return 0;
   const set = new Set(dates);
@@ -41,18 +53,18 @@ interface UnitProgress {
 }
 
 interface LearningState {
+  categories: Category[]; // ДИНАМІЧНІ ДАНІ
+  isLoading: boolean;
+
   progress: Record<string, UnitProgress>;
   xp: number;
 
   dailyDate: string;
   dailyCompletedCategories: CategoryId[];
-
-  /** YYYY-MM-DD — день, у якому ми вже показали оверлей "день завершено". */
   celebratedDayKey: string | null;
-
-  /** YYYY-MM-DD — усі дні, коли ціль 4/4 була закрита. Для серії. */
   goalCompletedDates: string[];
 
+  fetchCategories: (level: string) => Promise<void>;
   markUnitCompleted: (
     unitId: string,
     categoryId: CategoryId,
@@ -67,12 +79,35 @@ interface LearningState {
 export const useLearningStore = create<LearningState>()(
   persist(
     (set) => ({
+      categories: [],
+      isLoading: false,
       progress: {},
       xp: 0,
       dailyDate: todayKey(),
       dailyCompletedCategories: [],
       celebratedDayKey: null,
       goalCompletedDates: [],
+
+      fetchCategories: async (level: string) => {
+        set({ isLoading: true });
+        try {
+          const res = await fetch(
+            `${API_URL}/progress/categories?level=${level}`,
+            {
+              headers: getAuthHeaders(),
+            },
+          );
+          if (res.ok) {
+            const data = await res.json();
+            set({ categories: data, isLoading: false });
+          } else {
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          console.error("Failed to fetch categories:", error);
+          set({ isLoading: false });
+        }
+      },
 
       markUnitCompleted: (unitId, categoryId, accuracy, earnedXp) =>
         set((state) => {
@@ -126,6 +161,16 @@ export const useLearningStore = create<LearningState>()(
           goalCompletedDates: [],
         }),
     }),
-    { name: "snack_learning_storage" },
+    {
+      name: "snack_learning_storage",
+      partialize: (state) => ({
+        progress: state.progress,
+        xp: state.xp,
+        dailyDate: state.dailyDate,
+        dailyCompletedCategories: state.dailyCompletedCategories,
+        celebratedDayKey: state.celebratedDayKey,
+        goalCompletedDates: state.goalCompletedDates,
+      }), // Категорії не кешуємо, щоб вони оновлювались
+    },
   ),
 );

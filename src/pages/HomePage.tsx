@@ -41,6 +41,7 @@ export const HomePage = () => {
     telegramPhotoUrl,
     customDisplayName,
     customAvatarUrl,
+    fetchUser,
   } = useUserStore();
 
   const {
@@ -56,6 +57,11 @@ export const HomePage = () => {
 
   const [stats, setStats] = useState({ likesCount: 0, friendsCount: 0 });
 
+  // ВИПРАВЛЕНО: Додано true, щоб ПРИМУСОВО оновити дані з бекенду в обхід кешу
+  useEffect(() => {
+    fetchUser(true);
+  }, [fetchUser]);
+
   useEffect(() => {
     if (status === "idle") {
       loadDailyWords();
@@ -68,7 +74,7 @@ export const HomePage = () => {
     }
   }, [units.length, loadUnits, level, lastFetchedLevel]);
 
-  // Статистику тягнемо після того, як бекенд підтвердив існування юзера
+  // ВИПРАВЛЕНО: Додано ngrok-заголовки, щоб запит не блокувався в dev-режимі
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -78,6 +84,8 @@ export const HomePage = () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${initData}`,
+            "ngrok-skip-browser-warning": "true",
+            "Bypass-Tunnel-Reminder": "true",
           },
         });
         if (res.ok) {

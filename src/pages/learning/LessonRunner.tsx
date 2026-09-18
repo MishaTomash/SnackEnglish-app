@@ -16,7 +16,6 @@ import { Card } from "../../shared/ui/Card";
 import { Button } from "../../shared/ui/Button";
 import { ProgressBar } from "../../shared/ui/ProgressBar";
 import { CookieMascot } from "../../shared/ui/CookieMascot";
-import { LEARNING_CATEGORIES } from "../../mocks/learningData";
 import {
   useLearningStore,
   XP_PER_CORRECT,
@@ -626,15 +625,17 @@ const CompletionScreen = ({
 export const LessonRunner = () => {
   const { unitId } = useParams<{ unitId: string }>();
   const navigate = useNavigate();
-  const markUnitCompleted = useLearningStore((s) => s.markUnitCompleted);
+  // ДОДАНО: витягуємо категорії зі стору
+  const { markUnitCompleted, categories } = useLearningStore();
 
   const found = useMemo(() => {
-    for (const category of LEARNING_CATEGORIES) {
+    for (const category of categories) {
+      // ЗМІНЕНО: categories замість LEARNING_CATEGORIES
       const unit = category.units.find((u) => u.id === unitId);
       if (unit) return { category, unit };
     }
     return null;
-  }, [unitId]);
+  }, [unitId, categories]);
 
   const [stepIdx, setStepIdx] = useState(0);
   const [itemIdx, setItemIdx] = useState(0);
