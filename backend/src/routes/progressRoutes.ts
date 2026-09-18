@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
-  getUserUnits,
-  completeStep,
+  completeLesson,
   getPracticeWords,
   reviewWord,
 } from "../controllers/progressController.js";
@@ -14,14 +13,16 @@ import {
 
 const router = Router();
 
+// Марштрути для Навчання (Categories & Daily Plans)
 router.get("/categories", getLearningCategories);
 router.get("/categories/next-day", getNextDayNumber);
 router.post("/categories/admin", createDailyPlan);
-router.post("/categories/complete-day", completeDailyPlan); // ДОДАНО
+router.post("/categories/complete-day", completeDailyPlan);
 
-router.get("/units", getUserUnits);
-router.post("/step", completeStep);
+// Маршрути для проходження уроку
+router.post("/lesson-complete", completeLesson);
 
+// Маршрути для інтервального повторення
 router.get("/practice", getPracticeWords);
 router.post("/review", reviewWord);
 

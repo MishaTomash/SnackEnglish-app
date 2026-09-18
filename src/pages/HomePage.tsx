@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  BookOpen,
   BrainCircuit,
   Sparkles,
   MoreVertical,
@@ -12,12 +11,9 @@ import {
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
-import { Button } from "../shared/ui/Button";
 import { Badge } from "../shared/ui/Badge";
-import { ProgressBar } from "../shared/ui/ProgressBar";
 import { StreakBadge } from "../entities/user/ui/StreakBadge";
 import { useUserStore } from "../store/userStore";
-import { useProgressStore } from "../store/progressStore";
 import { useRepetitionStore } from "../store/repetitionStore";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -44,20 +40,10 @@ export const HomePage = () => {
     fetchUser,
   } = useUserStore();
 
-  const {
-    units,
-    currentUnitId,
-    loadUnits,
-    isLoading,
-    progressPercent,
-    lastFetchedLevel,
-  } = useProgressStore();
-
   const { dailyQueue, loadDailyWords, status } = useRepetitionStore();
 
   const [stats, setStats] = useState({ likesCount: 0, friendsCount: 0 });
 
-  // ВИПРАВЛЕНО: Додано true, щоб ПРИМУСОВО оновити дані з бекенду в обхід кешу
   useEffect(() => {
     fetchUser(true);
   }, [fetchUser]);
@@ -68,13 +54,6 @@ export const HomePage = () => {
     }
   }, [status, loadDailyWords]);
 
-  useEffect(() => {
-    if (units.length === 0 || lastFetchedLevel !== level) {
-      loadUnits(level || "A1");
-    }
-  }, [units.length, loadUnits, level, lastFetchedLevel]);
-
-  // ВИПРАВЛЕНО: Додано ngrok-заголовки, щоб запит не блокувався в dev-режимі
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -99,13 +78,7 @@ export const HomePage = () => {
     if (telegramId) fetchStats();
   }, [telegramId]);
 
-  const activeUnit = units.find((u) => u.id === currentUnitId) ?? units[0];
   const reviewWordsCount = dailyQueue.length;
-
-  const completedUnitsCount = units.filter(
-    (u) => u.status === "completed",
-  ).length;
-  const totalUnitsCount = units.length;
 
   const currentDisplayName =
     customDisplayName || telegramFirstName || "Користувач";
@@ -113,7 +86,7 @@ export const HomePage = () => {
 
   return (
     <Screen className="space-y-4">
-      <div className="flex items-center justify-between pt-1">
+      <div className="flex items-center justify-between pt-1 pb-2">
         <div className="flex items-center gap-3">
           <Link to="/settings" className="relative shrink-0">
             {currentPhotoUrl ? (
@@ -161,60 +134,6 @@ export const HomePage = () => {
           </Link>
         </div>
       </div>
-
-      <Card className="space-y-2.5">
-        <div className="flex justify-between items-center text-sm font-semibold">
-          <span className="text-[var(--text-main)]">Прогрес рівня {level}</span>
-          <span className="text-[var(--accent-cta)] font-bold">
-            {progressPercent}%
-          </span>
-        </div>
-        <ProgressBar progress={progressPercent} />
-        <div className="flex justify-between text-xs text-[var(--text-muted)]">
-          <span>
-            Пройдено тем: {completedUnitsCount} з {totalUnitsCount}
-          </span>
-          <span>{totalUnitsCount - completedUnitsCount} залишилось</span>
-        </div>
-      </Card>
-
-      <Card className="space-y-4 border-[var(--accent-cta)]/20">
-        <div className="flex items-start justify-between">
-          <div>
-            <span className="text-xs uppercase tracking-wider font-bold text-[var(--accent-cta)]">
-              Поточна тема
-            </span>
-            <h2 className="text-xl font-bold mt-1 text-[var(--text-main)]">
-              {isLoading
-                ? "Завантаження..."
-                : (activeUnit?.title ?? "Немає активних уроків")}
-            </h2>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              Граматика:{" "}
-              {activeUnit?.grammarTopic || activeUnit?.grammar?.title || "—"}
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-[var(--accent-cta)]/10 text-[var(--accent-cta)] flex items-center justify-center shrink-0">
-            <BookOpen className="w-5 h-5" />
-          </div>
-        </div>
-
-        {activeUnit ? (
-          <Link
-            to={`/path/${activeUnit.id}`}
-            state={{ from: "/" }}
-            className="block"
-          >
-            <Button variant="primary" className="w-full">
-              Продовжити урок
-            </Button>
-          </Link>
-        ) : (
-          <Button variant="primary" disabled className="w-full">
-            Урок недоступний
-          </Button>
-        )}
-      </Card>
 
       <div className="grid grid-cols-2 gap-3 pb-4">
         <Card className="flex flex-col items-start gap-2 p-3.5 h-full">

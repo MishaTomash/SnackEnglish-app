@@ -2,7 +2,7 @@ import { Schema, model, Document, Types } from "mongoose";
 
 export interface IUserProgress extends Document {
   userId: Types.ObjectId;
-  wordId: Types.ObjectId;
+  wordId: string; // ЗМІНЕНО: тепер це рядок (String)
   easinessFactor: number;
   interval: number;
   repetitions: number;
@@ -20,8 +20,7 @@ const userProgressSchema = new Schema<IUserProgress>(
       index: true,
     },
     wordId: {
-      type: Schema.Types.ObjectId,
-      ref: "Word",
+      type: String, // ЗМІНЕНО: String замість ObjectId
       required: true,
       index: true,
     },
@@ -55,7 +54,6 @@ const userProgressSchema = new Schema<IUserProgress>(
   },
 );
 
-// Унікальна пара: для одного користувача існує лише один запис прогресу по конкретному слову
 userProgressSchema.index({ userId: 1, wordId: 1 }, { unique: true });
 
 export const UserProgress = model<IUserProgress>(

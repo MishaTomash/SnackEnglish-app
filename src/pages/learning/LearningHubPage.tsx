@@ -91,14 +91,13 @@ const DayCompletedOverlay = ({
 
 export const LearningHubPage = () => {
   const navigate = useNavigate();
-  const { telegramId, level } = useUserStore();
+  const { telegramId, level, totalScore } = useUserStore();
   const {
     categories,
     noMoreDays,
     currentDayTitle,
     isLoading,
     fetchCategories,
-    xp,
     progress,
     celebratedDayKey,
     goalCompletedDates,
@@ -225,7 +224,7 @@ export const LearningHubPage = () => {
           </div>
           <div className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cta)]/10 border border-[var(--accent-cta)]/25 text-[var(--accent-cta)] font-black text-sm shadow-[0_2px_12px_rgba(232,163,61,0.15)]">
             <Trophy className="w-4 h-4" />
-            <span className="tabular-nums">{xp}</span>
+            <span className="tabular-nums">{totalScore || 0}</span>
           </div>
         </div>
 

@@ -667,6 +667,8 @@ export const AdminPanel = ({
         setListening([newListening()]);
         setSpeaking([newSpeaking()]);
         setDayNumber((prev) => prev + 1); // Автоматично перекидаємо на наступний день
+
+        onSaved(); // ДОДАНО ОСЬ ТУТ!
       }, 1500);
     } catch (e: any) {
       setSaveError(e?.message || "Невідома помилка");

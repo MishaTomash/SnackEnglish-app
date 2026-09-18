@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CategoryId, Category } from "../entities/learning/types";
+import { useUserStore } from "./userStore"; // Підключаємо глобальний рахунок
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -40,10 +41,6 @@ export const computeStreak = (dates: string[]): number => {
   return streak;
 };
 
-export const XP_PER_STEP = 10;
-export const XP_PER_CORRECT = 5;
-export const REPEAT_XP_MULTIPLIER = 0.5;
-
 interface UnitProgress {
   completed: boolean;
   completedAt: number;
@@ -58,7 +55,6 @@ interface LearningState {
   isLoading: boolean;
 
   progress: Record<string, UnitProgress>;
-  xp: number;
 
   dailyDate: string;
   dailyCompletedCategories: CategoryId[];
@@ -70,10 +66,9 @@ interface LearningState {
     unitId: string,
     categoryId: CategoryId,
     accuracy: number,
-    earnedXp: number,
-  ) => void;
+  ) => Promise<void>;
   markCelebrated: () => void;
-  recordGoalReached: () => Promise<void>; // Тепер асинхронна
+  recordGoalReached: () => Promise<void>;
   resetAll: () => void;
 }
 
@@ -86,7 +81,6 @@ export const useLearningStore = create<LearningState>()(
       currentDayTitle: null,
       isLoading: false,
       progress: {},
-      xp: 0,
       dailyDate: todayKey(),
       dailyCompletedCategories: [],
       celebratedDayKey: null,
@@ -117,34 +111,48 @@ export const useLearningStore = create<LearningState>()(
         }
       },
 
-      markUnitCompleted: (unitId, categoryId, accuracy, earnedXp) =>
-        set((state) => {
-          const today = todayKey();
-          const dailyCats =
-            state.dailyDate === today ? state.dailyCompletedCategories : [];
-          const existing = state.progress[unitId];
-          const isFirstTime = !existing?.completed;
-          const awarded = isFirstTime
-            ? earnedXp
-            : Math.round(earnedXp * REPEAT_XP_MULTIPLIER);
-          const newDaily = dailyCats.includes(categoryId)
-            ? dailyCats
-            : [...dailyCats, categoryId];
+      markUnitCompleted: async (unitId, categoryId, accuracy) => {
+        const state = get();
+        const today = todayKey();
+        const dailyCats =
+          state.dailyDate === today ? state.dailyCompletedCategories : [];
+        const newDaily = dailyCats.includes(categoryId)
+          ? dailyCats
+          : [...dailyCats, categoryId];
+        const existing = state.progress[unitId];
 
-          return {
-            progress: {
-              ...state.progress,
-              [unitId]: {
-                completed: true,
-                completedAt: Date.now(),
-                bestAccuracy: Math.max(existing?.bestAccuracy ?? 0, accuracy),
-              },
+        // 1. Оптимістичне оновлення локального прогресу
+        set({
+          progress: {
+            ...state.progress,
+            [unitId]: {
+              completed: true,
+              completedAt: Date.now(),
+              bestAccuracy: Math.max(existing?.bestAccuracy ?? 0, accuracy),
             },
-            xp: state.xp + awarded,
-            dailyDate: today,
-            dailyCompletedCategories: newDaily,
-          };
-        }),
+          },
+          dailyDate: today,
+          dailyCompletedCategories: newDaily,
+        });
+
+        // 2. Запит на бекенд: зберегти прогрес уроку і отримати XP
+        try {
+          const res = await fetch(`${API_URL}/progress/lesson-complete`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ unitId }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.totalScore !== undefined) {
+              // Синхронізуємо глобальний рейтинг
+              useUserStore.setState({ totalScore: data.totalScore });
+            }
+          }
+        } catch (e) {
+          console.error("Failed to sync lesson progress", e);
+        }
+      },
 
       markCelebrated: () => set({ celebratedDayKey: todayKey() }),
 
@@ -156,7 +164,6 @@ export const useLearningStore = create<LearningState>()(
           set({ goalCompletedDates: [...state.goalCompletedDates, key] });
         }
 
-        // ДОДАНО: Сповіщаємо бекенд, що день повністю завершено
         if (state.currentPlanId) {
           try {
             await fetch(`${API_URL}/progress/categories/complete-day`, {
@@ -165,7 +172,7 @@ export const useLearningStore = create<LearningState>()(
               body: JSON.stringify({ planId: state.currentPlanId }),
             });
           } catch (error) {
-            console.error("Failed to complete day on backend", error);
+            console.error("Failed to complete day", error);
           }
         }
       },
@@ -173,7 +180,6 @@ export const useLearningStore = create<LearningState>()(
       resetAll: () =>
         set({
           progress: {},
-          xp: 0,
           dailyDate: todayKey(),
           dailyCompletedCategories: [],
           celebratedDayKey: null,
@@ -184,7 +190,6 @@ export const useLearningStore = create<LearningState>()(
       name: "snack_learning_storage",
       partialize: (state) => ({
         progress: state.progress,
-        xp: state.xp,
         dailyDate: state.dailyDate,
         dailyCompletedCategories: state.dailyCompletedCategories,
         celebratedDayKey: state.celebratedDayKey,

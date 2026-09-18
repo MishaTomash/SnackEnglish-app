@@ -16,11 +16,7 @@ import { Card } from "../../shared/ui/Card";
 import { Button } from "../../shared/ui/Button";
 import { ProgressBar } from "../../shared/ui/ProgressBar";
 import { CookieMascot } from "../../shared/ui/CookieMascot";
-import {
-  useLearningStore,
-  XP_PER_CORRECT,
-  XP_PER_STEP,
-} from "../../store/learningStore";
+import { useLearningStore } from "../../store/learningStore";
 import {
   speak,
   speakSlow,
@@ -680,16 +676,39 @@ export const LessonRunner = () => {
     }
   };
 
+  const [earnedXp, setEarnedXp] = useState(0);
+
   const registerAnswer = (isCorrect: boolean) => {
-    if (isCorrect) setCorrect((c) => c + 1);
-    advance();
+    const newCorrect = isCorrect ? correct + 1 : correct;
+    if (isCorrect) setCorrect(newCorrect);
+
+    stopSpeech();
+    if (itemIdx < stepLength - 1) {
+      setItemIdx((i) => i + 1);
+    } else if (stepIdx < unit.steps.length - 1) {
+      setStepIdx((i) => i + 1);
+      setItemIdx(0);
+    } else {
+      // ФІНІШ!
+      const finalAccuracy =
+        totalQuestions > 0
+          ? Math.round((newCorrect / totalQuestions) * 100)
+          : 100;
+
+      // Перевіряємо локально, чи урок пройдено вперше (щоб показати +10)
+      const isFirstTime =
+        !useLearningStore.getState().progress[unit.id]?.completed;
+      setEarnedXp(isFirstTime ? 10 : 0);
+
+      // Викликаємо збереження
+      markUnitCompleted(unit.id, category.id, finalAccuracy);
+      setPhase("done");
+    }
   };
 
   if (phase === "done") {
     const accuracy =
       totalQuestions > 0 ? Math.round((correct / totalQuestions) * 100) : 100;
-    const earnedXp = unit.steps.length * XP_PER_STEP + correct * XP_PER_CORRECT;
-    markUnitCompleted(unit.id, category.id, accuracy, earnedXp);
 
     return (
       <CompletionScreen

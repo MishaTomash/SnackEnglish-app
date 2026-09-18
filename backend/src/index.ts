@@ -12,13 +12,11 @@ import { authMiddleware } from "./middlewares/authMiddleware.js";
 import progressRoutes from "./routes/progressRoutes.js";
 import { bot } from "./bot.js";
 import { initCronJobs } from "./services/cronService.js";
-import wordRoutes from "./routes/wordRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import compression from "compression";
 import gamesRoutes from "./routes/gamesRoutes.js";
 import { seedGames } from "./services/gameService.js";
 // ДОДАНО: Імпорт нового сервісу контенту
-import { contentService } from "./services/contentService.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import duelRoutes from "./routes/duelRoutes.js";
 import { initDuelSocketService } from "./services/duelSocketService.js";
@@ -39,7 +37,6 @@ app.get("/health", (_req, res) => {
 app.use("/api/duels", authMiddleware, duelRoutes);
 app.use("/api/progress", authMiddleware, progressRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
-app.use("/api/words", wordRoutes);
 
 app.use("/api/games", authMiddleware, gamesRoutes);
 app.use("/api/profile", authMiddleware, profileRoutes);
@@ -57,9 +54,6 @@ async function bootstrap(): Promise<void> {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log("Successfully connected to MongoDB.");
-
-    // ДОДАНО: Ініціалізація статичного контенту з JSON-файлів
-    await contentService.init();
 
     // ДОДАНО: Сідінг ігор (виклик функції)
     await seedGames();

@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUserStore } from "../../store/userStore";
-import { useProgressStore } from "../../store/progressStore";
-import type { EnglishLevel } from "../../entities/word/types";
 import { LevelPlacementTest } from "../../shared/ui/LevelPlacementTest";
 
 import { SettingsList } from "./ui/SettingsList";
 import { EditProfile } from "./ui/EditProfile";
 import { ConfirmLevel } from "./ui/ConfirmLevel";
 import { TestResult } from "./ui/TestResult";
+
+import { useUserStore } from "../../store/userStore";
+import { useLearningStore } from "../../store/learningStore";
+import type { EnglishLevel } from "../../entities/word/types";
 
 export type SettingsStep =
   | "list"
@@ -20,7 +21,7 @@ export type SettingsStep =
 export const SettingsPage = () => {
   const navigate = useNavigate();
   const { updateLevel } = useUserStore();
-  const { loadUnits } = useProgressStore();
+  const { fetchCategories } = useLearningStore();
 
   const [step, setStep] = useState<SettingsStep>("list");
   const [pendingLevel, setPendingLevel] = useState<EnglishLevel | null>(null);
@@ -34,7 +35,7 @@ export const SettingsPage = () => {
     try {
       const success = await updateLevel(newLevel);
       if (success) {
-        await loadUnits(newLevel);
+        await fetchCategories(newLevel);
         navigate("/");
       } else {
         setGlobalError("Не вдалося оновити рівень. Спробуй ще раз.");

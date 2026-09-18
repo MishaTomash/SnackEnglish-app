@@ -5,8 +5,8 @@ import { UserGamePurchase } from "../models/UserGamePurchase.js";
 import { ManualPaymentRequest } from "../models/ManualPaymentRequest.js";
 import { bot } from "../bot.js";
 import { User } from "../models/User.js";
-// ДОДАНО: Імпорт сервісу контенту для ігор
-import { contentService } from "../services/contentService.js";
+// ВИПРАВЛЕНО: Імпортуємо DailyPlan замість contentService
+import { DailyPlan } from "../models/DailyPlan.js";
 
 export const getGamesList = async (
   req: Request,
@@ -211,7 +211,7 @@ export const getPaymentHistory = async (
   }
 };
 
-// ДОДАНО БАГ 2: Ендпоінт для отримання слів безвідносно до прогресу
+// ОНОВЛЕНО: Ендпоінт для отримання слів тепер бере їх із динамічних планів
 export const getWordsForGame = async (
   req: Request,
   res: Response,
@@ -223,16 +223,17 @@ export const getWordsForGame = async (
       return;
     }
 
-    const units = contentService.getUnitsByLevel(level);
-    const allLevelWords = units.flatMap(
-      (unit: any) => unit.steps?.vocabulary || [],
-    );
+    // Дістаємо всі дні з бази для обраного рівня
+    const plans = await DailyPlan.find({ level }).lean();
+
+    // Збираємо всі слова з усіх планів у єдиний масив
+    const allLevelWords = plans.flatMap((plan) => plan.words || []);
 
     const shuffled = allLevelWords
       .map((w: any, index: number) => ({
         ...w,
         id: w.id || `game_word_${index}`,
-      })) // Забезпечуємо наявність ID для компонентів гри
+      }))
       .sort(() => 0.5 - Math.random())
       .slice(0, 20);
 
