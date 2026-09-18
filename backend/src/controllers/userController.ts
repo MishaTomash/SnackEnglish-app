@@ -19,7 +19,6 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     }
 
     const telegramUser = req.user as ExtendedTelegramUser;
-
     let user = await User.findOne({ telegramId: telegramUser.id });
 
     if (!user) {
@@ -30,6 +29,9 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         telegramPhotoUrl: telegramUser.photo_url || undefined,
         level: null,
         onboardingCompleted: false,
+        hp: 5,
+        lastActivityDate: new Date(),
+        streak: 1, // Перший вхід — стрік 1
       });
     } else {
       let needsUpdate = false;
@@ -45,6 +47,29 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         user.telegramPhotoUrl = telegramUser.photo_url;
         needsUpdate = true;
       }
+
+      // ЛОГІКА СТРІКУ ТА HP
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (!user.lastActivityDate || user.lastActivityDate < today) {
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        // Якщо остання активність була вчора -> продовжуємо стрік
+        if (user.lastActivityDate && user.lastActivityDate >= yesterday) {
+          user.streak += 1;
+        }
+        // Якщо раніше ніж вчора -> скидаємо на 1
+        else if (!user.lastActivityDate || user.lastActivityDate < yesterday) {
+          user.streak = 1;
+        }
+
+        user.hp = 5; // Відновлюємо HP кожен новий день
+        user.lastActivityDate = now;
+        needsUpdate = true;
+      }
+
       if (needsUpdate) {
         await user.save();
       }
@@ -54,8 +79,6 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({
       ...user.toObject(),
-      // Обчислюване поле для сумісності з фронтом/лідербордом.
-      // Джерело істини — Telegram: username має пріоритет, інакше first_name.
       nickname: user.username || user.telegramFirstName || "User",
       wordsLearnedCount,
     });
@@ -74,29 +97,19 @@ export const completeOnboarding = async (
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
-
-    const telegramId = req.user.id;
     const { level } = req.body;
-
     if (!level) {
       res.status(400).json({ error: "Level is required" });
       return;
     }
 
     const user = await User.findOneAndUpdate(
-      { telegramId },
+      { telegramId: req.user.id },
       { level, onboardingCompleted: true },
       { returnDocument: "after" },
     );
-
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
     res.status(200).json(user);
   } catch (error) {
-    console.error("Error in completeOnboarding:", error);
     res.status(500).json({ error: "Failed to complete onboarding" });
   }
 };
@@ -110,29 +123,19 @@ export const updateLevel = async (
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
-
-    const telegramId = req.user.id;
     const { level } = req.body;
-
     if (!level) {
       res.status(400).json({ error: "Level is required" });
       return;
     }
 
     const user = await User.findOneAndUpdate(
-      { telegramId },
+      { telegramId: req.user.id },
       { level },
       { returnDocument: "after" },
     );
-
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    res.status(200).json({ success: true, level: user.level });
+    res.status(200).json({ success: true, level: user?.level });
   } catch (error) {
-    console.error("Error in updateLevel:", error);
     res.status(500).json({ error: "Failed to update level" });
   }
 };
@@ -148,25 +151,21 @@ export const updateProfile = async (
     }
 
     const telegramId = req.user.id;
-    const { customDisplayName } = req.body;
+    const { customDisplayName, hp } = req.body;
     const updateData: any = {};
 
-    if (customDisplayName !== undefined) {
+    if (customDisplayName !== undefined)
       updateData.customDisplayName = customDisplayName;
-    }
 
-    if (req.file) {
+    // ДОДАНО: Можливість оновлювати HP з фронтенду при помилках в уроці
+    if (hp !== undefined) updateData.hp = Number(hp);
+
+    if (req.file)
       updateData.customAvatarUrl = `/uploads/avatars/${req.file.filename}`;
-      console.log(
-        "[Profile] Файл успішно збережено:",
-        updateData.customAvatarUrl,
-      );
-    }
 
     const user = await User.findOneAndUpdate({ telegramId }, updateData, {
       returnDocument: "after",
     });
-
     if (!user) {
       res.status(404).json({ error: "User not found" });
       return;
@@ -174,7 +173,6 @@ export const updateProfile = async (
 
     res.status(200).json(user);
   } catch (error) {
-    console.error("Error in updateProfile:", error);
     res.status(500).json({ error: "Failed to update profile" });
   }
 };

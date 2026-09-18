@@ -12,14 +12,11 @@ export function initCronJobs(): void {
     );
     try {
       const now = new Date();
-
-      // Отримуємо ID всіх слів, які готові до повторення
       const overdueProgress = await UserProgress.find({
         nextReviewDate: { $lte: now },
       }).select("userId");
-
-      // Рахуємо кількість слів для кожного userId
       const userWordCountMap = new Map<string, number>();
+
       overdueProgress.forEach((item) => {
         const key = item.userId.toString();
         userWordCountMap.set(key, (userWordCountMap.get(key) ?? 0) + 1);
@@ -28,7 +25,6 @@ export function initCronJobs(): void {
       for (const [userId, count] of userWordCountMap.entries()) {
         const user = await User.findById(userId);
         if (!user || !user.telegramId) continue;
-
         try {
           await bot.telegram.sendMessage(
             user.telegramId,
@@ -41,34 +37,29 @@ export function initCronJobs(): void {
               },
             },
           );
-        } catch (sendError: unknown) {
-          // Користувач міг заблокувати бота
+        } catch (e) {
           console.warn(
-            `Не вдалося надіслати повідомлення користувачу ${user.telegramId}:`,
-            sendError,
+            `Не вдалося надіслати повідомлення користувачу ${user.telegramId}`,
           );
         }
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("[CRON Error] Помилка нагадування слів:", error);
     }
   });
 
-  // Задача 2: Щодня о 19:00 — нагадування про збереження Streak (серії днів)
+  // Задача 2: Щодня о 19:00 — нагадування про збереження Streak
   cron.schedule("0 19 * * *", async () => {
     console.log("[CRON] Запуск нагадування про Streak...");
     try {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-      // Користувачі з активним стріком, у яких updatedAt старіший за 24 години
       const inactiveUsers = await User.find({
         streak: { $gt: 0 },
-        updatedAt: { $lte: oneDayAgo },
+        lastActivityDate: { $lte: oneDayAgo },
       });
 
       for (const user of inactiveUsers) {
         if (!user.telegramId) continue;
-
         try {
           await bot.telegram.sendMessage(
             user.telegramId,
@@ -83,15 +74,42 @@ export function initCronJobs(): void {
               },
             },
           );
-        } catch (sendError: unknown) {
-          console.warn(
-            `Не вдалося надіслати нагадування стріку користувачу ${user.telegramId}:`,
-            sendError,
-          );
-        }
+        } catch (e) {}
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("[CRON Error] Помилка нагадування Streak:", error);
+    }
+  });
+
+  // НОВА Задача 3: Щодня о 00:01 — Скидання втрачених стріків та відновлення HP
+  cron.schedule("1 0 * * *", async () => {
+    console.log(
+      "[CRON] Скидання втрачених стріків та відновлення життів (HP)...",
+    );
+    try {
+      const startOfYesterday = new Date();
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+      startOfYesterday.setHours(0, 0, 0, 0);
+
+      // Скидаємо стрік тим, хто не заходив учора
+      const inactiveResult = await User.updateMany(
+        {
+          streak: { $gt: 0 },
+          $or: [
+            { lastActivityDate: { $lt: startOfYesterday } },
+            { lastActivityDate: null },
+          ],
+        },
+        { $set: { streak: 0 } },
+      );
+      console.log(
+        `[CRON] Скинуто стрік для ${inactiveResult.modifiedCount} користувачів.`,
+      );
+
+      // Відновлюємо HP всім користувачам вночі
+      await User.updateMany({ hp: { $lt: 5 } }, { $set: { hp: 5 } });
+    } catch (error) {
+      console.error("[CRON Error] Помилка скидання стріку та HP:", error);
     }
   });
 }

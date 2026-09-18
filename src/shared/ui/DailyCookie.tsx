@@ -1,18 +1,12 @@
 import { useId, useMemo } from "react";
 
 interface DailyCookieProps {
-  /** Скільки уроків завершено сьогодні. */
   eaten: number;
-  /** Денна ціль. */
   total: number;
   size?: number;
   className?: string;
 }
 
-/**
- * Печиво, яке прогресивно "з'їдається": кожен завершений урок додає укус.
- * Коли ціль досягнута — замість печива лишаються крихти.
- */
 export const DailyCookie = ({
   eaten,
   total,
@@ -25,6 +19,7 @@ export const DailyCookie = ({
 
   const bites = useMemo(() => {
     const TOTAL_BITES = 6;
+    // ВИПРАВЛЕНО: Захист від ділення на нуль
     const shown = total > 0 ? Math.round((clamped / total) * TOTAL_BITES) : 0;
     const positions = [
       { cx: 16, cy: 22, r: 15 },
@@ -73,7 +68,6 @@ export const DailyCookie = ({
               strokeWidth="3.5"
             />
             <circle cx="48" cy="48" r="41" fill="#F4B251" />
-
             <circle cx="30" cy="32" r="3.5" fill="#582F0E" />
             <circle cx="72" cy="36" r="3" fill="#582F0E" />
             <circle cx="28" cy="66" r="3.5" fill="#582F0E" />

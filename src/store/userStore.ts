@@ -20,14 +20,8 @@ export interface UserState {
   level: EnglishLevel | null;
   onboardingCompleted: boolean;
   streak: number;
-  /**
-   * Загальний рахунок (бали за пройдені кроки/юніти). Джерело правди —
-   * бекенд (User.totalScore, рахується в progressController.completeStep).
-   */
+  hp: number; // ДОДАНО: Стейт життів
   totalScore: number;
-  /**
-   * Кількість УНІКАЛЬНИХ вивчених слів. Джерело правди — бекенд.
-   */
   wordsLearnedCount: number;
   isLoading: boolean;
   error: string | null;
@@ -41,13 +35,12 @@ export interface UserState {
   customAvatarUrl: string | null;
 
   setLevel: (level: EnglishLevel) => void;
-  incrementStreak: () => void;
   setLastActiveUnitId: (id: string | null) => void;
+  decrementHp: () => Promise<void>; // Метод для зняття життя при помилці
 
   updateLevel: (level: EnglishLevel) => Promise<boolean>;
   fetchUser: (force?: boolean) => Promise<void>;
   completeOnboarding: (level: EnglishLevel) => Promise<boolean>;
-
   updateProfile: (
     displayName: string | null,
     avatarFile: File | null,
@@ -60,7 +53,8 @@ export const useUserStore = create<UserState>()(
       telegramId: null,
       level: null,
       onboardingCompleted: false,
-      streak: 1,
+      streak: 0,
+      hp: 5,
       totalScore: 0,
       wordsLearnedCount: 0,
       isLoading: false,
@@ -75,8 +69,30 @@ export const useUserStore = create<UserState>()(
       customAvatarUrl: null,
 
       setLevel: (level) => set({ level }),
-      incrementStreak: () => set((state) => ({ streak: state.streak + 1 })),
       setLastActiveUnitId: (id) => set({ lastActiveUnitId: id }),
+
+      decrementHp: async () => {
+        const currentHp = get().hp;
+        if (currentHp <= 0) return;
+        const newHp = currentHp - 1;
+
+        set({ hp: newHp }); // Оптимістичне оновлення UI
+
+        try {
+          const initData =
+            window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
+          const formData = new FormData();
+          formData.append("hp", newHp.toString());
+
+          await fetch(`${API_URL}/user/profile`, {
+            method: "PATCH",
+            headers: { Authorization: `Bearer ${initData}` },
+            body: formData,
+          });
+        } catch (e) {
+          console.error("Failed to sync HP", e);
+        }
+      },
 
       updateLevel: async (level: EnglishLevel) => {
         set({ isLoading: true, error: null });
@@ -108,7 +124,8 @@ export const useUserStore = create<UserState>()(
             telegramId: data.telegramId,
             level: data.level,
             onboardingCompleted: data.onboardingCompleted,
-            streak: data.streak,
+            streak: data.streak ?? 0,
+            hp: data.hp ?? 5, // Підтягуємо HP
             totalScore: data.totalScore ?? 0,
             wordsLearnedCount: data.wordsLearnedCount ?? 0,
             telegramFirstName: data.telegramFirstName,
@@ -180,6 +197,7 @@ export const useUserStore = create<UserState>()(
         level: state.level,
         onboardingCompleted: state.onboardingCompleted,
         streak: state.streak,
+        hp: state.hp,
         totalScore: state.totalScore,
         wordsLearnedCount: state.wordsLearnedCount,
         lastActiveUnitId: state.lastActiveUnitId,
