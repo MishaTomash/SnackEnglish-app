@@ -9,7 +9,6 @@ import {
 import { Screen } from "../../../shared/ui/Screen";
 import { Card } from "../../../shared/ui/Card";
 import { useUserStore } from "../../../store/userStore";
-import { useLearningStore } from "../../../store/learningStore";
 import type { EnglishLevel } from "../../../entities/word/types";
 import type { SettingsStep } from "../SettingsPage";
 import { LEVELS, resolveAvatarUrl } from "../constants";
@@ -31,19 +30,14 @@ export const SettingsList = ({
   const {
     level,
     streak,
+    wordsLearnedCount,
     isLoading,
     telegramFirstName,
     telegramPhotoUrl,
     customDisplayName,
     customAvatarUrl,
   } = useUserStore();
-  const { categories, progress } = useLearningStore();
 
-  const completedCount = categories.reduce(
-    (acc, cat) =>
-      acc + cat.units.filter((u) => progress[u.id]?.completed).length,
-    0,
-  );
   const currentDisplayName =
     customDisplayName || telegramFirstName || "Користувач";
   const currentPhotoUrl = resolveAvatarUrl(customAvatarUrl) || telegramPhotoUrl;
@@ -119,10 +113,10 @@ export const SettingsList = ({
         </div>
         <div className="flex justify-between items-center text-sm">
           <span className="text-[var(--text-main)] font-medium">
-            Пройдено тем
+            Вивчено слів
           </span>
           <span className="font-bold text-[var(--accent-cta)]">
-            {completedCount}
+            {wordsLearnedCount}
           </span>
         </div>
       </Card>
