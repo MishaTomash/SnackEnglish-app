@@ -92,6 +92,33 @@ export function initCronJobs(): void {
       startOfYesterday.setDate(startOfYesterday.getDate() - 1);
       startOfYesterday.setHours(0, 0, 0, 0);
 
+      // ДОДАНО: Сповіщення користувачам про те, що стрік втрачено
+      const usersLosingStreak = await User.find({
+        streak: { $gt: 0 },
+        $or: [
+          { lastActivityDate: { $lt: startOfYesterday } },
+          { lastActivityDate: null },
+        ],
+      });
+
+      for (const user of usersLosingStreak) {
+        if (!user.telegramId) continue;
+        try {
+          await bot.telegram.sendMessage(
+            user.telegramId,
+            `Ой, твій вогник згас 😢\nАле сьогодні ідеальний день, щоб почати нову серію!\n\nЗаходь у SnackEnglish та повертай свій темп!`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: "Почати нову серію 🚀", web_app: { url: appUrl } }],
+                ],
+              },
+            },
+          );
+        } catch (e) {}
+      }
+
+      // Скидання стріку в базі
       const inactiveResult = await User.updateMany(
         {
           streak: { $gt: 0 },
@@ -112,7 +139,7 @@ export function initCronJobs(): void {
     }
   });
 
-  // НОВА Задача 4: Щонеділі о 20:00 — Завершення тижневого розіграшу
+  // Задача 4: Щонеділі о 20:00 — Завершення тижневого розіграшу
   cron.schedule("0 20 * * 0", async () => {
     console.log("[CRON] Запуск підсумків тижневого розіграшу...");
     try {

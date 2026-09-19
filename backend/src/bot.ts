@@ -10,6 +10,7 @@ import { Game } from "./models/Game.js";
 import { UserGamePurchase } from "./models/UserGamePurchase.js";
 import { ManualPaymentRequest } from "./models/ManualPaymentRequest.js";
 import { Friendship } from "./models/Friendship.js";
+import { getLearnedWordsCount } from "./services/progressStatsService.js";
 
 const botToken = process.env.BOT_TOKEN;
 
@@ -19,51 +20,46 @@ if (!botToken) {
 
 export const bot = new Telegraf(botToken);
 
+// Встановлюємо системне меню команд
+bot.telegram
+  .setMyCommands([
+    { command: "start", description: "Запустити застосунок" },
+    { command: "profile", description: "Моя статистика" },
+  ])
+  .catch(console.error);
+
 bot.start(async (ctx) => {
   try {
     const telegramUser = ctx.from;
     if (!telegramUser) return;
 
-    // Перевіряємо чи створюємо користувача в базі
-    // Безпечний атомарний Upsert
-    const user = await User.findOneAndUpdate(
-      { telegramId: telegramUser.id }, // Шукаємо за цим полем
-      {
-        $setOnInsert: {
-          // Ці поля запишуться ТІЛЬКИ якщо користувач новий.
-          // Якщо він вже є в базі, вони не перезапишуться!
-          username: telegramUser.username ?? undefined,
-          level: null,
-          weakAreas: [],
-          streak: 1,
-          onboardingCompleted: false,
-        },
-      },
-      {
-        upsert: true, // Створити, якщо не знайдено
-        new: true, // Повернути документ після створення/знаходження
-        setDefaultsOnInsert: true, // Застосувати дефолтні значення зі схеми Mongoose
-      },
-    );
+    let user = await User.findOne({ telegramId: telegramUser.id });
+    const isNewUser = !user;
+
+    if (!user) {
+      user = await User.create({
+        telegramId: telegramUser.id,
+        username: telegramUser.username ?? undefined,
+        telegramFirstName: telegramUser.first_name ?? undefined,
+        level: null,
+        weakAreas: [],
+        streak: 1,
+        hp: 5,
+        lastActivityDate: new Date(),
+        onboardingCompleted: false,
+      });
+    }
 
     const appUrl = process.env.VITE_APP_URL?.trim();
-    console.log(
-      `[BOT /start] Користувач: ${telegramUser.id}, VITE_APP_URL:`,
-      appUrl,
-    );
 
-    // Telegram дозволяє web_app кнопки лише з валідним HTTPS посиланням
     if (!appUrl || !appUrl.startsWith("https://")) {
-      console.error(
-        `[BOT ERROR] Неможливо створити WebApp кнопку: VITE_APP_URL має починатися з 'https://'. Поточне значення: '${appUrl}'`,
-      );
       await ctx.reply(
         `Привіт, ${telegramUser.first_name}! 🍪\n\nСервер ще налаштовує захищене HTTPS-з'єднання. Будь ласка, перевірте VITE_APP_URL у файлі .env.`,
       );
       return;
     }
 
-    const payload = ctx.payload; // Отримуємо параметр після /start
+    const payload = ctx.payload;
 
     // 1. ЯКЩО ЦЕ ЗАПРОШЕННЯ НА ДУЕЛЬ
     if (payload && payload.startsWith("duel_")) {
@@ -79,21 +75,63 @@ bot.start(async (ctx) => {
           ]),
         },
       );
-      return; // Завершуємо виконання, щоб не надсилати стандартне вітання
+      return;
     }
 
-    // 2. СТАНДАРТНЕ ВІТАННЯ (якщо просто відкрили бота)
-    await ctx.reply(
-      `Привіт, ${telegramUser.first_name}! 🍪\n\nЛаскаво просимо до SnackEnglish — твоїх щоденних швидких та смачних уроків англійської.\n\nНатискай кнопку нижче, щоб відкрити застосунок та спробувати свій перший снек!`,
-      Markup.inlineKeyboard([
-        [Markup.button.webApp("Відкрити SnackEnglish 🚀", appUrl)],
-      ]),
-    );
+    // 2. ПРИВІТАННЯ (Новий або існуючий юзер)
+    if (isNewUser) {
+      await ctx.reply(
+        `Привіт, ${telegramUser.first_name}! 🍪\n\nЛаскаво просимо до SnackEnglish — твоїх щоденних швидких та смачних уроків англійської.\n\nНатискай кнопку нижче, щоб відкрити застосунок та спробувати свій перший снек!`,
+        Markup.inlineKeyboard([
+          [Markup.button.webApp("Відкрити SnackEnglish 🚀", appUrl)],
+        ]),
+      );
+    } else {
+      await ctx.reply(
+        `З поверненням, ${telegramUser.first_name}! 🍪\n\nТвій поточний вогник: 🔥 ${user.streak} днів.\nПродовжимо навчання?`,
+        Markup.inlineKeyboard([
+          [Markup.button.webApp("Відкрити застосунок 🚀", appUrl)],
+        ]),
+      );
+    }
   } catch (error: unknown) {
     console.error("Помилка в обробнику /start бота:", error);
     await ctx.reply(
       "Сталася помилка при запуску. Будь ласка, спробуйте пізніше.",
     );
+  }
+});
+
+// НОВА КОМАНДА: /profile
+bot.command("profile", async (ctx) => {
+  try {
+    const user = await User.findOne({ telegramId: ctx.from.id });
+    if (!user) {
+      return ctx.reply("Спочатку запусти бота командою /start !");
+    }
+
+    const wordsLearned = await getLearnedWordsCount(user._id);
+    const displayName = user.username
+      ? `@${user.username}`
+      : user.telegramFirstName;
+
+    const message =
+      `👤 <b>Профіль:</b> ${displayName}\n\n` +
+      `🏆 <b>Кубків:</b> ${user.totalScore || 0}\n` +
+      `🔥 <b>Стрік:</b> ${user.streak || 0} днів\n` +
+      `📚 <b>Вивчено слів:</b> ${wordsLearned}\n` +
+      `📈 <b>Рівень:</b> ${user.level || "Не обрано"}`;
+
+    const appUrl = process.env.VITE_APP_URL?.trim() || "";
+
+    await ctx.reply(message, {
+      parse_mode: "HTML",
+      ...Markup.inlineKeyboard([
+        [Markup.button.webApp("Вчити англійську 🚀", appUrl)],
+      ]),
+    });
+  } catch (error) {
+    console.error("Помилка команди /profile:", error);
   }
 });
 
@@ -148,9 +186,9 @@ bot.on("successful_payment", async (ctx) => {
 
 // --- СПОСІБ 2: РУЧНИЙ ПЕРЕКАЗ ---
 
-bot.on("photo", async (ctx) => {
+bot.on("photo", async (ctx, next) => {
   try {
-    if (!("photo" in ctx.message)) return;
+    if (!("photo" in ctx.message)) return next();
 
     const caption = ("caption" in ctx.message ? ctx.message.caption : "") || "";
     const match = caption.match(/([A-F0-9]{8})/i);
@@ -160,7 +198,7 @@ bot.on("photo", async (ctx) => {
       status: "pending",
     });
 
-    if (manualRequests.length === 0) return;
+    if (manualRequests.length === 0) return next();
 
     let targetRequest = match
       ? manualRequests.find((r) => r.uniqueCode === match[1].toUpperCase())
@@ -209,6 +247,7 @@ bot.on("photo", async (ctx) => {
     }
   } catch (error) {
     console.error("Photo processing error:", error);
+    return next();
   }
 });
 
@@ -287,7 +326,6 @@ bot.action(/^f_(acc|rej)_(.+)$/, async (ctx) => {
       return ctx.answerCbQuery("Це не ваша заявка.");
     }
 
-    // Формуємо реальне ім'я ініціатора (того, хто кинув заявку)
     const requester = friendship.requestedBy as any;
     const reqFirstName = requester.telegramFirstName;
     const reqUsername = requester.username ? `@${requester.username}` : null;
@@ -300,7 +338,6 @@ bot.action(/^f_(acc|rej)_(.+)$/, async (ctx) => {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // Формуємо реальне ім'я поточного юзера (того, хто натискає кнопку)
     const myFirstName = currentUser.telegramFirstName;
     const myUsername = currentUser.username ? `@${currentUser.username}` : null;
     let myName =
@@ -319,7 +356,6 @@ bot.action(/^f_(acc|rej)_(.+)$/, async (ctx) => {
         parse_mode: "HTML",
       });
 
-      // Повідомляємо ініціатора, що його заявку прийнято
       await ctx.telegram.sendMessage(
         requester.telegramId,
         `🎉 <b>${mySafeName}</b> прийняв(ла) вашу заявку в друзі!`,
@@ -337,5 +373,28 @@ bot.action(/^f_(acc|rej)_(.+)$/, async (ctx) => {
   } catch (error) {
     console.error("Помилка обробки заявки в друзі через бота:", error);
     await ctx.answerCbQuery("Сталася помилка.");
+  }
+});
+
+// НОВИЙ ФОЛБЕК: Обробка невідомих повідомлень
+bot.on("message", async (ctx, next) => {
+  // Ловимо тільки текст, стікери або інші звичайні повідомлення, пропускаючи системні
+  if (
+    "text" in ctx.message ||
+    "sticker" in ctx.message ||
+    "voice" in ctx.message ||
+    "animation" in ctx.message
+  ) {
+    const appUrl = process.env.VITE_APP_URL?.trim() || "";
+    if (!appUrl) return;
+
+    await ctx.reply(
+      "Я тут для того, щоб допомагати тобі з англійською! 🍪\nТисни кнопку нижче, щоб відкрити застосунок 👇",
+      Markup.inlineKeyboard([
+        [Markup.button.webApp("Відкрити SnackEnglish 🚀", appUrl)],
+      ]),
+    );
+  } else {
+    return next();
   }
 });
