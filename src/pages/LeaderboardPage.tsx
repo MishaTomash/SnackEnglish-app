@@ -426,8 +426,8 @@ export const LeaderboardPage = () => {
             <div className="flex items-start gap-2 bg-[var(--bg-app)]/50 p-3 rounded-xl mt-2">
               <Timer className="w-4 h-4 text-[var(--accent-success)] shrink-0 mt-0.5" />
               <p className="text-xs text-[var(--text-main)] leading-relaxed font-medium">
-                Участь автоматична для всіх у Топі! Переможці обираються
-                випадково, але вищий рейтинг = більше шансів.
+                Участь автоматична! Щонеділі о 20:00 топ-3 гравці з найвищим
+                рейтингом стають переможцями та назавжди потрапляють в історію.
               </p>
             </div>
           </Card>
