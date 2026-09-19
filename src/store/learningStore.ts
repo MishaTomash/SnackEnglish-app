@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CategoryId, Category } from "../entities/learning/types";
-import { useUserStore } from "./userStore"; // Підключаємо глобальний рахунок
+import { useUserStore } from "./userStore";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -66,6 +66,7 @@ interface LearningState {
     unitId: string,
     categoryId: CategoryId,
     accuracy: number,
+    wordIds: string[],
   ) => Promise<void>;
   markCelebrated: () => void;
   recordGoalReached: () => Promise<void>;
@@ -111,7 +112,7 @@ export const useLearningStore = create<LearningState>()(
         }
       },
 
-      markUnitCompleted: async (unitId, categoryId, accuracy) => {
+      markUnitCompleted: async (unitId, categoryId, accuracy, wordIds) => {
         const state = get();
         const today = todayKey();
         const dailyCats =
@@ -121,7 +122,6 @@ export const useLearningStore = create<LearningState>()(
           : [...dailyCats, categoryId];
         const existing = state.progress[unitId];
 
-        // 1. Оптимістичне оновлення локального прогресу
         set({
           progress: {
             ...state.progress,
@@ -135,17 +135,15 @@ export const useLearningStore = create<LearningState>()(
           dailyCompletedCategories: newDaily,
         });
 
-        // 2. Запит на бекенд: зберегти прогрес уроку і отримати XP
         try {
           const res = await fetch(`${API_URL}/progress/lesson-complete`, {
             method: "POST",
             headers: getAuthHeaders(),
-            body: JSON.stringify({ unitId }),
+            body: JSON.stringify({ unitId, wordIds }), // Додано wordIds
           });
           if (res.ok) {
             const data = await res.json();
             if (data.success && data.totalScore !== undefined) {
-              // Синхронізуємо глобальний рейтинг
               useUserStore.setState({ totalScore: data.totalScore });
             }
           }

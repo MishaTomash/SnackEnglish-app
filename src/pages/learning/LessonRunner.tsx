@@ -33,7 +33,6 @@ import type {
   WordCardData,
 } from "../../entities/learning/types";
 
-/** Мінімальний контракт для Web Speech API — прибирає `any` з компонента. */
 interface SpeechRecognitionLike {
   lang: string;
   interimResults: boolean;
@@ -50,8 +49,6 @@ interface SpeechRecognitionLike {
 }
 
 const SIMILARITY_PASS_THRESHOLD = 0.7;
-
-// ---------- Shared sub-view ----------
 
 const AnswerOptions = <T extends string>({
   options,
@@ -96,8 +93,6 @@ const AnswerOptions = <T extends string>({
   </div>
 );
 
-// ---------- Views ----------
-
 const LearnView = ({
   cards,
   index,
@@ -112,8 +107,6 @@ const LearnView = ({
 
   useEffect(() => {
     setFlipped(false);
-    // Auto-play приглушено: TTS без тапу часто блокується на iOS і дає рваний звук.
-    // Користувач сам тапає "Прослухати".
     return () => stopSpeech();
   }, [card.word]);
 
@@ -539,8 +532,6 @@ const SpeakView = ({
   );
 };
 
-// ---------- Completion ----------
-
 const CompletionScreen = ({
   accuracy,
   correct,
@@ -616,17 +607,13 @@ const CompletionScreen = ({
   </Screen>
 );
 
-// ---------- Runner ----------
-
 export const LessonRunner = () => {
   const { unitId } = useParams<{ unitId: string }>();
   const navigate = useNavigate();
-  // ДОДАНО: витягуємо категорії зі стору
   const { markUnitCompleted, categories } = useLearningStore();
 
   const found = useMemo(() => {
     for (const category of categories) {
-      // ЗМІНЕНО: categories замість LEARNING_CATEGORIES
       const unit = category.units.find((u) => u.id === unitId);
       if (unit) return { category, unit };
     }
@@ -689,19 +676,25 @@ export const LessonRunner = () => {
       setStepIdx((i) => i + 1);
       setItemIdx(0);
     } else {
-      // ФІНІШ!
       const finalAccuracy =
         totalQuestions > 0
           ? Math.round((newCorrect / totalQuestions) * 100)
           : 100;
 
-      // Перевіряємо локально, чи урок пройдено вперше (щоб показати +10)
       const isFirstTime =
         !useLearningStore.getState().progress[unit.id]?.completed;
       setEarnedXp(isFirstTime ? 10 : 0);
 
-      // Викликаємо збереження
-      markUnitCompleted(unit.id, category.id, finalAccuracy);
+      // ЗБИРАЄМО СЛОВА З УРОКУ ДЛЯ ЗБЕРЕЖЕННЯ
+      const wordIdsToSave = unit.steps
+        .filter((s) => s.kind === "learn")
+        .flatMap((s) =>
+          (s as { kind: "learn"; cards: WordCardData[] }).cards.map(
+            (c) => c.id,
+          ),
+        );
+
+      markUnitCompleted(unit.id, category.id, finalAccuracy, wordIdsToSave);
       setPhase("done");
     }
   };

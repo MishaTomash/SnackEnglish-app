@@ -2,8 +2,8 @@ import { useEffect, useState, type FC } from "react";
 import type { GameProps, GameResult } from "../types";
 import { getPracticeWordsApi, getWordsByLevel } from "../../entities/word/api";
 import type { Word } from "../../entities/word/types";
-// ⚠️ ПЕРЕВІР ШЛЯХ: підправ під реальне розташування store в репо.
 import { useUserStore } from "../../store/userStore";
+import { useLearningStore } from "../../store/learningStore";
 
 // ---------------------------------------------------------------------------
 // Константи гри
@@ -108,13 +108,39 @@ function useWordMatchDeck(maxPairs: number = MAX_PAIRS) {
       try {
         // 1. Спершу — слова, що користувач вивчає/повторює (SM-2 practice queue)
         const practice = await getPracticeWordsApi();
+        const dueIds = practice.dueWordIds || [];
         const seenIds = new Set<string>();
         const pool: Word[] = [];
 
-        for (const w of practice.words || []) {
-          if (w.level === level && !seenIds.has(w.id)) {
-            pool.push(w);
-            seenIds.add(w.id);
+        if (dueIds.length > 0) {
+          let { categories, fetchCategories } = useLearningStore.getState();
+          if (categories.length === 0) {
+            await fetchCategories(level);
+            categories = useLearningStore.getState().categories;
+          }
+
+          for (const cat of categories) {
+            for (const unit of cat.units) {
+              for (const step of unit.steps) {
+                if (step.kind === "learn") {
+                  for (const card of step.cards) {
+                    if (dueIds.includes(card.id) && !seenIds.has(card.id)) {
+                      pool.push({
+                        id: card.id,
+                        text: card.word,
+                        translation: card.translation,
+                        transcription: card.transcription,
+                        exampleSentence: "",
+                        exampleTranslation: "",
+                        level: level,
+                        topic: cat.title,
+                      });
+                      seenIds.add(card.id);
+                    }
+                  }
+                }
+              }
+            }
           }
         }
 

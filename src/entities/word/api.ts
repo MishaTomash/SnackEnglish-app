@@ -9,7 +9,7 @@ export async function getWordsByIds(ids: string[]): Promise<Word[]> {
     return (response.data as any).words || response.data || [];
   } catch (error) {
     console.error("Error fetching words in batch:", error);
-    throw error; // Тепер батьківський компонент дізнається про помилку
+    throw error;
   }
 }
 
@@ -28,10 +28,9 @@ export async function getWordById(id: string): Promise<Word | null> {
 }
 
 export async function getPracticeWordsApi(): Promise<{
-  count: number;
-  words: Word[];
+  dueWordIds: string[];
 }> {
-  const response = await apiClient.get<{ count: number; words: Word[] }>(
+  const response = await apiClient.get<{ dueWordIds: string[] }>(
     "/progress/practice",
   );
   return response.data;
@@ -45,12 +44,6 @@ export async function reviewWordApi(
   repetitions: number;
   interval: number;
   nextReviewDate: string;
-  /**
-   * Реальна кількість унікальних вивчених слів користувача, порахована
-   * на бекенді (UserProgress, repetitions >= LEARNED_MIN_REPETITIONS).
-   * Приходить одразу в цій відповіді, щоб не робити окремий forced
-   * fetchUser() після кожної картки в Практиці.
-   */
   wordsLearnedCount: number;
 }> {
   const response = await apiClient.post<{

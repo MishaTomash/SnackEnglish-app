@@ -8,6 +8,7 @@ import {
   Trophy,
   Users,
   Heart,
+  Flame,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -15,6 +16,7 @@ import { Badge } from "../shared/ui/Badge";
 import { StreakBadge } from "../entities/user/ui/StreakBadge";
 import { useUserStore } from "../store/userStore";
 import { useRepetitionStore } from "../store/repetitionStore";
+import { CookieMascot } from "../shared/ui/CookieMascot";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -79,45 +81,50 @@ export const HomePage = () => {
   }, [telegramId]);
 
   const reviewWordsCount = dailyQueue.length;
+  const hasReviews = reviewWordsCount > 0;
 
   const currentDisplayName =
     customDisplayName || telegramFirstName || "Користувач";
   const currentPhotoUrl = resolveAvatarUrl(customAvatarUrl) || telegramPhotoUrl;
 
-  return (
-    <Screen className="space-y-4">
-      <div className="flex items-center justify-between pt-1 pb-2">
-        <div className="flex items-center gap-3">
-          <Link to="/settings" className="relative shrink-0">
-            {currentPhotoUrl ? (
-              <img
-                src={currentPhotoUrl}
-                alt="Avatar"
-                className="w-12 h-12 rounded-full object-cover bg-[var(--bg-app)] border border-[var(--border-color)]"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-muted)] border border-[var(--border-color)]">
-                <UserIcon className="w-6 h-6" />
-              </div>
-            )}
-          </Link>
+  // Тижнева активність
+  const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+  const jsDay = new Date().getDay();
+  const currentDayIndex = jsDay === 0 ? 6 : jsDay - 1;
 
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-black text-[var(--text-main)] leading-tight truncate max-w-[140px]">
+  return (
+    <Screen className="space-y-4 pb-24">
+      {/* Шапка профілю */}
+      <div className="flex items-center justify-between gap-3 pt-1 pb-2">
+        <Link to="/settings" className="flex items-center gap-3 min-w-0 flex-1">
+          {currentPhotoUrl ? (
+            <img
+              src={currentPhotoUrl}
+              alt="Avatar"
+              className="w-12 h-12 rounded-full object-cover bg-[var(--bg-app)] border border-[var(--border-color)] shrink-0"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-muted)] border border-[var(--border-color)] shrink-0">
+              <UserIcon className="w-6 h-6" />
+            </div>
+          )}
+
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <h1 className="text-base font-black text-[var(--text-main)] leading-tight truncate">
                 {currentDisplayName}
               </h1>
-              <Badge className="px-1.5 py-0 font-bold text-[10px] tracking-wide bg-[var(--accent-cta)]/10 text-[var(--text-main)] border border-[var(--accent-cta)]/20">
+              <Badge className="px-1.5 py-0 font-bold text-[10px] tracking-wide bg-[var(--accent-cta)]/10 text-[var(--text-main)] border border-[var(--accent-cta)]/20 shrink-0">
                 {level}
               </Badge>
             </div>
             {telegramUsername && (
-              <span className="text-[11px] font-medium text-[var(--text-muted)] mt-0.5 truncate max-w-[160px]">
+              <span className="text-[11px] font-medium text-[var(--text-muted)] mt-0.5 truncate">
                 @{telegramUsername}
               </span>
             )}
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cta)]/10 border border-[var(--accent-cta)]/20 text-[var(--accent-cta)] font-black text-sm shadow-sm">
@@ -126,6 +133,7 @@ export const HomePage = () => {
           </div>
 
           <StreakBadge streak={streak} />
+
           <Link
             to="/settings"
             className="p-2 rounded-full bg-[var(--bg-card)] text-[var(--text-main)] transition-colors active:opacity-70 border border-[var(--border-color)]"
@@ -135,7 +143,69 @@ export const HomePage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 pb-4">
+      {/* Тижнева активність */}
+      <Card className="p-4 bg-[var(--bg-card)] border-[var(--border-color)]">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-black text-sm text-[var(--text-main)] flex items-center gap-1.5">
+            <Flame className="w-4 h-4 text-orange-500" /> Активність
+          </h3>
+          <span className="text-xs font-bold text-[var(--text-muted)]">
+            Цього тижня
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          {weekDays.map((day, index) => {
+            const isToday = index === currentDayIndex;
+            const isPast = index < currentDayIndex;
+            const isCompletedMock = isPast && currentDayIndex - index <= streak;
+
+            return (
+              <div key={day} className="flex flex-col items-center gap-1.5">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all border-2 ${
+                    isCompletedMock
+                      ? "bg-orange-500 border-orange-500 text-white shadow-sm"
+                      : isToday
+                        ? "bg-orange-100 border-orange-500 text-orange-600 dark:bg-orange-900/30"
+                        : "bg-transparent border-[var(--border-color)] text-[var(--text-muted)]"
+                  }`}
+                >
+                  {isCompletedMock ? "✓" : ""}
+                </div>
+                <span
+                  className={`text-[10px] font-bold ${
+                    isToday
+                      ? "text-[var(--text-main)]"
+                      : "text-[var(--text-muted)]"
+                  }`}
+                >
+                  {day}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Мотивація від Маскота */}
+      <Link to="/learning" className="block">
+        <Card className="p-0 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-950/40 dark:to-orange-900/40 border-amber-200 dark:border-amber-800/50 overflow-hidden relative interactive">
+          <div className="p-4 pr-24 relative z-10">
+            <h3 className="font-black text-amber-900 dark:text-amber-100 text-sm mb-1">
+              Час для англійської!
+            </h3>
+            <p className="text-xs text-amber-800/80 dark:text-amber-200/80 font-medium leading-relaxed">
+              Снакі вже зачекався. Продовжимо вивчення нових слів?
+            </p>
+          </div>
+          <div className="absolute right-0 bottom-0 translate-x-2 translate-y-2">
+            <CookieMascot state="happy" size={100} />
+          </div>
+        </Card>
+      </Link>
+
+      {/* Сітка статистики — внизу */}
+      <div className="grid grid-cols-2 gap-3 pt-2">
         <Card className="flex flex-col items-start gap-2 p-3.5 h-full">
           <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
@@ -153,14 +223,14 @@ export const HomePage = () => {
         <Link to="/practice" className="block h-full">
           <Card
             className={`flex flex-col items-start gap-2 p-3.5 h-full transition-all active:scale-[0.98] ${
-              reviewWordsCount > 0
+              hasReviews
                 ? "border-[var(--accent-success)] bg-[var(--accent-success)]/5 shadow-sm"
                 : "border-[var(--border-color)]"
             }`}
           >
             <div
               className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                reviewWordsCount > 0
+                hasReviews
                   ? "bg-[var(--accent-success)]/20 text-[var(--accent-success)]"
                   : "bg-[var(--text-muted)]/15 text-[var(--text-muted)]"
               }`}
@@ -173,12 +243,12 @@ export const HomePage = () => {
               </div>
               <div
                 className={`text-xs mt-1 font-medium ${
-                  reviewWordsCount > 0
+                  hasReviews
                     ? "text-[var(--accent-success)] font-bold"
                     : "text-[var(--text-muted)]"
                 }`}
               >
-                {reviewWordsCount > 0 ? "до Практики ➔" : "на сьогодні"}
+                {hasReviews ? "до Практики ➔" : "на сьогодні"}
               </div>
             </div>
           </Card>

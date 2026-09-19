@@ -2,16 +2,28 @@
 
 @layer base {
   :root {
-    /* Твої токени залишаються без змін */
+    /* Фонові кольори */
     --bg-app: #241812;
     --bg-card: #33241a;
     --bg-card-elevated: #3d2b20;
     --bg-card-hover: #4a3b31;
+
+    /* Акцентні */
     --accent-cta: #e8a33d;
+    --accent-cta-hover: #f0b355;
+    --accent-cta-active: #b87d24;
+    --accent-success: #4ade80;
+    --accent-success-hover: #22c55e;
+    --accent-error: #ef4444;
+    --accent-error-hover: #dc2626;
+
+    /* Текст */
     --text-main: #f5e9dd;
     --text-muted: #c9b8a8;
     --text-accent: #241812;
-    /* ... інші змінні ... */
+
+    /* Бордери */
+    --border-color: #4a3b31;
   }
 
   body {

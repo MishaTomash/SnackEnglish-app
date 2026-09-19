@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { bot } from "../bot.js";
 import { User, UserProgress } from "../models/index.js";
+import { processGiveawayEnd } from "../controllers/leaderboardController.js";
 
 export function initCronJobs(): void {
   const appUrl = process.env.VITE_APP_URL ?? "http://localhost:5173";
@@ -81,7 +82,7 @@ export function initCronJobs(): void {
     }
   });
 
-  // НОВА Задача 3: Щодня о 00:01 — Скидання втрачених стріків та відновлення HP
+  // Задача 3: Щодня о 00:01 — Скидання втрачених стріків та відновлення HP
   cron.schedule("1 0 * * *", async () => {
     console.log(
       "[CRON] Скидання втрачених стріків та відновлення життів (HP)...",
@@ -91,7 +92,6 @@ export function initCronJobs(): void {
       startOfYesterday.setDate(startOfYesterday.getDate() - 1);
       startOfYesterday.setHours(0, 0, 0, 0);
 
-      // Скидаємо стрік тим, хто не заходив учора
       const inactiveResult = await User.updateMany(
         {
           streak: { $gt: 0 },
@@ -106,10 +106,20 @@ export function initCronJobs(): void {
         `[CRON] Скинуто стрік для ${inactiveResult.modifiedCount} користувачів.`,
       );
 
-      // Відновлюємо HP всім користувачам вночі
       await User.updateMany({ hp: { $lt: 5 } }, { $set: { hp: 5 } });
     } catch (error) {
       console.error("[CRON Error] Помилка скидання стріку та HP:", error);
+    }
+  });
+
+  // НОВА Задача 4: Щонеділі о 20:00 — Завершення тижневого розіграшу
+  cron.schedule("0 20 * * 0", async () => {
+    console.log("[CRON] Запуск підсумків тижневого розіграшу...");
+    try {
+      await processGiveawayEnd();
+      console.log("[CRON] Тижневий розіграш успішно завершено.");
+    } catch (error) {
+      console.error("[CRON Error] Помилка завершення розіграшу:", error);
     }
   });
 }

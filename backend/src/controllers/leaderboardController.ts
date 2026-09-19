@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { User } from "../models/User.js";
+import { GiveawayHistory } from "../models/GiveawayHistory.js";
 
 export const getLeaderboard = async (
   req: Request,
@@ -8,8 +9,6 @@ export const getLeaderboard = async (
   try {
     const telegramId = req.user?.id;
 
-    // Беремо всіх, у кого є ім'я з Telegram (username або first_name) —
-    // саме воно тепер використовується як відображуване ім'я в Топі.
     const users = await User.find({
       $or: [
         { username: { $exists: true, $nin: [null, ""] } },
@@ -30,8 +29,6 @@ export const getLeaderboard = async (
 
     const buildEntry = (u: any, position: number) => ({
       _id: u._id.toString(),
-      // Поле лишаємо з ім'ям `nickname` для сумісності з фронтом,
-      // але значення — виключно з Telegram.
       nickname: u.username || u.telegramFirstName || "User",
       score: u.totalScore || 0,
       customAvatarUrl: u.customAvatarUrl,
@@ -59,5 +56,76 @@ export const getLeaderboard = async (
   } catch (error) {
     console.error("Leaderboard error:", error);
     res.status(500).json({ error: "Failed to fetch leaderboard" });
+  }
+};
+
+export const processGiveawayEnd = async (): Promise<void> => {
+  const users = await User.find({
+    $or: [
+      { username: { $exists: true, $nin: [null, ""] } },
+      { telegramFirstName: { $exists: true, $nin: [null, ""] } },
+    ],
+    totalScore: { $gt: 0 },
+  })
+    .select(
+      "username telegramFirstName totalScore customAvatarUrl telegramPhotoUrl streak",
+    )
+    .lean();
+
+  if (users.length === 0) return;
+
+  users.sort((a, b) => {
+    const scoreA = (a as any).totalScore || 0;
+    const scoreB = (b as any).totalScore || 0;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    return ((b as any).streak || 0) - ((a as any).streak || 0);
+  });
+
+  const top3 = users.slice(0, 3);
+  const lastGiveaway = await GiveawayHistory.findOne().sort({ weekNumber: -1 });
+  const nextWeek = lastGiveaway ? lastGiveaway.weekNumber + 1 : 1;
+
+  const winners = top3.map((u, i) => ({
+    userId: u._id.toString(),
+    nickname: (u as any).username || (u as any).telegramFirstName || "User",
+    score: (u as any).totalScore || 0,
+    avatarUrl: (u as any).customAvatarUrl || (u as any).telegramPhotoUrl,
+    position: i + 1,
+  }));
+
+  await GiveawayHistory.create({
+    weekNumber: nextWeek,
+    endDate: new Date(),
+    winners,
+  });
+
+  await User.updateMany({}, { $set: { totalScore: 0 } });
+};
+
+export const forceEndGiveaway = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    await processGiveawayEnd();
+    res.status(200).json({ message: "Giveaway ended successfully" });
+  } catch (error) {
+    console.error("Force end giveaway error:", error);
+    res.status(500).json({ error: "Failed to end giveaway" });
+  }
+};
+
+export const getGiveawayHistory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const history = await GiveawayHistory.find()
+      .sort({ weekNumber: -1 })
+      .lean();
+    res.status(200).json(history);
+  } catch (error) {
+    console.error("Fetch giveaway history error:", error);
+    res.status(500).json({ error: "Failed to fetch history" });
   }
 };

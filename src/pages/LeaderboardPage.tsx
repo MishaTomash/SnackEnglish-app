@@ -14,7 +14,10 @@ import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { useUserStore } from "../store/userStore";
-import { useLeaderboardStore } from "../store/leaderboardStore";
+import {
+  useLeaderboardStore,
+  type GiveawayHistoryData,
+} from "../store/leaderboardStore";
 
 type Tab = "rating" | "giveaway";
 
@@ -33,7 +36,7 @@ const calculateTimeLeft = () => {
   nextSunday.setDate(now.getDate() + ((7 - now.getDay()) % 7));
   nextSunday.setHours(20, 0, 0, 0);
 
-  if (now.getTime() > nextSunday.getTime()) {
+  if (now.getTime() >= nextSunday.getTime()) {
     nextSunday.setDate(nextSunday.getDate() + 7);
   }
 
@@ -59,6 +62,10 @@ const UserAvatar = ({
 }) => {
   const [hasError, setHasError] = useState(false);
 
+  useEffect(() => {
+    setHasError(false);
+  }, [url]);
+
   if (!url || hasError) {
     return (
       <div
@@ -79,6 +86,58 @@ const UserAvatar = ({
   );
 };
 
+const HistoryItem = ({ week }: { week: GiveawayHistoryData }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dateStr = new Date(week.endDate).toLocaleDateString("uk-UA");
+
+  return (
+    <Card className="p-3 bg-[var(--bg-card)] border-[var(--border-color)] mb-3">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-sm font-bold text-[var(--text-main)]"
+      >
+        <span>
+          Тиждень {week.weekNumber}{" "}
+          <span className="text-[var(--text-muted)] text-xs font-normal">
+            ({dateStr})
+          </span>
+        </span>
+        {isOpen ? (
+          <ChevronUp className="w-4 h-4" />
+        ) : (
+          <ChevronDown className="w-4 h-4" />
+        )}
+      </button>
+      {isOpen && (
+        <div className="mt-3 pt-3 border-t border-[var(--border-color)] space-y-2">
+          {week.winners.map((winner) => (
+            <div key={winner.userId} className="flex items-center gap-3">
+              <div className="w-6 text-center font-bold text-sm">
+                {winner.position === 1
+                  ? "🥇"
+                  : winner.position === 2
+                    ? "🥈"
+                    : "🥉"}
+              </div>
+              <UserAvatar
+                url={resolveAvatarUrl(winner.avatarUrl)}
+                name={winner.nickname}
+                className="w-8 h-8 rounded-full object-cover border border-[var(--border-color)]"
+              />
+              <div className="flex-1 font-bold text-sm text-[var(--text-main)] truncate">
+                {winner.nickname}
+              </div>
+              <div className="font-black text-[var(--accent-cta)] text-sm">
+                {winner.score}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+};
+
 export const LeaderboardPage = () => {
   const {
     telegramId,
@@ -89,8 +148,15 @@ export const LeaderboardPage = () => {
     streak,
     wordsLearnedCount,
   } = useUserStore();
-  const { topUsers, currentUserRank, isLoading, fetchLeaderboard } =
-    useLeaderboardStore();
+  const {
+    topUsers,
+    currentUserRank,
+    giveawayHistory,
+    isLoading,
+    fetchLeaderboard,
+    fetchGiveawayHistory,
+    forceEndGiveaway,
+  } = useLeaderboardStore();
 
   const [activeTab, setActiveTab] = useState<Tab>("rating");
   const [showRules, setShowRules] = useState(false);
@@ -101,24 +167,28 @@ export const LeaderboardPage = () => {
 
   const myDisplayName = telegramUsername || telegramFirstName || "User";
 
+  const myLocalScore = wordsLearnedCount + streak;
+  const myScore = currentUserRank?.score ?? myLocalScore;
+
   useEffect(() => {
     if (telegramId) fetchLeaderboard();
   }, [telegramId, fetchLeaderboard]);
 
   useEffect(() => {
     if (activeTab === "giveaway") {
+      fetchGiveawayHistory();
+      setTimeLeft(calculateTimeLeft());
       const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 60000);
       return () => clearInterval(timer);
     }
-  }, [activeTab]);
+  }, [activeTab, fetchGiveawayHistory]);
 
-  const handleForceEndGiveaway = () => {
+  const handleForceEndGiveaway = async () => {
     if (
       window.confirm("Закінчити розіграш і визначити переможців прямо зараз?")
     ) {
-      alert(
-        "Ендпоінт для ручного завершення розіграшу буде підключено в Кроці 6!",
-      );
+      await forceEndGiveaway();
+      alert("Розіграш успішно завершено! Бали рейтингу скинуто.");
     }
   };
 
@@ -206,7 +276,7 @@ export const LeaderboardPage = () => {
                     </div>
                   </div>
                   <div className="font-black text-xl text-[var(--accent-cta)]">
-                    {wordsLearnedCount + streak}
+                    {myScore}
                   </div>
                 </Card>
               )}
@@ -365,17 +435,25 @@ export const LeaderboardPage = () => {
             <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] ml-1 mb-3 flex items-center gap-2">
               <Star className="w-4 h-4" /> Історія переможців
             </h3>
-            <Card className="p-8 text-center border-dashed border-[var(--border-color)] bg-transparent">
-              <div className="w-12 h-12 mx-auto bg-[var(--bg-card)] rounded-full flex items-center justify-center text-[var(--text-muted)] mb-3 shadow-sm">
-                <Trophy className="w-6 h-6" />
+            {giveawayHistory.length === 0 ? (
+              <Card className="p-8 text-center border-dashed border-[var(--border-color)] bg-transparent">
+                <div className="w-12 h-12 mx-auto bg-[var(--bg-card)] rounded-full flex items-center justify-center text-[var(--text-muted)] mb-3 shadow-sm">
+                  <Trophy className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-[var(--text-main)]">
+                  Перший розіграш ще попереду!
+                </p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">
+                  Грай щодня, щоб потрапити в історію.
+                </p>
+              </Card>
+            ) : (
+              <div>
+                {giveawayHistory.map((week) => (
+                  <HistoryItem key={week._id} week={week} />
+                ))}
               </div>
-              <p className="text-sm font-bold text-[var(--text-main)]">
-                Перший розіграш ще попереду!
-              </p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">
-                Грай щодня, щоб потрапити в історію.
-              </p>
-            </Card>
+            )}
           </div>
         </div>
       )}

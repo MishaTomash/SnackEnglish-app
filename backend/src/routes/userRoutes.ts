@@ -8,7 +8,11 @@ import {
   updateLevel,
   updateProfile,
 } from "../controllers/userController.js";
-import { getLeaderboard } from "../controllers/leaderboardController.js";
+import {
+  getLeaderboard,
+  getGiveawayHistory,
+  forceEndGiveaway,
+} from "../controllers/leaderboardController.js";
 
 const router = Router();
 
@@ -32,6 +36,8 @@ const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 router.get("/me", getMe);
 router.get("/leaderboard", getLeaderboard);
+router.get("/giveaway-history", getGiveawayHistory);
+router.post("/giveaway/force-end", forceEndGiveaway);
 router.patch("/onboarding", completeOnboarding);
 router.patch("/level", updateLevel);
 router.patch("/profile", upload.single("avatar"), updateProfile);

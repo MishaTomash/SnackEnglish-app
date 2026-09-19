@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Word } from "../entities/word/types";
 import { getPracticeWordsApi, reviewWordApi } from "../entities/word/api";
 import { useUserStore } from "./userStore";
+import { useLearningStore } from "./learningStore";
 
 type RequestStatus = "idle" | "loading" | "success" | "error";
 
@@ -34,22 +35,61 @@ export const useRepetitionStore = create<RepetitionState>((set, get) => ({
     });
 
     try {
-      // Реалізація таймауту на фронтенді
-      const timeoutPromise = new Promise<{ words: Word[] }>((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Сервер не відповідає. Перевірте з'єднання.")),
-          TIMEOUT_MS,
-        ),
+      const timeoutPromise = new Promise<{ dueWordIds: string[] }>(
+        (_, reject) =>
+          setTimeout(
+            () =>
+              reject(new Error("Сервер не відповідає. Перевірте з'єднання.")),
+            TIMEOUT_MS,
+          ),
       );
 
-      // Запит перерветься з помилкою, якщо getPracticeWordsApi триватиме довше 8 секунд
       const data = await Promise.race([getPracticeWordsApi(), timeoutPromise]);
+      const dueIds = data.dueWordIds || [];
+      const wordsToReview: Word[] = [];
+
+      if (dueIds.length > 0) {
+        // ЗАХИСТ ВІД ПУСТОГО СТЕЙТУ: Якщо категорії ще не завантажені, вантажимо їх
+        let { categories, fetchCategories } = useLearningStore.getState();
+        if (categories.length === 0) {
+          const { level } = useUserStore.getState();
+          if (level) {
+            await fetchCategories(level);
+            categories = useLearningStore.getState().categories;
+          }
+        }
+
+        // Тепер безпечно шукаємо текст слів
+        const idSet = new Set(dueIds);
+        for (const cat of categories) {
+          for (const unit of cat.units) {
+            for (const step of unit.steps) {
+              if (step.kind === "learn") {
+                for (const card of step.cards) {
+                  if (idSet.has(card.id)) {
+                    wordsToReview.push({
+                      id: card.id,
+                      text: card.word,
+                      translation: card.translation,
+                      transcription: card.transcription,
+                      exampleSentence: "", // Заглушка (у Практиці не виводиться)
+                      exampleTranslation: "", // Заглушка
+                      level: "A1",
+                      topic: cat.title,
+                    });
+                    idSet.delete(card.id);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
 
       set({
-        dailyQueue: data.words,
+        dailyQueue: wordsToReview,
         status: "success",
-        // Якщо бекенд повернув порожній масив — це норма (isFinished = true)
-        isFinished: data.words.length === 0,
+        isFinished: wordsToReview.length === 0,
       });
     } catch (err: unknown) {
       console.error("❌ Помилка завантаження слів на повторення:", err);
@@ -73,8 +113,6 @@ export const useRepetitionStore = create<RepetitionState>((set, get) => ({
     try {
       const response = await reviewWordApi(currentWord.id, quality);
 
-      // Джерело правди — бекенд: пишемо прийшле число напряму в userStore,
-      // без окремого forced fetchUser() і без локального інкременту.
       if (typeof response.wordsLearnedCount === "number") {
         useUserStore.setState({
           wordsLearnedCount: response.wordsLearnedCount,
