@@ -10,24 +10,24 @@ let lastText = "";
 let lastTextAt = 0;
 const DEDUPE_WINDOW_MS = 150;
 
+// Оновлений пріоритет: спочатку хмарні/нейронні, потім преміум від Apple, потім стандартні
 const PREFERRED_VOICE_NAMES: string[] = [
-  "Samantha",
+  "Microsoft Aria Online (Natural) - English (United States)",
+  "Microsoft Jenny Online (Natural) - English (United States)",
+  "Microsoft Guy Online (Natural) - English (United States)",
   "Ava (Premium)",
-  "Allison (Enhanced)",
   "Samantha (Enhanced)",
-  "Alex",
-  "Karen",
-  "Moira",
-  "Tessa",
-  "Fiona",
-  "Daniel",
+  "Allison (Enhanced)",
+  "Susan (Enhanced)",
+  "Alex", // Alex має природні мікропаузи на дихання в macOS
+  "Karen (Enhanced)",
+  "Daniel (Enhanced)",
   "Google US English",
   "Google UK English Female",
   "Google UK English Male",
-  "Microsoft Aria Online (Natural) - English (United States)",
-  "Microsoft Jenny Online (Natural) - English (United States)",
-  "Microsoft Michelle Online (Natural) - English (United States)",
-  "Microsoft Ana Online (Natural) - English (United States)",
+  "Samantha",
+  "Moira",
+  "Tessa",
 ];
 
 let voicesCache: SpeechSynthesisVoice[] = [];
@@ -55,25 +55,26 @@ const pickBestVoice = (): SpeechSynthesisVoice | null => {
   const voices = getVoices();
   if (!voices.length) return null;
 
-  const us = voices.filter((v) => v.lang === "en-US" || v.lang === "en_US");
-  const en = voices.filter((v) => v.lang.toLowerCase().startsWith("en"));
-  const pool = us.length ? us : en;
-  if (!pool.length) return null;
+  // Фільтруємо лише англійські голоси
+  const enVoices = voices.filter((v) => v.lang.toLowerCase().startsWith("en"));
+
+  if (!enVoices.length) return voices[0]; // фоллбек, якщо англійської взагалі немає
 
   for (const name of PREFERRED_VOICE_NAMES) {
-    const v = pool.find((x) => x.name === name);
-    if (v) return v;
+    const match = enVoices.find((v) => v.name === name);
+    if (match) return match;
   }
-  const enhanced = pool.find((v) =>
-    /premium|enhanced|natural|neural/i.test(v.name),
+
+  const enhanced = enVoices.find((v) =>
+    /premium|enhanced|natural|neural|online/i.test(v.name),
   );
   if (enhanced) return enhanced;
 
-  const branded = pool.find((v) => /^(Google|Microsoft)\b/.test(v.name));
+  const branded = enVoices.find((v) => /^(Google|Microsoft)\b/.test(v.name));
   if (branded) return branded;
 
-  const decent = pool.find((v) => !/compact|espeak/i.test(v.name));
-  return decent ?? pool[0];
+  const decent = enVoices.find((v) => !/compact|espeak/i.test(v.name));
+  return decent ?? enVoices[0];
 };
 
 export interface SpeakOptions {
@@ -101,13 +102,20 @@ export const speak = (text: string, opts: SpeakOptions = {}): void => {
 
   setTimeout(() => {
     if (myToken !== speakToken) return; // хтось новіший переміг — мовчимо
-    // Ще раз скасовуємо — на випадок, якщо між setTimeout і зараз
-    // щось встигло потрапити в чергу (Safari іноді так робить).
+
     window.speechSynthesis.cancel();
 
-    const u = new SpeechSynthesisUtterance(text);
+    // ХАК ДЛЯ ПРИРОДНОСТІ: Додаємо крапку в кінці, якщо її немає.
+    // Це змушує рушій робити правильне природне зниження інтонації,
+    // замість того щоб "обривати" слово на півтоні.
+    let textToSpeak = text.trim();
+    if (textToSpeak && !/[.!?]$/.test(textToSpeak)) {
+      textToSpeak += ".";
+    }
+
+    const u = new SpeechSynthesisUtterance(textToSpeak);
     u.lang = opts.lang ?? "en-US";
-    u.rate = opts.rate ?? 0.9;
+    u.rate = opts.rate ?? 1.0; // 1.0 — це нативна швидкість, уповільнення ламає якість
     u.pitch = opts.pitch ?? 1.0;
     u.volume = 1;
 
@@ -120,8 +128,9 @@ export const speak = (text: string, opts: SpeakOptions = {}): void => {
   }, 60);
 };
 
+// Зробили трохи швидшим, бо 0.65 звучить надто механічно і "п'яно"
 export const speakSlow = (text: string, onEnd?: () => void): void =>
-  speak(text, { rate: 0.65, pitch: 1.0, onEnd, force: true });
+  speak(text, { rate: 0.75, pitch: 1.0, onEnd, force: true });
 
 export const stopSpeech = (): void => {
   if (typeof window !== "undefined" && window.speechSynthesis) {

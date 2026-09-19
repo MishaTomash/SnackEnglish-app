@@ -145,9 +145,9 @@ export const LeaderboardPage = () => {
     telegramUsername,
     telegramPhotoUrl,
     customAvatarUrl,
-    streak,
-    wordsLearnedCount,
+    totalScore,
   } = useUserStore();
+
   const {
     topUsers,
     currentUserRank,
@@ -167,7 +167,7 @@ export const LeaderboardPage = () => {
 
   const myDisplayName = telegramUsername || telegramFirstName || "User";
 
-  const myLocalScore = wordsLearnedCount + streak;
+  const myLocalScore = totalScore || 0;
   const myScore = currentUserRank?.score ?? myLocalScore;
 
   useEffect(() => {
@@ -243,11 +243,12 @@ export const LeaderboardPage = () => {
             {showRules && (
               <div className="mt-3 pt-3 border-t border-[var(--border-color)] text-xs text-[var(--text-muted)] leading-relaxed space-y-2">
                 <p>
-                  Твій рейтинг = <b>Слова + Теми + Дні поспіль (Streak)</b>.
+                  Твій рейтинг — це <b>сума всіх зароблених кубків</b>.
                 </p>
                 <p>
-                  Чим регулярніше ти навчаєшся, тим вище твоя позиція та шанси
-                  на перемогу в розіграшах!
+                  За кожен пройдений урок на сторінці Навчання ти отримуєш рівно{" "}
+                  <b>10 кубків</b>. Більше пройдених уроків = вища позиція в
+                  рейтингу та більші шанси на перемогу!
                 </p>
               </div>
             )}

@@ -239,7 +239,7 @@ const ListeningView = ({
 
   const replayNormal = () => {
     stopSpeech();
-    speak(item.phrase, { rate: 0.95, force: true });
+    speak(item.phrase, { rate: 1.0, force: true });
   };
 
   return (
@@ -328,7 +328,7 @@ const SpeakView = ({
 
   const playPhrase = () => {
     stopSpeech();
-    speak(item.phrase, { rate: 0.85, force: true });
+    speak(item.phrase, { rate: 1.0, force: true });
   };
 
   const playSlow = () => {
@@ -681,11 +681,9 @@ export const LessonRunner = () => {
           ? Math.round((newCorrect / totalQuestions) * 100)
           : 100;
 
-      const isFirstTime =
-        !useLearningStore.getState().progress[unit.id]?.completed;
-      setEarnedXp(isFirstTime ? 10 : 0);
+      // Завжди 10 кубків за проходження уроку
+      setEarnedXp(10);
 
-      // ЗБИРАЄМО СЛОВА З УРОКУ ДЛЯ ЗБЕРЕЖЕННЯ
       const wordIdsToSave = unit.steps
         .filter((s) => s.kind === "learn")
         .flatMap((s) =>

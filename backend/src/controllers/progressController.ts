@@ -25,24 +25,22 @@ export const completeLesson = async (
     const user = await User.findOne({ telegramId });
     if (!user) return void res.status(404).json({ error: "User not found" });
 
-    const oldProgress = await UserUnitProgress.findOneAndUpdate(
+    await UserUnitProgress.findOneAndUpdate(
       { userId: user._id, unitId },
       { $set: { status: "completed" }, $addToSet: { completedSteps: "test" } },
       { new: false, upsert: true },
     );
 
-    const isNew = !oldProgress || oldProgress.status !== "completed";
-    let scoreToAdd = isNew ? 10 : 0;
+    // Завжди нараховуємо 10 балів (кубків) за кожен пройдений урок
+    const scoreToAdd = 10;
     let finalTotalScore = (user as any).totalScore || 0;
 
-    if (scoreToAdd > 0) {
-      const updatedUser = await User.findByIdAndUpdate(
-        user._id,
-        { $inc: { totalScore: scoreToAdd } },
-        { new: true },
-      );
-      if (updatedUser) finalTotalScore = (updatedUser as any).totalScore;
-    }
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { totalScore: scoreToAdd } },
+      { new: true },
+    );
+    if (updatedUser) finalTotalScore = (updatedUser as any).totalScore;
 
     // Зберігаємо нові слова в систему інтервального повторення
     if (Array.isArray(wordIds) && wordIds.length > 0) {
