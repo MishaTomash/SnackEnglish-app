@@ -98,13 +98,20 @@ export const getLearningCategories = async (
       },
     ];
 
+    const vocabularySteps: any[] = [];
     if (nextPlan.words?.length) {
+      vocabularySteps.push({ kind: "learn", cards: nextPlan.words });
+    }
+    if (nextPlan.sentences?.length) {
+      vocabularySteps.push({ kind: "sentence", items: nextPlan.sentences });
+    }
+    if (vocabularySteps.length > 0) {
       categories[0].units.push({
         id: `voc-${nextPlan._id}`,
         title: `День ${nextPlan.dayNumber}`,
         description: nextPlan.title,
         emoji: "📚",
-        steps: [{ kind: "learn", cards: nextPlan.words }],
+        steps: vocabularySteps,
       });
     }
     if (nextPlan.quizzes?.length) {
@@ -196,8 +203,16 @@ export const createDailyPlan = async (
       return;
     }
 
-    const { level, dayNumber, title, words, quizzes, listening, speaking } =
-      req.body;
+    const {
+      level,
+      dayNumber,
+      title,
+      words,
+      quizzes,
+      listening,
+      speaking,
+      sentences,
+    } = req.body;
 
     const processedWords = (words || []).map((w: any) => ({
       ...w,
@@ -215,6 +230,10 @@ export const createDailyPlan = async (
       ...s,
       id: s.id || genId("s"),
     }));
+    const processedSentences = (sentences || []).map((s: any) => ({
+      ...s,
+      id: s.id || genId("st"),
+    }));
 
     const plan = await DailyPlan.findOneAndUpdate(
       { level, dayNumber },
@@ -224,6 +243,7 @@ export const createDailyPlan = async (
         quizzes: processedQuizzes,
         listening: processedListening,
         speaking: processedSpeaking,
+        sentences: processedSentences,
       },
       { upsert: true, new: true },
     );

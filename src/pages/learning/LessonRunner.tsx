@@ -29,6 +29,7 @@ import { hapticSelectNode } from "../../shared/lib/telegramHaptics";
 import type {
   ListeningData,
   QuizData,
+  SentenceBuildData,
   SpeakData,
   WordCardData,
 } from "../../entities/learning/types";
@@ -532,6 +533,155 @@ const SpeakView = ({
   );
 };
 
+const normalizeSentence = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[.,!?]/g, "")
+    .replace(/\s+/g, " ");
+
+const shuffleWords = (words: string[]): string[] => {
+  const arr = [...words];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+const SentenceBuildView = ({
+  item,
+  index,
+  total,
+  onAnswer,
+}: {
+  item: SentenceBuildData;
+  index: number;
+  total: number;
+  onAnswer: (correct: boolean) => void;
+}) => {
+  const shuffledBank = useMemo(
+    () => shuffleWords(item.wordBank),
+    [item.id, item.wordBank],
+  );
+  const [selected, setSelected] = useState<number[]>([]);
+  const [checked, setChecked] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+
+  useEffect(() => {
+    setSelected([]);
+    setChecked(false);
+    setIsCorrect(false);
+  }, [item.id]);
+
+  const availableIndices = shuffledBank
+    .map((_, i) => i)
+    .filter((i) => !selected.includes(i));
+
+  const builtSentence = selected.map((i) => shuffledBank[i]).join(" ");
+
+  const handleCheck = () => {
+    hapticSelectNode();
+    const correct =
+      normalizeSentence(builtSentence) ===
+      normalizeSentence(item.correctSentence);
+    setIsCorrect(correct);
+    setChecked(true);
+  };
+
+  return (
+    <div className="space-y-5 animate-in fade-in duration-300">
+      <Card className="text-center !p-6 space-y-3">
+        <span className="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">
+          Речення {index + 1} з {total}
+        </span>
+        <h2 className="text-lg font-black text-[var(--text-main)] leading-snug">
+          {item.translation}
+        </h2>
+        <p className="text-xs text-[var(--text-muted)]">
+          Склади речення зі слів нижче
+        </p>
+      </Card>
+
+      <Card className="!p-4 min-h-[64px] flex flex-wrap gap-2 items-center">
+        {selected.length === 0 && (
+          <span className="text-xs text-[var(--text-muted)]">
+            Тапни слова знизу, щоб скласти речення
+          </span>
+        )}
+        {selected.map((wordIdx, pos) => (
+          <button
+            key={pos}
+            onClick={() => {
+              if (checked) return;
+              hapticSelectNode();
+              setSelected((s) => s.filter((_, i) => i !== pos));
+            }}
+            disabled={checked}
+            className="px-3 py-2 rounded-xl bg-[var(--accent-cta)] text-[var(--text-accent)] font-bold text-sm active:scale-95 disabled:opacity-70"
+          >
+            {shuffledBank[wordIdx]}
+          </button>
+        ))}
+      </Card>
+
+      <div className="flex flex-wrap gap-2">
+        {availableIndices.map((wordIdx) => (
+          <button
+            key={wordIdx}
+            onClick={() => {
+              hapticSelectNode();
+              setSelected((s) => [...s, wordIdx]);
+            }}
+            disabled={checked}
+            className="px-3 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] font-bold text-sm active:scale-95 disabled:opacity-50"
+          >
+            {shuffledBank[wordIdx]}
+          </button>
+        ))}
+      </div>
+
+      {checked && (
+        <Card
+          className={`!p-4 text-center text-sm font-bold flex items-center justify-center gap-2 ${
+            isCorrect ? "text-emerald-400" : "text-rose-400"
+          }`}
+        >
+          {isCorrect ? (
+            <>
+              <Check className="w-4 h-4" /> Правильно!
+            </>
+          ) : (
+            <>
+              <XCircle className="w-4 h-4 shrink-0" />
+              Правильно: «{item.correctSentence}»
+            </>
+          )}
+        </Card>
+      )}
+
+      {!checked ? (
+        <Button
+          variant="primary"
+          className="w-full"
+          onClick={handleCheck}
+          disabled={selected.length === 0}
+        >
+          Перевірити
+        </Button>
+      ) : (
+        <Button
+          variant="primary"
+          className="w-full"
+          onClick={() => onAnswer(isCorrect)}
+        >
+          {index < total - 1 ? "Далі" : "Продовжити"}
+        </Button>
+      )}
+    </div>
+  );
+};
+
 const CompletionScreen = ({
   accuracy,
   correct,
@@ -722,7 +872,9 @@ export const LessonRunner = () => {
         ? "Перевірка знань"
         : step.kind === "listening"
           ? "Аудіювання"
-          : "Розмовна практика";
+          : step.kind === "speak"
+            ? "Розмовна практика"
+            : "Складання речень";
 
   return (
     <Screen className="!p-0 bg-[var(--bg-app)]">
@@ -782,6 +934,14 @@ export const LessonRunner = () => {
         )}
         {step.kind === "speak" && (
           <SpeakView
+            item={step.items[itemIdx]}
+            index={itemIdx}
+            total={step.items.length}
+            onAnswer={registerAnswer}
+          />
+        )}
+        {step.kind === "sentence" && (
+          <SentenceBuildView
             item={step.items[itemIdx]}
             index={itemIdx}
             total={step.items.length}

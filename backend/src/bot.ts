@@ -11,6 +11,7 @@ import { UserGamePurchase } from "./models/UserGamePurchase.js";
 import { ManualPaymentRequest } from "./models/ManualPaymentRequest.js";
 import { Friendship } from "./models/Friendship.js";
 import { getLearnedWordsCount } from "./services/progressStatsService.js";
+import { broadcastMessage } from "./services/broadcastService.js";
 
 const botToken = process.env.BOT_TOKEN;
 
@@ -132,6 +133,40 @@ bot.command("profile", async (ctx) => {
     });
   } catch (error) {
     console.error("Помилка команди /profile:", error);
+  }
+});
+
+// НОВА КОМАНДА: /copy — розсилка повідомлення, на яке адмін відповів, усім користувачам
+bot.command("copy", async (ctx) => {
+  try {
+    const adminId = Number(process.env.VITE_ADMIN_ID);
+    if (ctx.from?.id !== adminId) {
+      return ctx.reply("Ця команда доступна лише адміністратору.");
+    }
+
+    const message = ctx.message;
+    const repliedMessage =
+      "reply_to_message" in message ? message.reply_to_message : undefined;
+
+    if (!repliedMessage) {
+      return ctx.reply(
+        "Відповідай командою /copy на повідомлення, яке потрібно розіслати.",
+      );
+    }
+
+    const sourceChatId = message.chat.id;
+    const sourceMessageId = repliedMessage.message_id;
+
+    await ctx.reply("📨 Розсилку розпочато, це може зайняти деякий час...");
+
+    void broadcastMessage(ctx.telegram, sourceChatId, sourceMessageId).then(
+      (result) =>
+        ctx.reply(
+          `✅ Розсилку завершено.\nУспішно: ${result.success}\nНе вдалося: ${result.failed}`,
+        ),
+    );
+  } catch (error) {
+    console.error("Помилка команди /copy:", error);
   }
 });
 

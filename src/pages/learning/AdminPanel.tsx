@@ -8,6 +8,7 @@ import {
   Loader2,
   Mic,
   Plus,
+  Puzzle,
   Save,
   ShieldAlert,
   Trash2,
@@ -18,7 +19,7 @@ import { Button } from "../../shared/ui/Button";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-type ContentTab = "words" | "quizzes" | "listening" | "speaking";
+type ContentTab = "words" | "quizzes" | "listening" | "speaking" | "sentences";
 
 interface WordItem {
   id: string;
@@ -42,6 +43,12 @@ interface SpeakingItem {
   id: string;
   phrase: string;
   translation: string;
+}
+interface SentenceItem {
+  id: string;
+  translation: string;
+  correctSentence: string;
+  wordBank: string[];
 }
 
 interface AdminPanelProps {
@@ -76,6 +83,12 @@ const newSpeaking = (): SpeakingItem => ({
   id: uid(),
   phrase: "",
   translation: "",
+});
+const newSentence = (): SentenceItem => ({
+  id: uid(),
+  translation: "",
+  correctSentence: "",
+  wordBank: ["", ""],
 });
 
 const inputCls =
@@ -505,6 +518,138 @@ const SpeakingTab = ({
   );
 };
 
+// ---------------- Tab: Sentences ----------------
+
+const SentencesTab = ({
+  items,
+  setItems,
+}: {
+  items: SentenceItem[];
+  setItems: React.Dispatch<React.SetStateAction<SentenceItem[]>>;
+}) => {
+  const update = (id: string, patch: Partial<SentenceItem>) =>
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, ...patch } : it)),
+    );
+  const remove = (id: string) =>
+    setItems((prev) => prev.filter((it) => it.id !== id));
+
+  const updateWord = (id: string, idx: number, value: string) =>
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== id) return it;
+        const wordBank = it.wordBank.map((w, i) => (i === idx ? value : w));
+        return { ...it, wordBank };
+      }),
+    );
+
+  const addWord = (id: string) =>
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === id ? { ...it, wordBank: [...it.wordBank, ""] } : it,
+      ),
+    );
+
+  const removeWord = (id: string, idx: number) =>
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== id) return it;
+        return { ...it, wordBank: it.wordBank.filter((_, i) => i !== idx) };
+      }),
+    );
+
+  const fillFromSentence = (id: string) =>
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== id) return it;
+        const words = it.correctSentence.trim().split(/\s+/).filter(Boolean);
+        return words.length ? { ...it, wordBank: words } : it;
+      }),
+    );
+
+  return (
+    <div className="space-y-3">
+      {items.length === 0 && (
+        <EmptyBlock text="Немає речень для складання. Додай перше 👇" />
+      )}
+      {items.map((it, i) => (
+        <Card key={it.id} className="p-3 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)]">
+              Речення #{i + 1}
+            </span>
+            <button
+              type="button"
+              onClick={() => remove(it.id)}
+              className="p-1 text-red-400/70 active:text-red-400"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <input
+            value={it.translation}
+            onChange={(e) => update(it.id, { translation: e.target.value })}
+            placeholder="Переклад-підказка (ua)"
+            className={inputCls}
+          />
+          <input
+            value={it.correctSentence}
+            onChange={(e) => update(it.id, { correctSentence: e.target.value })}
+            placeholder="Правильне речення (en), напр. Nice to meet you."
+            className={inputCls}
+          />
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className={`${labelCls} !mb-0`}>
+                Слова-блоки (у випадковому порядку показуються учню)
+              </label>
+              <button
+                type="button"
+                onClick={() => fillFromSentence(it.id)}
+                className="text-[10px] text-[var(--accent-cta)] font-bold active:opacity-70 shrink-0"
+              >
+                Заповнити з речення
+              </button>
+            </div>
+            <div className="space-y-2">
+              {it.wordBank.map((word, wi) => (
+                <div key={wi} className="flex gap-2 items-center">
+                  <input
+                    value={word}
+                    onChange={(e) => updateWord(it.id, wi, e.target.value)}
+                    placeholder={`Слово-блок ${wi + 1}`}
+                    className={inputCls}
+                  />
+                  {it.wordBank.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => removeWord(it.id, wi)}
+                      className="p-1 text-red-400/70 active:text-red-400 shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => addWord(it.id)}
+              className="mt-2 text-xs text-[var(--accent-cta)] font-bold flex items-center gap-1 active:opacity-70"
+            >
+              <Plus className="w-3 h-3" /> Додати слово-блок
+            </button>
+          </div>
+        </Card>
+      ))}
+      <AddButton
+        onClick={() => setItems((p) => [...p, newSentence()])}
+        label="Додати речення"
+      />
+    </div>
+  );
+};
+
 // ---------------- Main Panel ----------------
 
 export const AdminPanel = ({
@@ -523,6 +668,7 @@ export const AdminPanel = ({
   const [quizzes, setQuizzes] = useState<QuizItem[]>([newQuiz()]);
   const [listening, setListening] = useState<ListeningItem[]>([newListening()]);
   const [speaking, setSpeaking] = useState<SpeakingItem[]>([newSpeaking()]);
+  const [sentences, setSentences] = useState<SentenceItem[]>([newSentence()]);
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -598,15 +744,33 @@ export const AdminPanel = ({
         e.push(`Говоріння #${i + 1}: порожній переклад`);
     });
 
+    sentences.forEach((s, i) => {
+      if (!s.translation.trim())
+        e.push(`Речення #${i + 1}: порожній переклад-підказка`);
+      if (!s.correctSentence.trim())
+        e.push(`Речення #${i + 1}: порожнє правильне речення`);
+      const bank = s.wordBank.map((w) => w.trim()).filter(Boolean);
+      if (bank.length < 2)
+        e.push(`Речення #${i + 1}: потрібно мінімум 2 слова-блоки`);
+    });
+
     const total =
-      words.length + quizzes.length + listening.length + speaking.length;
+      words.length +
+      quizzes.length +
+      listening.length +
+      speaking.length +
+      sentences.length;
     if (total === 0) e.push("Додай хоча б один блок контенту");
 
     return e;
-  }, [title, level, dayNumber, words, quizzes, listening, speaking]);
+  }, [title, level, dayNumber, words, quizzes, listening, speaking, sentences]);
 
   const totalItems =
-    words.length + quizzes.length + listening.length + speaking.length;
+    words.length +
+    quizzes.length +
+    listening.length +
+    speaking.length +
+    sentences.length;
 
   const handleSave = async () => {
     if (errors.length > 0 || saving) return;
@@ -640,6 +804,11 @@ export const AdminPanel = ({
           phrase: s.phrase.trim(),
           translation: s.translation.trim(),
         })),
+        sentences: sentences.map((s) => ({
+          translation: s.translation.trim(),
+          correctSentence: s.correctSentence.trim(),
+          wordBank: s.wordBank.map((w) => w.trim()).filter(Boolean),
+        })),
       };
 
       const res = await fetch(`${API_URL}/progress/categories/admin`, {
@@ -666,6 +835,7 @@ export const AdminPanel = ({
         setQuizzes([newQuiz()]);
         setListening([newListening()]);
         setSpeaking([newSpeaking()]);
+        setSentences([newSentence()]);
         setDayNumber((prev) => prev + 1); // Автоматично перекидаємо на наступний день
 
         onSaved(); // ДОДАНО ОСЬ ТУТ!
@@ -696,6 +866,12 @@ export const AdminPanel = ({
       label: "Говоріння",
       icon: Mic,
       count: speaking.length,
+    },
+    {
+      id: "sentences" as const,
+      label: "Речення",
+      icon: Puzzle,
+      count: sentences.length,
     },
   ];
 
@@ -804,6 +980,9 @@ export const AdminPanel = ({
         )}
         {tab === "speaking" && (
           <SpeakingTab items={speaking} setItems={setSpeaking} />
+        )}
+        {tab === "sentences" && (
+          <SentencesTab items={sentences} setItems={setSentences} />
         )}
 
         {errors.length > 0 && (

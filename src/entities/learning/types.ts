@@ -28,11 +28,19 @@ export interface SpeakData {
   translation: string;
 }
 
+export interface SentenceBuildData {
+  id: string;
+  translation: string;
+  correctSentence: string;
+  wordBank: string[];
+}
+
 export type LessonStep =
   | { kind: "learn"; cards: WordCardData[] }
   | { kind: "quiz"; items: QuizData[] }
   | { kind: "listening"; items: ListeningData[] }
-  | { kind: "speak"; items: SpeakData[] };
+  | { kind: "speak"; items: SpeakData[] }
+  | { kind: "sentence"; items: SentenceBuildData[] };
 
 export interface LessonUnit {
   id: string;

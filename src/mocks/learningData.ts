@@ -88,6 +88,23 @@ export const LEARNING_CATEGORIES: Category[] = [
               },
             ],
           },
+          {
+            kind: "sentence",
+            items: [
+              {
+                id: "gs1",
+                translation: "Приємно познайомитись.",
+                correctSentence: "Nice to meet you.",
+                wordBank: ["Nice", "to", "meet", "you."],
+              },
+              {
+                id: "gs2",
+                translation: "Дякую, до побачення.",
+                correctSentence: "Thank you, goodbye.",
+                wordBank: ["Thank", "you,", "goodbye."],
+              },
+            ],
+          },
         ],
       },
       {

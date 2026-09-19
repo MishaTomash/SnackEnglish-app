@@ -23,6 +23,12 @@ export interface IDailyPlan extends Document {
     correctAnswer: string;
   }>;
   speaking: Array<{ id: string; phrase: string; translation: string }>;
+  sentences: Array<{
+    id: string;
+    translation: string;
+    correctSentence: string;
+    wordBank: string[];
+  }>;
 }
 
 const dailyPlanSchema = new Schema<IDailyPlan>(
@@ -45,6 +51,14 @@ const dailyPlanSchema = new Schema<IDailyPlan>(
       { id: String, phrase: String, options: [String], correctAnswer: String },
     ],
     speaking: [{ id: String, phrase: String, translation: String }],
+    sentences: [
+      {
+        id: String,
+        translation: String,
+        correctSentence: String,
+        wordBank: [String],
+      },
+    ],
   },
   { timestamps: true },
 );
