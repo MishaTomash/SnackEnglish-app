@@ -23,6 +23,17 @@ const BOT_USERNAME =
   import.meta.env.VITE_BOT_USERNAME || "snack_english_test_bot";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
+// ДОДАНО: іменований тип замість багаторядкового union-generic напряму в useState<>(),
+// що ламало TS/esbuild-стрипінг і залишало у рантаймі "|" та ">" як JS-оператори.
+type DuelUiState =
+  | "connecting"
+  | "configuring"
+  | "waiting"
+  | "starting"
+  | "playing"
+  | "finished"
+  | "disconnected";
+
 class RoomErrorBoundary extends React.Component<any, { error: Error | null }> {
   constructor(props: any) {
     super(props);
@@ -62,15 +73,8 @@ const DuelRoomContent = () => {
   const { telegramId } = useUserStore();
   const socketRef = useRef<Socket | null>(null);
 
-  const [uiState, setUiState] = useState<
-    | "connecting"
-    | "configuring"
-    | "waiting"
-    | "starting"
-    | "playing"
-    | "finished"
-    | "disconnected"
-  >("connecting");
+  // ЗМІНЕНО: generic одним рядком через named type замість багаторядкового union
+  const [uiState, setUiState] = useState<DuelUiState>("connecting");
   const [setupRounds, setSetupRounds] = useState(5);
   const [setupLevel, setSetupLevel] = useState("B1");
   const [activeGameId, setActiveGameId] = useState<string | null>(null);
@@ -116,6 +120,12 @@ const DuelRoomContent = () => {
         } else {
           socket.emit("join_room", roomId);
         }
+      });
+
+      socket.on("connect_error", (err) => {
+        console.error("Duel socket connect_error:", err.message);
+        setUiState("disconnected");
+        setTimeout(() => navigate("/games"), 2500);
       });
 
       socket.on("duel:ready", (data) => {
@@ -223,7 +233,6 @@ const DuelRoomContent = () => {
   };
 
   const handleShareLink = () => {
-    // ГЕНЕРУЄМО ПРАВИЛЬНИЙ ТЕЛЕГРАМ-ЛІНК
     const botLink = `https://t.me/${BOT_USERNAME}?start=duel_${roomId}`;
     const text = `⚔️ Я створив дуель! Заходь, хто перший — той і грає!`;
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(text)}`;

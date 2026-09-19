@@ -14,11 +14,14 @@ interface PlayerData {
   level: string | null;
 }
 
+interface ActiveGame {
+  adapter: any;
+  state: DuelGameState | null;
+  hostId: string;
+}
+
 const rooms = new Map<string, Map<string, PlayerData>>();
-const activeGames = new Map<
-  string,
-  { adapter: any; state: DuelGameState | null; hostId: string }
->();
+const activeGames = new Map<string, ActiveGame>();
 
 export const initDuelSocketService = (httpServer: HttpServer) => {
   const io = new SocketIOServer(httpServer, {
@@ -29,8 +32,12 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
   duelNamespace.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth.token;
-      if (!token || !token.startsWith("Bearer "))
+      if (!token || !token.startsWith("Bearer ")) {
+        console.error("[duels auth] Unauthorized: no/invalid token header", {
+          token,
+        });
         return next(new Error("Unauthorized"));
+      }
 
       const rawInitData = token.replace("Bearer ", "").trim();
       let telegramId: number = 100000001;
@@ -38,11 +45,20 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
       if (rawInitData !== "mock_hash_for_dev_mode") {
         const params = new URLSearchParams(rawInitData);
         telegramId = JSON.parse(params.get("user") || "{}").id;
-        if (!telegramId) return next(new Error("Invalid user"));
+        if (!telegramId) {
+          console.error("[duels auth] Invalid user, rawInitData:", rawInitData);
+          return next(new Error("Invalid user"));
+        }
       }
 
       const user = await User.findOne({ telegramId });
-      if (!user) return next(new Error("User not found"));
+      if (!user) {
+        console.error(
+          "[duels auth] User not found for telegramId:",
+          telegramId,
+        );
+        return next(new Error("User not found"));
+      }
 
       socket.data.user = {
         userId: user._id.toString(),
@@ -53,6 +69,7 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
       };
       next();
     } catch (e) {
+      console.error("[duels auth] Auth failed with exception:", e);
       next(new Error("Auth failed"));
     }
   });
@@ -60,7 +77,6 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
   duelNamespace.on("connection", (socket) => {
     const user = socket.data.user;
 
-    // 1. ХОСТ СТВОРЮЄ КІМНАТУ З НАЛАШТУВАННЯМИ
     socket.on(
       "create_room",
       (data: { roomCode: string; rounds: number; level: string }) => {
@@ -89,7 +105,6 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
       },
     );
 
-    // 2. ГІСТЬ ПРИЄДНУЄТЬСЯ (АБО ХОСТ ПЕРЕПІДКЛЮЧАЄТЬСЯ)
     socket.on("join_room", (roomCode: string) => {
       const game = activeGames.get(roomCode);
       if (!game) {
@@ -104,7 +119,6 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
       const room = rooms.get(roomCode)!;
       room.set(user.telegramId.toString(), { socketId: socket.id, ...user });
 
-      // Якщо зібралося 2 гравці — починаємо гру!
       if (room.size === 2) {
         const players = Array.from(room.values());
         game.state!.scores = {
