@@ -2,8 +2,7 @@ import { Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import crypto from "crypto";
 import { User } from "../models/User.js";
-import type { DuelGameState } from "../duels/types.js";
-import { WordClashAdapter } from "../duels/word-clash/WordClashAdapter.js";
+import type { DuelGameState, DuelGameAdapter } from "../duels/types.js";
 
 interface PlayerData {
   socketId: string;
@@ -15,13 +14,42 @@ interface PlayerData {
 }
 
 interface ActiveGame {
-  adapter: any;
+  adapter: DuelGameAdapter;
   state: DuelGameState | null;
   hostId: string;
 }
 
 const rooms = new Map<string, Map<string, PlayerData>>();
 const activeGames = new Map<string, ActiveGame>();
+
+// ТИМЧАСОВИЙ АДАПТЕР-ЗАГЛУШКА (Mock)
+// Захищає сервер від падіння після видалення WordClashAdapter.
+// У майбутньому тут потрібно буде інстанціювати адаптер залежно від обраної гри.
+class MockAdapter implements DuelGameAdapter {
+  constructor(public config: { rounds: number; level: string }) {}
+
+  async generateRound() {
+    return { correctAnswer: "test", dummyData: true };
+  }
+
+  submitAnswer(
+    playerId: string,
+    answer: any,
+    ts: number,
+    state: DuelGameState,
+  ) {
+    return {
+      isCorrect: false,
+      scoreDelta: 0,
+      roundFinished: true,
+      newState: state,
+    };
+  }
+
+  isMatchOver(state: DuelGameState) {
+    return state.currentRound >= this.config.rounds;
+  }
+}
 
 export const initDuelSocketService = (httpServer: HttpServer) => {
   const io = new SocketIOServer(httpServer, {
@@ -89,7 +117,7 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
           .get(roomCode)!
           .set(user.telegramId.toString(), { socketId: socket.id, ...user });
 
-        const adapter = new WordClashAdapter({ rounds, level });
+        const adapter = new MockAdapter({ rounds, level });
         const initialState: DuelGameState = {
           scores: {},
           currentRound: 1,
@@ -128,16 +156,16 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
 
         duelNamespace
           .to(players[0].socketId)
-          .emit("duel:ready", { opponent: players[1], gameId: "word-clash" });
+          .emit("duel:ready", { opponent: players[1], gameId: "mock-game" });
         duelNamespace
           .to(players[1].socketId)
-          .emit("duel:ready", { opponent: players[0], gameId: "word-clash" });
+          .emit("duel:ready", { opponent: players[0], gameId: "mock-game" });
         duelNamespace.to(roomCode).emit("duel:match_starting");
 
         setTimeout(async () => {
           const roundData = await game.adapter.generateRound([]);
           game.state!.customData = { ...roundData, answers: {} };
-          const { correctAnswer, ...clientRoundData } = roundData;
+          const { correctAnswer, ...clientRoundData } = roundData as any;
           duelNamespace
             .to(roomCode)
             .emit("duel:round_start", { round: 1, data: clientRoundData });
@@ -181,7 +209,7 @@ export const initDuelSocketService = (httpServer: HttpServer) => {
           setTimeout(async () => {
             const newRound = await game.adapter.generateRound([]);
             gameState.customData = { ...newRound, answers: {} };
-            const { correctAnswer, ...clientRoundData } = newRound;
+            const { correctAnswer, ...clientRoundData } = newRound as any;
             duelNamespace.to(roomCode).emit("duel:round_start", {
               round: gameState.currentRound,
               data: clientRoundData,
