@@ -19,6 +19,7 @@ import { seedGames } from "./services/gameService.js";
 // ДОДАНО: Імпорт нового сервісу контенту
 import profileRoutes from "./routes/profileRoutes.js";
 import duelRoutes from "./routes/duelRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import { initDuelSocketService } from "./services/duelSocketService.js";
 import { Server } from "http";
 
@@ -40,6 +41,7 @@ app.use("/api/user", authMiddleware, userRoutes);
 
 app.use("/api/games", authMiddleware, gamesRoutes);
 app.use("/api/profile", authMiddleware, profileRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 

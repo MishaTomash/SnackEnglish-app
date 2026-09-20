@@ -40,3 +40,33 @@ export const broadcastMessage = async (
 
   return { success, failed };
 };
+
+/**
+ * Надсилає текстове повідомлення усім користувачам бота з інтервалом між відправками.
+ */
+export const broadcastText = async (
+  telegram: Telegram,
+  text: string,
+): Promise<BroadcastResult> => {
+  const users = await User.find({}, { telegramId: 1 }).lean();
+
+  let success = 0;
+  let failed = 0;
+
+  for (const user of users) {
+    try {
+      await telegram.sendMessage(user.telegramId, text, { parse_mode: "HTML" });
+      success += 1;
+    } catch (error) {
+      failed += 1;
+      console.error(
+        `Broadcast: не вдалося надіслати текст користувачу ${user.telegramId}:`,
+        error,
+      );
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, BROADCAST_DELAY_MS));
+  }
+
+  return { success, failed };
+};

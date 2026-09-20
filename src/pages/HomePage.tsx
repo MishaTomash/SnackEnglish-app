@@ -17,6 +17,7 @@ import { StreakBadge } from "../entities/user/ui/StreakBadge";
 import { useUserStore } from "../store/userStore";
 import { useRepetitionStore } from "../store/repetitionStore";
 import { CookieMascot } from "../shared/ui/CookieMascot";
+import { apiClient } from "../shared/api/apiClient";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -45,6 +46,13 @@ export const HomePage = () => {
   const { dailyQueue, loadDailyWords, status } = useRepetitionStore();
 
   const [stats, setStats] = useState({ likesCount: 0, friendsCount: 0 });
+
+  // Стейт для розсилки
+  const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
+  const [broadcastText, setBroadcastText] = useState("");
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+
+  const isAdmin = telegramId === Number(import.meta.env.VITE_ADMIN_ID);
 
   useEffect(() => {
     fetchUser(true);
@@ -79,6 +87,22 @@ export const HomePage = () => {
     };
     if (telegramId) fetchStats();
   }, [telegramId]);
+
+  const handleBroadcast = async () => {
+    if (!broadcastText.trim()) return;
+    setIsBroadcasting(true);
+    try {
+      await apiClient.post("/admin/broadcast", { text: broadcastText });
+      setIsBroadcastOpen(false);
+      setBroadcastText("");
+      alert("Розсилку успішно запущено!");
+    } catch (error) {
+      console.error("Broadcast failed:", error);
+      alert("Помилка при запуску розсилки");
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
 
   const reviewWordsCount = dailyQueue.length;
   const hasReviews = reviewWordsCount > 0;
@@ -142,6 +166,49 @@ export const HomePage = () => {
           </Link>
         </div>
       </div>
+
+      {/* Панель адміністратора (Кнопка розсилки) */}
+      {isAdmin && (
+        <Card className="p-3 bg-[var(--bg-card)] border-[var(--border-color)]">
+          {!isBroadcastOpen ? (
+            <button
+              onClick={() => setIsBroadcastOpen(true)}
+              className="w-full py-2.5 rounded-xl bg-blue-500/10 text-blue-500 font-bold border border-blue-500/20 active:opacity-70 transition-opacity flex items-center justify-center gap-2 text-sm"
+            >
+              🔔 Сповістити про оновлення
+            </button>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <h3 className="font-bold text-sm text-[var(--text-main)]">
+                Текст розсилки:
+              </h3>
+              <textarea
+                value={broadcastText}
+                onChange={(e) => setBroadcastText(e.target.value)}
+                className="w-full p-3 rounded-xl bg-[var(--bg-app)] border border-[var(--border-color)] text-[var(--text-main)] text-sm resize-none focus:outline-none focus:border-[var(--accent-cta)]"
+                rows={3}
+                placeholder="Введіть повідомлення для всіх користувачів..."
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsBroadcastOpen(false)}
+                  className="flex-1 py-2 rounded-xl bg-[var(--bg-app)] text-[var(--text-muted)] font-bold border border-[var(--border-color)] active:opacity-70 text-sm"
+                  disabled={isBroadcasting}
+                >
+                  Скасувати
+                </button>
+                <button
+                  onClick={handleBroadcast}
+                  disabled={isBroadcasting || !broadcastText.trim()}
+                  className="flex-1 py-2 rounded-xl bg-[var(--accent-cta)] text-white font-bold active:opacity-70 disabled:opacity-50 text-sm"
+                >
+                  {isBroadcasting ? "Відправка..." : "Надіслати"}
+                </button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Тижнева активність */}
       <Card className="p-4 bg-[var(--bg-card)] border-[var(--border-color)]">
