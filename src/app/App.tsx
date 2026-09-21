@@ -27,6 +27,16 @@ import { DuelRoomPage } from "../pages/DuelRoomPage";
 import { LearningHubPage } from "../pages/learning/LearningHubPage";
 import { CategoryPathPage } from "../pages/learning/CategoryPathPage";
 import { LessonRunner } from "../pages/learning/LessonRunner";
+import { AdminPage } from "../pages/admin/AdminPage";
+
+// Перевірка, чи поточний telegram id співпадає з адмін-id.
+// VITE_ADMIN_ID має бути задано у фронтенд .env (той самий id, що й у бекенда).
+const isAdminUser = (): boolean => {
+  const tg = (window as any).Telegram?.WebApp;
+  const currentId = tg?.initDataUnsafe?.user?.id;
+  const adminId = Number(import.meta.env.VITE_ADMIN_ID || "0");
+  return Boolean(currentId) && Number(currentId) === adminId;
+};
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
@@ -90,6 +100,7 @@ const AppContent = () => {
   const isInsideLesson = location.pathname.startsWith("/learning/unit/");
   const isDuel = location.pathname.includes("/room/");
   const isOnboarding = location.pathname === "/onboarding";
+  const isAdminPage = location.pathname === "/admin";
 
   if (!onboardingCompleted && !isOnboarding)
     return <Navigate to="/onboarding" replace />;
@@ -116,8 +127,14 @@ const AppContent = () => {
         <Route path="/profile/:userId" element={<ProfilePage />} />
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/room/:roomId" element={<DuelRoomPage />} />
+        <Route
+          path="/admin"
+          element={isAdminUser() ? <AdminPage /> : <Navigate to="/" replace />}
+        />
       </Routes>
-      {!isInsideLesson && !isOnboarding && !isDuel && <BottomNav />}
+      {!isInsideLesson && !isOnboarding && !isDuel && !isAdminPage && (
+        <BottomNav />
+      )}
     </div>
   );
 };

@@ -9,6 +9,7 @@ import {
   Users,
   Heart,
   Flame,
+  ShieldCheck,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -167,9 +168,17 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Панель адміністратора (Кнопка розсилки) */}
+      {/* Панель адміністратора (Кнопка розсилки + вхід в адмінку) */}
       {isAdmin && (
-        <Card className="p-3 bg-[var(--bg-card)] border-[var(--border-color)]">
+        <Card className="p-3 bg-[var(--bg-card)] border-[var(--border-color)] flex flex-col gap-2">
+          <Link
+            to="/admin"
+            className="w-full py-2.5 rounded-xl bg-violet-500/10 text-violet-400 font-bold border border-violet-500/20 active:opacity-70 transition-opacity flex items-center justify-center gap-2 text-sm"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Адмін-панель
+          </Link>
+
           {!isBroadcastOpen ? (
             <button
               onClick={() => setIsBroadcastOpen(true)}

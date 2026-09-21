@@ -15,6 +15,7 @@ export interface IUser extends Document {
   hp: number; // ДОДАНО: Життя/Спроби
   lastActivityDate: Date | null; // ДОДАНО: Дата останньої активності для розрахунку стріку
   onboardingCompleted: boolean;
+  blocked: boolean; // ДОДАНО: Блокування адміністратором
   createdAt: Date;
   updatedAt: Date;
   totalScore: number;
@@ -38,6 +39,7 @@ const userSchema = new Schema<IUser>(
     hp: { type: Number, default: 5, min: 0, max: 5 }, // 5 життів максимум
     lastActivityDate: { type: Date, default: null },
     onboardingCompleted: { type: Boolean, default: false },
+    blocked: { type: Boolean, default: false, index: true },
     totalScore: { type: Number, default: 0 },
   },
   { timestamps: true },

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import type { TelegramUser } from "../types/express.js";
 import { logEvent } from "../services/analyticsService.js";
+import { User } from "../models/User.js";
 
 declare global {
   namespace Express {
@@ -16,11 +17,36 @@ declare global {
   }
 }
 
-export const authMiddleware = (
+/**
+ * Перевіряє, що юзер не заблокований адміном, і викликає next().
+ * Один легкий lean-запит (лише поле blocked), щоб мінімізувати вплив на швидкість.
+ */
+const proceedIfNotBlocked = async (
   req: Request,
   res: Response,
   next: NextFunction,
-): void => {
+): Promise<void> => {
+  const telegramId = req.user?.id;
+
+  if (telegramId) {
+    const dbUser = await User.findOne({ telegramId }).select("blocked").lean();
+
+    if (dbUser?.blocked) {
+      res.status(403).json({ error: "Forbidden: Account is blocked" });
+      return;
+    }
+  }
+
+  req.logEvent = (eventType, metadata) =>
+    logEvent(req.user?.id, eventType, metadata);
+  next();
+};
+
+export const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -59,9 +85,7 @@ export const authMiddleware = (
             first_name: "Developer",
             language_code: "en",
           } as TelegramUser);
-      req.logEvent = (eventType, metadata) =>
-        logEvent(req.user?.id, eventType, metadata);
-      next();
+      await proceedIfNotBlocked(req, res, next);
       return;
     }
 
@@ -104,12 +128,29 @@ export const authMiddleware = (
     }
 
     req.user = JSON.parse(userRaw) as TelegramUser;
-    req.logEvent = (eventType, metadata) =>
-      logEvent(req.user?.id, eventType, metadata);
-    next();
+    await proceedIfNotBlocked(req, res, next);
   } catch {
     res
       .status(401)
       .json({ error: "Unauthorized: Failed to authenticate user" });
   }
+};
+
+/**
+ * Пропускає далі лише telegram id, що співпадає з VITE_ADMIN_ID.
+ * Використовується ПІСЛЯ authMiddleware (потребує req.user).
+ */
+export const adminOnly = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  const adminId = Number(process.env.VITE_ADMIN_ID || "0");
+
+  if (!req.user?.id || req.user.id !== adminId) {
+    res.status(403).json({ error: "Forbidden: Admin only" });
+    return;
+  }
+
+  next();
 };

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import path from "path";
 import sharp from "sharp";
 import { User } from "../models/User.js";
+import { AnalyticsEvent } from "../models/AnalyticsEvent.js";
 import { getLearnedWordsCount } from "../services/progressStatsService.js";
 
 export interface ExtendedTelegramUser {
@@ -197,5 +198,110 @@ export const updateProfile = async (
   } catch (error) {
     console.error("[updateProfile] Помилка:", error);
     res.status(500).json({ error: "Failed to update profile" });
+  }
+};
+
+// ==================== АДМІН: КОРИСТУВАЧІ + АНАЛІТИКА ====================
+
+export const getAllUsersAdmin = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { search, status } = req.query;
+    const filter: Record<string, unknown> = {};
+
+    if (search) {
+      const term = String(search).trim();
+      const regex = new RegExp(term, "i");
+      const orConditions: Record<string, unknown>[] = [
+        { username: regex },
+        { telegramFirstName: regex },
+        { customDisplayName: regex },
+      ];
+      if (!isNaN(Number(term))) {
+        orConditions.push({ telegramId: Number(term) });
+      }
+      filter.$or = orConditions;
+    }
+
+    if (status === "blocked") filter.blocked = true;
+    if (status === "active") filter.blocked = { $ne: true };
+
+    const users = await User.find(filter)
+      .select(
+        "telegramId username telegramFirstName customDisplayName level streak blocked createdAt",
+      )
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean();
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Admin users list error:", error);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+};
+
+export const toggleUserBlock = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { telegramId } = req.params;
+    const { blocked } = req.body;
+
+    if (typeof blocked !== "boolean") {
+      res.status(400).json({ error: "'blocked' must be a boolean" });
+      return;
+    }
+
+    const user = await User.findOneAndUpdate(
+      { telegramId: Number(telegramId) },
+      { blocked },
+      { returnDocument: "after" },
+    ).select("telegramId blocked");
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.status(200).json({ success: true, blocked: user.blocked });
+  } catch (error) {
+    console.error("Admin block toggle error:", error);
+    res.status(500).json({ error: "Failed to update block status" });
+  }
+};
+
+export const getAnalyticsSummary = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const [topEvents, totalEvents, totalUsers, blockedUsers] =
+      await Promise.all([
+        AnalyticsEvent.aggregate([
+          { $group: { _id: "$eventType", count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+          { $limit: 20 },
+        ]),
+        AnalyticsEvent.countDocuments(),
+        User.countDocuments(),
+        User.countDocuments({ blocked: true }),
+      ]);
+
+    res.status(200).json({
+      totalEvents,
+      totalUsers,
+      blockedUsers,
+      topEvents: topEvents.map((e) => ({
+        eventType: e._id as string,
+        count: e.count as number,
+      })),
+    });
+  } catch (error) {
+    console.error("Admin analytics error:", error);
+    res.status(500).json({ error: "Failed to fetch analytics" });
   }
 };

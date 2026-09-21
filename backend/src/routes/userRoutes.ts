@@ -7,12 +7,16 @@ import {
   completeOnboarding,
   updateLevel,
   updateProfile,
+  getAllUsersAdmin,
+  toggleUserBlock,
+  getAnalyticsSummary,
 } from "../controllers/userController.js";
 import {
   getLeaderboard,
   getGiveawayHistory,
   forceEndGiveaway,
 } from "../controllers/leaderboardController.js";
+import { adminOnly } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
@@ -33,5 +37,10 @@ router.post("/giveaway/force-end", forceEndGiveaway);
 router.patch("/onboarding", completeOnboarding);
 router.patch("/level", updateLevel);
 router.patch("/profile", upload.single("avatar"), updateProfile);
+
+// Адмін-only
+router.get("/admin/users", adminOnly, getAllUsersAdmin);
+router.patch("/admin/users/:telegramId/block", adminOnly, toggleUserBlock);
+router.get("/admin/analytics", adminOnly, getAnalyticsSummary);
 
 export default router;
