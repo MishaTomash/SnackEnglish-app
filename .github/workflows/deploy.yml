@@ -25,21 +25,22 @@ jobs:
 
       - name: Sync repository to Hetzner Server
         run: |
-          ssh ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} "mkdir -p /app/snackenglish"
+          ssh ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} "mkdir -p /app/snackenglish-app"
           rsync -avz --delete \
             --exclude '.git' \
             --exclude 'node_modules' \
             --exclude 'backend/node_modules' \
             --exclude 'dist' \
             --exclude 'backend/dist' \
-            ./ ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:/app/snackenglish/
+            --exclude '.env' \
+            ./ ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:/app/snackenglish-app/
 
       - name: Deploy with Docker Compose
         run: |
           ssh ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} << 'EOF'
-            cd /app/snackenglish
-            
-            # Генерація .env з безпечних змінних середовища
+            cd /app/snackenglish-app
+
+            # Генерація production .env із GitHub Secrets
             cat <<EOT > .env
             BOT_TOKEN=${{ secrets.BOT_TOKEN }}
             CLIENT_URL=${{ secrets.CLIENT_URL }}
