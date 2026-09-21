@@ -43,10 +43,17 @@ jobs:
 
             # Generate production .env from GitHub Secrets
             printf '%s\n' \
+              "VITE_APP_ENV=production" \
+              "VITE_BOT_USERNAME=snackEnglish_bot" \
+              "VITE_API_URL=/api" \
+              "VITE_USE_MOCKS=false" \
+              "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" \
+              "PORT=3000" \
+              "MONGODB_URI=${{ secrets.MONGODB_URI }}" \
               "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" \
               "CLIENT_URL=${{ secrets.CLIENT_URL }}" \
-              "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" \
               "VITE_ADMIN_ID=${{ secrets.VITE_ADMIN_ID }}" \
+              "PAYMENT_CARD_NUMBER=${{ secrets.PAYMENT_CARD_NUMBER }}" \
               > .env
 
             docker compose pull

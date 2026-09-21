@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mongodb:
     image: mongo:7.0
@@ -24,6 +22,8 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       CLIENT_URL: ${CLIENT_URL}
       VITE_APP_URL: ${VITE_APP_URL}
+      VITE_ADMIN_ID: ${VITE_ADMIN_ID}
+      PAYMENT_CARD_NUMBER: ${PAYMENT_CARD_NUMBER}
     depends_on:
       - mongodb
     ports:
@@ -35,6 +35,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_APP_ENV: production
+        VITE_BOT_USERNAME: snackEnglish_bot
+        VITE_API_URL: /api
+        VITE_APP_URL: ${VITE_APP_URL}
+        VITE_USE_MOCKS: false
     container_name: snackenglish-frontend
     restart: always
     depends_on:
