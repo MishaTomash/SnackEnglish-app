@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom"; // ДОДАНО useLocation
 import { Screen } from "../shared/ui/Screen";
 import { createDuelSocket } from "../shared/lib/duelSocket";
 import {
@@ -23,8 +23,6 @@ const BOT_USERNAME =
   import.meta.env.VITE_BOT_USERNAME || "snack_english_test_bot";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-// ДОДАНО: іменований тип замість багаторядкового union-generic напряму в useState<>(),
-// що ламало TS/esbuild-стрипінг і залишало у рантаймі "|" та ">" як JS-оператори.
 type DuelUiState =
   | "connecting"
   | "configuring"
@@ -70,10 +68,10 @@ class RoomErrorBoundary extends React.Component<any, { error: Error | null }> {
 const DuelRoomContent = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation(); // ДОДАНО
   const { telegramId } = useUserStore();
   const socketRef = useRef<Socket | null>(null);
 
-  // ЗМІНЕНО: generic одним рядком через named type замість багаторядкового union
   const [uiState, setUiState] = useState<DuelUiState>("connecting");
   const [setupRounds, setSetupRounds] = useState(5);
   const [setupLevel, setSetupLevel] = useState("B1");
@@ -91,6 +89,11 @@ const DuelRoomContent = () => {
   const [isLoadingFriends, setIsLoadingFriends] = useState(false);
   const [invitedFriends, setInvitedFriends] = useState<Set<string>>(new Set());
   const [invitingId, setInvitingId] = useState<string | null>(null);
+
+  // Зчитуємо ID гри з URL (за замовчуванням speed-clash)
+  const searchParams = new URLSearchParams(location.search);
+  const urlGameId = searchParams.get("gameId") || "speed-clash";
+  const selectedGameDef = DUEL_REGISTRY.find((g) => g.id === urlGameId);
 
   useEffect(() => {
     if (!roomId || !telegramId) return;
@@ -111,10 +114,12 @@ const DuelRoomContent = () => {
         if (setupDataStr) {
           const settings = JSON.parse(setupDataStr);
           setTotalRounds(settings.rounds);
+          // Відправляємо налаштування + gameId на бекенд
           socket.emit("create_room", {
             roomCode: roomId,
             rounds: settings.rounds,
             level: settings.level,
+            gameId: settings.gameId || "speed-clash",
           });
           sessionStorage.removeItem(`duel_setup_${roomId}`);
         } else {
@@ -144,12 +149,18 @@ const DuelRoomContent = () => {
         setUiState("playing");
       });
 
-      socket.on("duel:player_acted", (data) => {
+      socket.on("duel:player_acted", (data: any) => {
+        // Оновлюємо стейт суперника
         if (data.playerId.toString() !== telegramId.toString()) {
           setOpponent((prev: any) => ({
             ...(prev || {}),
-            lastAction: "acted",
+            lastAction: data.action, // Тепер тут є { isCorrect: true/false }
+            score: data.newScores ? data.newScores[data.playerId] : prev?.score,
           }));
+        }
+        // Оновлюємо власний рахунок посеред раунду (потрібно для канату)
+        if (data.newScores && data.newScores[telegramId]) {
+          setMyScore(data.newScores[telegramId]);
         }
       });
 
@@ -223,9 +234,14 @@ const DuelRoomContent = () => {
     setUiState("connecting");
     const newRoomId =
       Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    // Зберігаємо обрану гру
     sessionStorage.setItem(
       `duel_setup_${newRoomId}`,
-      JSON.stringify({ rounds: setupRounds, level: setupLevel }),
+      JSON.stringify({
+        rounds: setupRounds,
+        level: setupLevel,
+        gameId: urlGameId,
+      }),
     );
     setTimeout(() => {
       navigate(`/room/${newRoomId}`, { replace: true });
@@ -271,14 +287,21 @@ const DuelRoomContent = () => {
     );
   }
 
+  // ДОДАНО: Відображаємо назву обраної гри
   if (uiState === "configuring") {
     return (
       <Screen className="justify-center items-center p-4 bg-[var(--bg-app)]">
         <Card className="w-full max-w-sm p-6 flex flex-col items-center space-y-6 border-[var(--accent-cta)]/20 shadow-xl">
-          <Settings className="w-12 h-12 text-[var(--accent-cta)]" />
-          <h2 className="text-2xl font-black text-[var(--text-main)] text-center">
-            Нова кімната
-          </h2>
+          <Settings className="w-12 h-12 text-[var(--accent-cta)] mb-1" />
+
+          <div className="text-center w-full">
+            <h2 className="text-2xl font-black text-[var(--text-main)] leading-tight mb-1">
+              {selectedGameDef?.title || "Нова кімната"}
+            </h2>
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">
+              Налаштування гри
+            </p>
+          </div>
 
           <div className="w-full space-y-5">
             <div className="space-y-2">

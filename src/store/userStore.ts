@@ -79,14 +79,16 @@ export const useUserStore = create<UserState>()(
         set({ hp: newHp }); // Оптимістичне оновлення UI
 
         try {
-          const initData =
-            window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
           const formData = new FormData();
           formData.append("hp", newHp.toString());
 
+          // Видаляємо Content-Type, щоб браузер сам згенерував multipart/form-data boundary,
+          // але залишаємо ngrok/localtunnel заголовки.
+          const { "Content-Type": _, ...headers } = getAuthHeaders();
+
           await fetch(`${API_URL}/user/profile`, {
             method: "PATCH",
-            headers: { Authorization: `Bearer ${initData}` },
+            headers,
             body: formData,
           });
         } catch (e) {
@@ -168,11 +170,13 @@ export const useUserStore = create<UserState>()(
           if (displayName) formData.append("customDisplayName", displayName);
           if (avatarFile) formData.append("avatar", avatarFile);
 
-          const initData =
-            window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
+          // Видаляємо Content-Type, щоб браузер сам згенерував boundary,
+          // інакше multer не зможе розпарсити файл.
+          const { "Content-Type": _, ...headers } = getAuthHeaders();
+
           const res = await fetch(`${API_URL}/user/profile`, {
             method: "PATCH",
-            headers: { Authorization: `Bearer ${initData}` },
+            headers,
             body: formData,
           });
 

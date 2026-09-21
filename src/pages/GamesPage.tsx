@@ -18,6 +18,7 @@ import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { DUEL_REGISTRY } from "../duels/registry";
+import { GAME_REGISTRY } from "../games/registry";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -50,7 +51,6 @@ interface PaymentHistoryItem {
 }
 
 export const GamesPage = () => {
-  // ДОДАНО: Стейт для вкладок
   const [activeTab, setActiveTab] = useState<"single" | "duel">("single");
 
   const [games, setGames] = useState<BackendGame[]>([]);
@@ -195,6 +195,11 @@ export const GamesPage = () => {
 
   const hasPendingPayments = payments.some((p) => p.status === "pending");
 
+  // Фільтруємо ігри, щоб показувати лише ті, що є у GAME_REGISTRY
+  const singleGames = games.filter((dbGame) =>
+    GAME_REGISTRY.some((regGame) => regGame.id === dbGame.gameId),
+  );
+
   return (
     <Screen className="justify-start p-4 space-y-5 bg-[var(--bg-app)] pb-24 relative">
       <div className="flex items-center justify-between w-full">
@@ -215,7 +220,6 @@ export const GamesPage = () => {
         </button>
       </div>
 
-      {/* ДОДАНО: Перемикач вкладок */}
       <div className="flex bg-[var(--bg-card)] p-1 rounded-xl border border-[var(--border-color)]">
         <button
           onClick={() => setActiveTab("single")}
@@ -237,7 +241,7 @@ export const GamesPage = () => {
         </div>
       ) : activeTab === "single" ? (
         <div className="space-y-4">
-          {games.map((game) => (
+          {singleGames.map((game) => (
             <Card
               key={game.gameId}
               className="p-4 flex flex-col gap-3 relative overflow-hidden"
@@ -320,7 +324,6 @@ export const GamesPage = () => {
           ))}
         </div>
       ) : (
-        /* ДОДАНО: Відображення дуелей */
         <div className="space-y-4">
           {DUEL_REGISTRY.length === 0 ? (
             <Card className="p-8 text-center border-dashed border-[var(--border-color)] bg-transparent">
@@ -359,7 +362,7 @@ export const GamesPage = () => {
                   <span className="text-sm font-bold text-blue-500">
                     Гра з другом
                   </span>
-                  <Link to="/room/new">
+                  <Link to={`/room/new?gameId=${duel.id}`}>
                     <Button
                       variant="secondary"
                       className="px-4 py-2 border-blue-500/30 text-blue-500 bg-blue-500/10"
@@ -374,7 +377,6 @@ export const GamesPage = () => {
         </div>
       )}
 
-      {/* Модалка Історії Платежів */}
       {showHistoryModal && (
         <div className="fixed inset-0 z-[110] flex flex-col bg-[var(--bg-app)] animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="flex items-center justify-between p-4 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
@@ -433,11 +435,9 @@ export const GamesPage = () => {
         </div>
       )}
 
-      {/* Модалка Ручної Оплати */}
       {manualModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <Card className="w-full max-w-sm p-5 space-y-5 animate-in fade-in zoom-in duration-200">
-            {/* Логіка модалки залишилася ідентичною до GamesPage_2.tsx */}
             {manualModal.step !== "success" && (
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
