@@ -1,5 +1,6 @@
 import { apiClient } from "../../shared/api/apiClient";
 import type { EnglishLevel, Word } from "./types";
+import type { PracticeItem } from "../learning/types";
 
 export async function getWordsByIds(ids: string[]): Promise<Word[]> {
   if (!ids || ids.length === 0) return [];
@@ -27,10 +28,11 @@ export async function getWordById(id: string): Promise<Word | null> {
   return response.data;
 }
 
+// ВИПРАВЛЕНО: Тепер повертає масив PracticeItem
 export async function getPracticeWordsApi(): Promise<{
-  dueWordIds: string[];
+  dueItems: PracticeItem[];
 }> {
-  const response = await apiClient.get<{ dueWordIds: string[] }>(
+  const response = await apiClient.get<{ dueItems: PracticeItem[] }>(
     "/progress/practice",
   );
   return response.data;

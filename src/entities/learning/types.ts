@@ -35,6 +35,33 @@ export interface SentenceBuildData {
   wordBank: string[];
 }
 
+export interface PracticeWord extends WordCardData {
+  type: "word";
+}
+
+export interface PracticeQuiz extends QuizData {
+  type: "quiz";
+}
+
+export interface PracticeListening extends ListeningData {
+  type: "listening";
+}
+
+export interface PracticeSpeaking extends SpeakData {
+  type: "speaking";
+}
+
+export interface PracticeSentence extends SentenceBuildData {
+  type: "sentence";
+}
+
+export type PracticeItem =
+  | PracticeWord
+  | PracticeQuiz
+  | PracticeListening
+  | PracticeSpeaking
+  | PracticeSentence;
+
 export type LessonStep =
   | { kind: "learn"; cards: WordCardData[] }
   | { kind: "quiz"; items: QuizData[] }

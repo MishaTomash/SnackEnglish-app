@@ -144,6 +144,12 @@ export const getLearningCategories = async (
 
     const activeCategories = categories.filter((c) => c.units.length > 0);
 
+    req.logEvent("lesson_opened", {
+      planId: nextPlan._id.toString(),
+      level,
+      dayNumber: nextPlan.dayNumber,
+    });
+
     res.status(200).json({
       categories: activeCategories,
       noMoreDays: false,
@@ -182,6 +188,8 @@ export const completeDailyPlan = async (
       { status: "completed", completedSteps: ["test"] }, // 'test' як технічний маркер для enum
       { upsert: true },
     );
+
+    req.logEvent("lesson_completed", { planId });
 
     res.status(200).json({ success: true });
   } catch (error) {

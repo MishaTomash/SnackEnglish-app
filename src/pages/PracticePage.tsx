@@ -6,6 +6,7 @@ import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { ProgressBar } from "../shared/ui/ProgressBar";
 import { useRepetitionStore } from "../store/repetitionStore";
+import type { PracticeItem } from "../entities/learning/types";
 
 export const PracticePage = () => {
   const navigate = useNavigate();
@@ -27,11 +28,11 @@ export const PracticePage = () => {
     void loadDailyWords();
   }, [loadDailyWords]);
 
-  const currentWord = dailyQueue[currentWordIndex];
+  const currentItem = dailyQueue[currentWordIndex];
   const totalDueToday = dailyQueue.length;
 
   const handleAnswer = async (remembered: boolean) => {
-    if (!currentWord || isSubmitting) return;
+    if (!currentItem || isSubmitting) return;
     setIsSubmitting(true);
 
     const quality = remembered ? 4 : 1;
@@ -61,7 +62,7 @@ export const PracticePage = () => {
           <h2 className="text-xl font-bold">Ой, халепа!</h2>
           <p className="text-sm text-[var(--text-muted)] max-w-xs">
             {error ||
-              "Не вдалося завантажити слова. Можливо, проблеми з мережею."}
+              "Не вдалося завантажити матеріали. Можливо, проблеми з мережею."}
           </p>
         </div>
         <Button
@@ -74,7 +75,8 @@ export const PracticePage = () => {
       </Screen>
     );
   }
-  if (isFinished || totalDueToday === 0 || !currentWord) {
+
+  if (isFinished || totalDueToday === 0 || !currentItem) {
     return (
       <Screen className="justify-center items-center text-center p-6 space-y-6">
         <div className="w-16 h-16 rounded-full bg-[var(--accent-success)]/10 text-[var(--accent-success)] flex items-center justify-center mx-auto">
@@ -101,48 +103,79 @@ export const PracticePage = () => {
     ((currentWordIndex + 1) / totalDueToday) * 100,
   );
 
+  const getCardContent = (item: PracticeItem) => {
+    switch (item.type) {
+      case "quiz":
+        return {
+          front: item.question,
+          back: item.correctAnswer,
+          badge: "Тест",
+        };
+      case "sentence":
+        return {
+          front: item.translation,
+          back: item.correctSentence,
+          badge: "Речення",
+        };
+      case "speaking":
+        return {
+          front: item.translation,
+          back: item.phrase,
+          badge: "Говоріння",
+        };
+      case "listening":
+        return {
+          front: item.phrase,
+          back: item.correctAnswer,
+          badge: "Аудіювання",
+        };
+      case "word":
+      default:
+        return {
+          front: item.word,
+          back: item.translation,
+          sub: item.transcription,
+          badge: "Слово",
+        };
+    }
+  };
+
+  const content = getCardContent(currentItem);
+
   return (
     <Screen className="justify-between space-y-4">
-      {/* Прогрес сесії */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-xs font-semibold text-[var(--text-muted)]">
           <span>
-            Слово {currentWordIndex + 1} з {totalDueToday}
+            Завдання {currentWordIndex + 1} з {totalDueToday}
           </span>
           <span>{progressPercent}%</span>
         </div>
         <ProgressBar progress={progressPercent} />
       </div>
 
-      {/* Флешкартка */}
       <div className="my-auto">
         <Card
           onClick={() => setIsRevealed((prev) => !prev)}
           className="p-6 text-center cursor-pointer min-h-[300px] flex flex-col justify-center items-center space-y-4 border border-[var(--border-color)] active:scale-[0.99] transition-transform select-none shadow-sm"
         >
           <span className="text-xs uppercase tracking-wider font-semibold text-[var(--text-muted)] flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" /> Флешкартка
+            <Sparkles className="w-3.5 h-3.5" /> {content.badge}
           </span>
 
           <div className="space-y-1">
-            <h1 className="text-3xl font-extrabold">{currentWord.text}</h1>
-            <p className="text-sm text-[var(--text-muted)] font-mono">
-              {currentWord.transcription}
-            </p>
+            <h1 className="text-3xl font-extrabold">{content.front}</h1>
+            {content.sub && (
+              <p className="text-sm text-[var(--text-muted)] font-mono">
+                {content.sub}
+              </p>
+            )}
           </div>
 
           {isRevealed ? (
             <div className="space-y-3 pt-4 border-t border-[var(--border-color)]/50 w-full">
               <div className="text-2xl font-bold text-[var(--accent-cta)]">
-                {currentWord.translation}
-              </div>
-              <div className="bg-[var(--bg-card-hover)] p-3 rounded-xl text-left space-y-1 text-sm">
-                <p className="font-medium text-[var(--text-main)]">
-                  "{currentWord.exampleSentence}"
-                </p>
-                <p className="text-xs text-[var(--text-muted)]">
-                  {currentWord.exampleTranslation}
-                </p>
+                {content.back}
               </div>
             </div>
           ) : (
@@ -154,7 +187,6 @@ export const PracticePage = () => {
         </Card>
       </div>
 
-      {/* Кнопки оцінки */}
       <div className="space-y-2">
         {isRevealed ? (
           <div className="grid grid-cols-2 gap-3">

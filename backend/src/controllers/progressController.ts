@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { User, UserProgress, UserUnitProgress } from "../models/index.js";
+import { DailyPlan } from "../models/DailyPlan.js";
 import { calculateSM2 } from "../utils/spacedRepetition.js";
 import { getLearnedWordsCount } from "../services/progressStatsService.js";
 
@@ -31,7 +32,6 @@ export const completeLesson = async (
       { new: false, upsert: true },
     );
 
-    // Завжди нараховуємо 10 балів (кубків) за кожен пройдений урок
     const scoreToAdd = 10;
     let finalTotalScore = (user as any).totalScore || 0;
 
@@ -42,9 +42,11 @@ export const completeLesson = async (
     );
     if (updatedUser) finalTotalScore = (updatedUser as any).totalScore;
 
-    // Зберігаємо нові слова в систему інтервального повторення
     if (Array.isArray(wordIds) && wordIds.length > 0) {
-      const now = new Date();
+      // Затримка старту на 1 день для нових слів
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
       const bulkOps = wordIds.map((wordId) => ({
         updateOne: {
           filter: { userId: user._id, wordId },
@@ -53,7 +55,7 @@ export const completeLesson = async (
               easinessFactor: 2.5,
               interval: 1,
               repetitions: 0,
-              nextReviewDate: now,
+              nextReviewDate: tomorrow, // Використовуємо tomorrow замість now
             },
           },
           upsert: true,
@@ -88,7 +90,6 @@ export const getPracticeWords = async (
 
     const now = new Date();
 
-    // Знаходимо всі слова користувача, для яких настав час повторення
     const dueProgress = await UserProgress.find({
       userId: user._id,
       nextReviewDate: { $lte: now },
@@ -100,7 +101,43 @@ export const getPracticeWords = async (
 
     const dueWordIds = dueProgress.map((p) => p.wordId);
 
-    res.status(200).json({ dueWordIds });
+    // Шукаємо контент цих ID у DailyPlan
+    const allPlans = await DailyPlan.find({}).lean();
+    const dueItems: any[] = [];
+    const idSet = new Set(dueWordIds);
+
+    for (const plan of allPlans) {
+      if (plan.words) {
+        plan.words.forEach(
+          (w: any) => idSet.has(w.id) && dueItems.push({ type: "word", ...w }),
+        );
+      }
+      if (plan.quizzes) {
+        plan.quizzes.forEach(
+          (q: any) => idSet.has(q.id) && dueItems.push({ type: "quiz", ...q }),
+        );
+      }
+      if (plan.listening) {
+        plan.listening.forEach(
+          (l: any) =>
+            idSet.has(l.id) && dueItems.push({ type: "listening", ...l }),
+        );
+      }
+      if (plan.speaking) {
+        plan.speaking.forEach(
+          (s: any) =>
+            idSet.has(s.id) && dueItems.push({ type: "speaking", ...s }),
+        );
+      }
+      if (plan.sentences) {
+        plan.sentences.forEach(
+          (s: any) =>
+            idSet.has(s.id) && dueItems.push({ type: "sentence", ...s }),
+        );
+      }
+    }
+
+    res.status(200).json({ dueItems });
   } catch (error) {
     console.error(`[Practice API] Error:`, error);
     res.status(500).json({ error: "Failed to fetch practice words." });

@@ -831,16 +831,23 @@ export const LessonRunner = () => {
           ? Math.round((newCorrect / totalQuestions) * 100)
           : 100;
 
-      // Завжди 10 кубків за проходження уроку
       setEarnedXp(10);
 
-      const wordIdsToSave = unit.steps
-        .filter((s) => s.kind === "learn")
-        .flatMap((s) =>
-          (s as { kind: "learn"; cards: WordCardData[] }).cards.map(
-            (c) => c.id,
-          ),
-        );
+      // ВИПРАВЛЕНО: Збираємо ВСІ id, а не лише з `learn`
+      const wordIdsToSave = unit.steps.flatMap((step) => {
+        if (step.kind === "learn") {
+          return step.cards.map((c) => c.id);
+        }
+        if (
+          step.kind === "quiz" ||
+          step.kind === "listening" ||
+          step.kind === "speak" ||
+          step.kind === "sentence"
+        ) {
+          return step.items.map((i) => i.id);
+        }
+        return [];
+      });
 
       markUnitCompleted(unit.id, category.id, finalAccuracy, wordIdsToSave);
       setPhase("done");

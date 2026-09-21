@@ -237,6 +237,8 @@ export const getWordsForGame = async (
       .sort(() => 0.5 - Math.random())
       .slice(0, 20);
 
+    req.logEvent("game_started", { level });
+
     res.status(200).json(shuffled);
   } catch (error) {
     console.error("Game words error:", error);

@@ -60,6 +60,8 @@ export const inviteToDuel = async (req: Request, res: Response) => {
         .json({ message: "Не вдалося надіслати запрошення." });
     }
 
+    req.logEvent("duel_invited", { roomId: finalRoomId, targetUserId });
+
     return res.status(200).json({ success: true, roomId: finalRoomId });
   } catch (error) {
     console.error("Помилка в inviteToDuel:", error);

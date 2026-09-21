@@ -1,6 +1,20 @@
 import { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import type { TelegramUser } from "../types/express.js";
+import { logEvent } from "../services/analyticsService.js";
+
+declare global {
+  namespace Express {
+    interface Request {
+      /**
+       * Хелпер для запису події аналітики з будь-якого контролера.
+       * Прив'язаний до telegramId авторизованого юзера.
+       * Виклик асинхронний і не блокує обробку запиту.
+       */
+      logEvent: (eventType: string, metadata?: Record<string, unknown>) => void;
+    }
+  }
+}
 
 export const authMiddleware = (
   req: Request,
@@ -45,6 +59,8 @@ export const authMiddleware = (
             first_name: "Developer",
             language_code: "en",
           } as TelegramUser);
+      req.logEvent = (eventType, metadata) =>
+        logEvent(req.user?.id, eventType, metadata);
       next();
       return;
     }
@@ -88,6 +104,8 @@ export const authMiddleware = (
     }
 
     req.user = JSON.parse(userRaw) as TelegramUser;
+    req.logEvent = (eventType, metadata) =>
+      logEvent(req.user?.id, eventType, metadata);
     next();
   } catch {
     res
