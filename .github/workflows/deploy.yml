@@ -26,6 +26,7 @@ jobs:
       - name: Sync repository to Hetzner Server
         run: |
           ssh ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} "mkdir -p /app/snackenglish-app"
+
           rsync -avz --delete \
             --exclude '.git' \
             --exclude 'node_modules' \
@@ -40,14 +41,14 @@ jobs:
           ssh ${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }} << 'EOF'
             cd /app/snackenglish-app
 
-            # Генерація production .env із GitHub Secrets
-            cat <<EOT > .env
-            BOT_TOKEN=${{ secrets.BOT_TOKEN }}
-            CLIENT_URL=${{ secrets.CLIENT_URL }}
-            VITE_APP_URL=${{ secrets.VITE_APP_URL }}
-            EOT
+            # Generate production .env from GitHub Secrets
+            printf '%s\n' \
+              "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" \
+              "CLIENT_URL=${{ secrets.CLIENT_URL }}" \
+              "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" \
+              > .env
 
-            docker compose pull || true
+            docker compose pull
             docker compose build --no-cache
             docker compose up -d --remove-orphans
             docker image prune -f
