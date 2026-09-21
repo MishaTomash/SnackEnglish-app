@@ -9,6 +9,47 @@ import { CookieMascot } from "../../shared/ui/CookieMascot";
 import type { EnglishLevel } from "../../entities/word/types";
 import testQuestions from "../../mocks/placement-test.json";
 
+type QuestionLevel = "A1" | "A2" | "B1" | "B2" | "C1";
+type QuestionType = "grammar" | "vocabulary" | "reading";
+
+interface TestQuestion {
+  id: number;
+  level: QuestionLevel;
+  weight: number;
+  type: QuestionType;
+  passage: string | null;
+  question: string;
+  options: string[];
+  correctIndex: number;
+}
+
+const QUESTIONS = testQuestions as TestQuestion[];
+const LEVEL_ORDER: QuestionLevel[] = ["A1", "A2", "B1", "B2", "C1"];
+const PASS_THRESHOLD = 0.7;
+
+const computeLevel = (answers: number[]): EnglishLevel => {
+  const stats = new Map<QuestionLevel, { earned: number; total: number }>();
+
+  QUESTIONS.forEach((q, idx) => {
+    const bucket = stats.get(q.level) ?? { earned: 0, total: 0 };
+    bucket.total += q.weight;
+    if (answers[idx] === q.correctIndex) bucket.earned += q.weight;
+    stats.set(q.level, bucket);
+  });
+
+  let result: EnglishLevel = "A1";
+  for (const lvl of LEVEL_ORDER) {
+    const s = stats.get(lvl);
+    if (!s) continue;
+    if (s.earned / s.total >= PASS_THRESHOLD) {
+      result = lvl;
+    } else {
+      break;
+    }
+  }
+  return result;
+};
+
 interface Props {
   onFinish: (level: EnglishLevel) => void;
   onCancel: () => void;
@@ -18,8 +59,8 @@ export const LevelPlacementTest = ({ onFinish, onCancel }: Props) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
 
-  const totalQuestions = testQuestions.length;
-  const currentQuestion = testQuestions[currentIndex];
+  const totalQuestions = QUESTIONS.length;
+  const currentQuestion = QUESTIONS[currentIndex];
 
   const handleSelectTestOption = (optionIndex: number) => {
     const updatedAnswers = [...selectedAnswers, optionIndex];
@@ -28,12 +69,7 @@ export const LevelPlacementTest = ({ onFinish, onCancel }: Props) => {
     if (currentIndex < totalQuestions - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      const correctCount = updatedAnswers.reduce((acc, answerIdx, idx) => {
-        return answerIdx === testQuestions[idx].correctIndex ? acc + 1 : acc;
-      }, 0);
-      // Логіка визначення рівня (можна буде розширити для B1/B2, якщо тест стане довшим)
-      const level: EnglishLevel = correctCount >= 6 ? "A2" : "A1";
-      onFinish(level);
+      onFinish(computeLevel(updatedAnswers));
     }
   };
 
@@ -59,6 +95,12 @@ export const LevelPlacementTest = ({ onFinish, onCancel }: Props) => {
       </div>
 
       <div className="my-auto space-y-4">
+        {currentQuestion.passage && (
+          <Card className="p-4 text-sm leading-relaxed text-cookieText-muted italic">
+            {currentQuestion.passage}
+          </Card>
+        )}
+
         <Card className="p-6 text-center space-y-2.5 border-primary/20">
           <Badge className="text-[10px] uppercase font-bold tracking-wider">
             {currentQuestion.type}

@@ -1,58 +1,222 @@
 [
   {
     "id": 1,
+    "level": "A1",
+    "weight": 1,
+    "type": "vocabulary",
+    "passage": null,
     "question": "Оберіть правильне привітання для ранку:",
     "options": ["Good night", "Good morning", "Goodbye", "Good evening"],
-    "correctIndex": 1,
-    "type": "vocabulary"
+    "correctIndex": 1
   },
   {
     "id": 2,
+    "level": "A1",
+    "weight": 1,
+    "type": "grammar",
+    "passage": null,
     "question": "She _____ from Ukraine.",
     "options": ["is", "are", "am", "be"],
-    "correctIndex": 0,
-    "type": "grammar"
+    "correctIndex": 0
   },
   {
     "id": 3,
+    "level": "A1",
+    "weight": 1,
+    "type": "vocabulary",
+    "passage": null,
     "question": "I usually drink _____ with milk for breakfast.",
     "options": ["bread", "coffee", "book", "table"],
-    "correctIndex": 1,
-    "type": "vocabulary"
+    "correctIndex": 1
   },
   {
     "id": 4,
+    "level": "A1",
+    "weight": 1,
+    "type": "grammar",
+    "passage": null,
     "question": "They _____ in Kyiv right now.",
     "options": ["lives", "living", "live", "is live"],
-    "correctIndex": 2,
-    "type": "grammar"
+    "correctIndex": 2
   },
   {
     "id": 5,
-    "question": "Який документ потрібен для подорожі за кордон?",
-    "options": ["Ticket", "Passport", "Map", "Key"],
-    "correctIndex": 1,
-    "type": "vocabulary"
+    "level": "A2",
+    "weight": 2,
+    "type": "grammar",
+    "passage": null,
+    "question": "He _____ wake up early on weekends.",
+    "options": ["doesn't", "don't", "isn't", "aren't"],
+    "correctIndex": 0
   },
   {
     "id": 6,
-    "question": "We are waiting for our flight _____ the airport.",
-    "options": ["at", "on", "under", "to"],
-    "correctIndex": 0,
-    "type": "grammar"
+    "level": "A2",
+    "weight": 2,
+    "type": "vocabulary",
+    "passage": null,
+    "question": "Який документ потрібен для подорожі за кордон?",
+    "options": ["Ticket", "Passport", "Map", "Key"],
+    "correctIndex": 1
   },
   {
     "id": 7,
-    "question": "He _____ wake up early on weekends.",
-    "options": ["doesn't", "don't", "isn't", "aren't"],
-    "correctIndex": 0,
-    "type": "grammar"
+    "level": "A2",
+    "weight": 2,
+    "type": "grammar",
+    "passage": null,
+    "question": "We are waiting for our flight _____ the airport.",
+    "options": ["at", "on", "under", "to"],
+    "correctIndex": 0
   },
   {
     "id": 8,
-    "question": "Our plane _____ was delayed by two hours.",
-    "options": ["flight", "hotel", "tourist", "luggage"],
-    "correctIndex": 0,
-    "type": "vocabulary"
+    "level": "A2",
+    "weight": 2,
+    "type": "reading",
+    "passage": "Anna lives in Lviv. Every Saturday she goes to the market with her mother. They buy fresh vegetables and fruit. Anna likes apples the most.",
+    "question": "What does Anna like the most?",
+    "options": ["Vegetables", "Apples", "Bread", "Milk"],
+    "correctIndex": 1
+  },
+  {
+    "id": 9,
+    "level": "B1",
+    "weight": 3,
+    "type": "grammar",
+    "passage": null,
+    "question": "I _____ never been to London.",
+    "options": ["have", "has", "had", "am"],
+    "correctIndex": 0
+  },
+  {
+    "id": 10,
+    "level": "B1",
+    "weight": 3,
+    "type": "vocabulary",
+    "passage": null,
+    "question": "He was _____ tired to finish the marathon.",
+    "options": ["too", "so", "enough", "very"],
+    "correctIndex": 0
+  },
+  {
+    "id": 11,
+    "level": "B1",
+    "weight": 3,
+    "type": "grammar",
+    "passage": null,
+    "question": "If it _____ tomorrow, we will stay at home.",
+    "options": ["rains", "will rain", "rained", "is raining"],
+    "correctIndex": 0
+  },
+  {
+    "id": 12,
+    "level": "B1",
+    "weight": 3,
+    "type": "reading",
+    "passage": "When Tom moved to a new city, he found it hard to make friends. He decided to join a local football club. After a few weeks, he not only improved his game but also met people who shared his interests.",
+    "question": "What helped Tom make friends?",
+    "options": [
+      "His new job",
+      "Joining a football club",
+      "Learning the language",
+      "Moving to a bigger house"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "id": 13,
+    "level": "B2",
+    "weight": 4,
+    "type": "grammar",
+    "passage": null,
+    "question": "If I _____ known about the traffic, I would have left earlier.",
+    "options": ["had", "have", "would has", "did"],
+    "correctIndex": 0
+  },
+  {
+    "id": 14,
+    "level": "B2",
+    "weight": 4,
+    "type": "vocabulary",
+    "passage": null,
+    "question": "The company decided to _____ the launch due to technical issues.",
+    "options": ["call off", "call on", "call for", "call up"],
+    "correctIndex": 0
+  },
+  {
+    "id": 15,
+    "level": "B2",
+    "weight": 4,
+    "type": "grammar",
+    "passage": null,
+    "question": "She said she _____ the report the day before.",
+    "options": ["finished", "had finished", "has finished", "was finishing"],
+    "correctIndex": 1
+  },
+  {
+    "id": 16,
+    "level": "B2",
+    "weight": 4,
+    "type": "reading",
+    "passage": "Despite initial skepticism, the research team's hypothesis was eventually vindicated. Their findings, published in a peer-reviewed journal, challenged decades of established theory and sparked a wave of follow-up studies across the field.",
+    "question": "How did the scientific community react to the findings?",
+    "options": [
+      "They ignored them",
+      "They challenged the theory immediately",
+      "They carried out further studies",
+      "They disproved the hypothesis"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": 17,
+    "level": "C1",
+    "weight": 5,
+    "type": "grammar",
+    "passage": null,
+    "question": "Hardly _____ the meeting when the fire alarm went off.",
+    "options": [
+      "had we started",
+      "we had started",
+      "we started",
+      "did we start"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 18,
+    "level": "C1",
+    "weight": 5,
+    "type": "vocabulary",
+    "passage": null,
+    "question": "His argument was so _____ that no one could find a flaw in it.",
+    "options": ["cogent", "fragile", "brittle", "tepid"],
+    "correctIndex": 0
+  },
+  {
+    "id": 19,
+    "level": "C1",
+    "weight": 5,
+    "type": "grammar",
+    "passage": null,
+    "question": "Were it not for her timely intervention, the deal _____ through.",
+    "options": ["would have fallen", "would fall", "had fallen", "fell"],
+    "correctIndex": 0
+  },
+  {
+    "id": 20,
+    "level": "C1",
+    "weight": 5,
+    "type": "reading",
+    "passage": "The author's prose, while ostensibly straightforward, conceals a labyrinthine structure of allusions that only the most attentive reader can fully unravel. It is this very tension between surface simplicity and underlying complexity that lends the work its enduring appeal.",
+    "question": "What does the author suggest about the work?",
+    "options": [
+      "It is appreciated only by academics",
+      "Its appeal stems from the contrast between its style and depth",
+      "Its structure is intentionally confusing",
+      "It is more accessible than it appears"
+    ],
+    "correctIndex": 1
   }
 ]
