@@ -21,16 +21,8 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      `${req.user?.id}-${uniqueSuffix}${path.extname(file.originalname)}`,
-    );
-  },
-});
+// ЗМІНЕНО: Використовуємо memoryStorage, щоб обробити файл перед збереженням
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 

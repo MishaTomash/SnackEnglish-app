@@ -16,7 +16,6 @@ import userRoutes from "./routes/userRoutes.js";
 import compression from "compression";
 import gamesRoutes from "./routes/gamesRoutes.js";
 import { seedGames } from "./services/gameService.js";
-// ДОДАНО: Імпорт нового сервісу контенту
 import profileRoutes from "./routes/profileRoutes.js";
 import duelRoutes from "./routes/duelRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -28,9 +27,21 @@ const PORT = process.env.PORT ?? 3000;
 const MONGODB_URI =
   process.env.MONGODB_URI ?? "mongodb://localhost:27017/snackenglish";
 
-app.use(cors({ origin: process.env.CLIENT_URL ?? "*", credentials: true }));
+// Виправлено CORS: "*" + credentials: true блокується браузером. origin: true вирішує це.
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || true,
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(compression());
+
+// ДОДАНО: Базове логування всіх запитів для дебагу в терміналі
+app.use((req, res, next) => {
+  console.log(`[HTTP] ${req.method} ${req.url}`);
+  next();
+});
 
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
@@ -57,9 +68,7 @@ async function bootstrap(): Promise<void> {
     await mongoose.connect(MONGODB_URI);
     console.log("Successfully connected to MongoDB.");
 
-    // ДОДАНО: Сідінг ігор (виклик функції)
     await seedGames();
-
     initCronJobs();
 
     void bot.launch(() => {

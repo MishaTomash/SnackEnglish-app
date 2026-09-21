@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import path from "path";
+import sharp from "sharp";
 import { User } from "../models/User.js";
 import { getLearnedWordsCount } from "../services/progressStatsService.js";
 
@@ -145,6 +147,8 @@ export const updateProfile = async (
   res: Response,
 ): Promise<void> => {
   try {
+    console.log(`[updateProfile] Запит від: ${req.user?.id}`);
+
     if (!req.user?.id) {
       res.status(401).json({ error: "Unauthorized" });
       return;
@@ -157,15 +161,33 @@ export const updateProfile = async (
     if (customDisplayName !== undefined)
       updateData.customDisplayName = customDisplayName;
 
-    // ДОДАНО: Можливість оновлювати HP з фронтенду при помилках в уроці
     if (hp !== undefined) updateData.hp = Number(hp);
 
-    if (req.file)
-      updateData.customAvatarUrl = `/uploads/avatars/${req.file.filename}`;
+    // ЗМІНЕНО: Обробка файлу через sharp
+    if (req.file) {
+      const filename = `${telegramId}-${Date.now()}.webp`;
+      const uploadPath = path.join(
+        process.cwd(),
+        "uploads",
+        "avatars",
+        filename,
+      );
+
+      await sharp(req.file.buffer)
+        .resize(300, 300, { fit: "cover" }) // Кропаємо рівний квадрат
+        .webp({ quality: 80 }) // Стискаємо у формат WebP
+        .toFile(uploadPath);
+
+      updateData.customAvatarUrl = `/uploads/avatars/${filename}`;
+      console.log(
+        `[updateProfile] Збережено стиснений аватар: ${updateData.customAvatarUrl}`,
+      );
+    }
 
     const user = await User.findOneAndUpdate({ telegramId }, updateData, {
       returnDocument: "after",
     });
+
     if (!user) {
       res.status(404).json({ error: "User not found" });
       return;
@@ -173,6 +195,7 @@ export const updateProfile = async (
 
     res.status(200).json(user);
   } catch (error) {
+    console.error("[updateProfile] Помилка:", error);
     res.status(500).json({ error: "Failed to update profile" });
   }
 };
