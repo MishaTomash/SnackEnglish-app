@@ -16,13 +16,14 @@ export const getLeaderboard = async (
       ],
     })
       .select(
-        "telegramId username telegramFirstName totalScore customAvatarUrl telegramPhotoUrl streak",
+        "telegramId username telegramFirstName weeklyScore customAvatarUrl telegramPhotoUrl streak",
       )
       .lean();
 
+    // ЗМІНЕНО: Топ тепер рахується за weeklyScore (поточний тиждень), не за весь час
     users.sort((a, b) => {
-      const scoreA = (a as any).totalScore || 0;
-      const scoreB = (b as any).totalScore || 0;
+      const scoreA = (a as any).weeklyScore || 0;
+      const scoreB = (b as any).weeklyScore || 0;
       if (scoreB !== scoreA) return scoreB - scoreA;
       return ((b as any).streak || 0) - ((a as any).streak || 0);
     });
@@ -30,7 +31,7 @@ export const getLeaderboard = async (
     const buildEntry = (u: any, position: number) => ({
       _id: u._id.toString(),
       nickname: u.username || u.telegramFirstName || "User",
-      score: u.totalScore || 0,
+      score: u.weeklyScore || 0,
       customAvatarUrl: u.customAvatarUrl,
       telegramPhotoUrl: u.telegramPhotoUrl,
       position,
@@ -60,23 +61,24 @@ export const getLeaderboard = async (
 };
 
 export const processGiveawayEnd = async (): Promise<void> => {
+  // ЗМІНЕНО: переможці розіграшу визначаються за weeklyScore (бали поточного тижня)
   const users = await User.find({
     $or: [
       { username: { $exists: true, $nin: [null, ""] } },
       { telegramFirstName: { $exists: true, $nin: [null, ""] } },
     ],
-    totalScore: { $gt: 0 },
+    weeklyScore: { $gt: 0 },
   })
     .select(
-      "username telegramFirstName totalScore customAvatarUrl telegramPhotoUrl streak",
+      "username telegramFirstName weeklyScore customAvatarUrl telegramPhotoUrl streak",
     )
     .lean();
 
   if (users.length === 0) return;
 
   users.sort((a, b) => {
-    const scoreA = (a as any).totalScore || 0;
-    const scoreB = (b as any).totalScore || 0;
+    const scoreA = (a as any).weeklyScore || 0;
+    const scoreB = (b as any).weeklyScore || 0;
     if (scoreB !== scoreA) return scoreB - scoreA;
     return ((b as any).streak || 0) - ((a as any).streak || 0);
   });
@@ -88,7 +90,7 @@ export const processGiveawayEnd = async (): Promise<void> => {
   const winners = top3.map((u, i) => ({
     userId: u._id.toString(),
     nickname: (u as any).username || (u as any).telegramFirstName || "User",
-    score: (u as any).totalScore || 0,
+    score: (u as any).weeklyScore || 0,
     avatarUrl: (u as any).customAvatarUrl || (u as any).telegramPhotoUrl,
     position: i + 1,
   }));
@@ -99,7 +101,8 @@ export const processGiveawayEnd = async (): Promise<void> => {
     winners,
   });
 
-  await User.updateMany({}, { $set: { totalScore: 0 } });
+  // ЗМІНЕНО: обнуляємо лише тижневий рахунок; totalScore (весь час, для профілю) лишається
+  await User.updateMany({}, { $set: { weeklyScore: 0 } });
 };
 
 export const forceEndGiveaway = async (

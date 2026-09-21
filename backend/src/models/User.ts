@@ -18,7 +18,8 @@ export interface IUser extends Document {
   blocked: boolean; // ДОДАНО: Блокування адміністратором
   createdAt: Date;
   updatedAt: Date;
-  totalScore: number;
+  totalScore: number; // Кубки за весь час (для профілю)
+  weeklyScore: number; // ДОДАНО: Кубки поточного тижня (для Топу і розіграшу)
 }
 
 const userSchema = new Schema<IUser>(
@@ -41,6 +42,7 @@ const userSchema = new Schema<IUser>(
     onboardingCompleted: { type: Boolean, default: false },
     blocked: { type: Boolean, default: false, index: true },
     totalScore: { type: Number, default: 0 },
+    weeklyScore: { type: Number, default: 0, index: true },
   },
   { timestamps: true },
 );

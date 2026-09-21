@@ -35,9 +35,11 @@ export const completeLesson = async (
     const scoreToAdd = 10;
     let finalTotalScore = (user as any).totalScore || 0;
 
+    // ЗМІНЕНО: одночасно інкрементуємо і весь-час рахунок (totalScore, для профілю),
+    // і тижневий рахунок (weeklyScore, для Топу й розіграшу)
     const updatedUser = await User.findByIdAndUpdate(
       user._id,
-      { $inc: { totalScore: scoreToAdd } },
+      { $inc: { totalScore: scoreToAdd, weeklyScore: scoreToAdd } },
       { new: true },
     );
     if (updatedUser) finalTotalScore = (updatedUser as any).totalScore;
