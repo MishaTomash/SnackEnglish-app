@@ -46,6 +46,7 @@ jobs:
               "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" \
               "CLIENT_URL=${{ secrets.CLIENT_URL }}" \
               "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" \
+              "VITE_ADMIN_ID=${{ secrets.VITE_ADMIN_ID }}" \
               > .env
 
             docker compose pull
