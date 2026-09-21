@@ -6,7 +6,6 @@ import type { DuelGameProps } from "../types";
 import { useUserStore } from "../../store/userStore";
 
 export const HotPotatoGame = ({
-  myScore,
   opponentState,
   roundData,
   roundResult,

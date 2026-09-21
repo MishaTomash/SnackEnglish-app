@@ -203,12 +203,24 @@ export const updateProfile = async (
 
 // ==================== АДМІН: КОРИСТУВАЧІ + АНАЛІТИКА ====================
 
+const ALLOWED_SORT_FIELDS = new Set([
+  "createdAt",
+  "streak",
+  "totalScore",
+  "weeklyScore",
+  "telegramId",
+]);
+
 export const getAllUsersAdmin = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const { search, status } = req.query;
+    const { search, status, sort, order } = req.query;
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+
     const filter: Record<string, unknown> = {};
 
     if (search) {
@@ -228,15 +240,30 @@ export const getAllUsersAdmin = async (
     if (status === "blocked") filter.blocked = true;
     if (status === "active") filter.blocked = { $ne: true };
 
-    const users = await User.find(filter)
-      .select(
-        "telegramId username telegramFirstName customDisplayName level streak blocked createdAt",
-      )
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .lean();
+    const sortField =
+      typeof sort === "string" && ALLOWED_SORT_FIELDS.has(sort)
+        ? sort
+        : "createdAt";
+    const sortOrder = order === "asc" ? 1 : -1;
 
-    res.status(200).json(users);
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select(
+          "telegramId username telegramFirstName customDisplayName level streak totalScore weeklyScore blocked createdAt",
+        )
+        .sort({ [sortField]: sortOrder })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      users,
+      total,
+      page,
+      pages: Math.max(1, Math.ceil(total / limit)),
+    });
   } catch (error) {
     console.error("Admin users list error:", error);
     res.status(500).json({ error: "Failed to fetch users" });
@@ -274,22 +301,75 @@ export const toggleUserBlock = async (
   }
 };
 
+/**
+ * Зводить telegramId -> зручне для відображення ім'я, одним запитом до User.
+ */
+const buildUserNameMap = async (
+  telegramIds: number[],
+): Promise<Map<number, string>> => {
+  if (telegramIds.length === 0) return new Map();
+
+  const users = await User.find({ telegramId: { $in: telegramIds } })
+    .select("telegramId username telegramFirstName customDisplayName")
+    .lean();
+
+  const map = new Map<number, string>();
+  users.forEach((u) => {
+    map.set(
+      u.telegramId,
+      u.customDisplayName ||
+        u.telegramFirstName ||
+        u.username ||
+        `#${u.telegramId}`,
+    );
+  });
+  return map;
+};
+
 export const getAnalyticsSummary = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const [topEvents, totalEvents, totalUsers, blockedUsers] =
-      await Promise.all([
-        AnalyticsEvent.aggregate([
-          { $group: { _id: "$eventType", count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-          { $limit: 20 },
-        ]),
-        AnalyticsEvent.countDocuments(),
-        User.countDocuments(),
-        User.countDocuments({ blocked: true }),
-      ]);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      topEvents,
+      totalEvents,
+      totalUsers,
+      blockedUsers,
+      eventsByDayRaw,
+      topActiveUsersRaw,
+    ] = await Promise.all([
+      AnalyticsEvent.aggregate([
+        { $group: { _id: "$eventType", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 20 },
+      ]),
+      AnalyticsEvent.countDocuments(),
+      User.countDocuments(),
+      User.countDocuments({ blocked: true }),
+      AnalyticsEvent.aggregate([
+        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      AnalyticsEvent.aggregate([
+        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        { $group: { _id: "$telegramId", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ]),
+    ]);
+
+    const nameMap = await buildUserNameMap(
+      topActiveUsersRaw.map((u) => u._id as number),
+    );
 
     res.status(200).json({
       totalEvents,
@@ -299,9 +379,66 @@ export const getAnalyticsSummary = async (
         eventType: e._id as string,
         count: e.count as number,
       })),
+      eventsByDay: eventsByDayRaw.map((d) => ({
+        date: d._id as string,
+        count: d.count as number,
+      })),
+      topActiveUsers: topActiveUsersRaw.map((u) => ({
+        telegramId: u._id as number,
+        name: nameMap.get(u._id as number) || `#${u._id}`,
+        count: u.count as number,
+      })),
     });
   } catch (error) {
     console.error("Admin analytics error:", error);
     res.status(500).json({ error: "Failed to fetch analytics" });
+  }
+};
+
+export const getRecentEvents = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { eventType, telegramId } = req.query;
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 30));
+
+    const filter: Record<string, unknown> = {};
+    if (eventType) filter.eventType = String(eventType);
+    if (telegramId && !isNaN(Number(telegramId))) {
+      filter.telegramId = Number(telegramId);
+    }
+
+    const [events, total] = await Promise.all([
+      AnalyticsEvent.find(filter)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      AnalyticsEvent.countDocuments(filter),
+    ]);
+
+    const nameMap = await buildUserNameMap(
+      Array.from(new Set(events.map((e) => e.telegramId))),
+    );
+
+    res.status(200).json({
+      events: events.map((e) => ({
+        id: e._id.toString(),
+        telegramId: e.telegramId,
+        userName: nameMap.get(e.telegramId) || `#${e.telegramId}`,
+        eventType: e.eventType,
+        metadata: e.metadata,
+        createdAt: e.createdAt,
+      })),
+      total,
+      page,
+      pages: Math.max(1, Math.ceil(total / limit)),
+    });
+  } catch (error) {
+    console.error("Admin events feed error:", error);
+    res.status(500).json({ error: "Failed to fetch events" });
   }
 };

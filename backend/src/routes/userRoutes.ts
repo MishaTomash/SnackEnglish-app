@@ -10,6 +10,7 @@ import {
   getAllUsersAdmin,
   toggleUserBlock,
   getAnalyticsSummary,
+  getRecentEvents,
 } from "../controllers/userController.js";
 import {
   getLeaderboard,
@@ -42,5 +43,6 @@ router.patch("/profile", upload.single("avatar"), updateProfile);
 router.get("/admin/users", adminOnly, getAllUsersAdmin);
 router.patch("/admin/users/:telegramId/block", adminOnly, toggleUserBlock);
 router.get("/admin/analytics", adminOnly, getAnalyticsSummary);
+router.get("/admin/events", adminOnly, getRecentEvents);
 
 export default router;
