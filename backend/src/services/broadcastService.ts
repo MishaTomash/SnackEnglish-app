@@ -12,6 +12,8 @@ export interface BroadcastResult {
 /**
  * Копіює одне повідомлення (текст/фото/відео/аудіо/опитування — будь-який тип)
  * усім користувачам бота з інтервалом між відправками.
+ * Заразом прибирає стару reply-клавіатуру (наприклад, залишену попередньою
+ * версією бота), якщо вона в користувача ще відображається.
  */
 export const broadcastMessage = async (
   telegram: Telegram,
@@ -25,7 +27,9 @@ export const broadcastMessage = async (
 
   for (const user of users) {
     try {
-      await telegram.copyMessage(user.telegramId, fromChatId, messageId);
+      await telegram.copyMessage(user.telegramId, fromChatId, messageId, {
+        reply_markup: { remove_keyboard: true },
+      });
       success += 1;
     } catch (error) {
       failed += 1;
@@ -43,6 +47,7 @@ export const broadcastMessage = async (
 
 /**
  * Надсилає текстове повідомлення усім користувачам бота з інтервалом між відправками.
+ * Заразом прибирає стару reply-клавіатуру, якщо вона в користувача ще відображається.
  */
 export const broadcastText = async (
   telegram: Telegram,
@@ -55,7 +60,10 @@ export const broadcastText = async (
 
   for (const user of users) {
     try {
-      await telegram.sendMessage(user.telegramId, text, { parse_mode: "HTML" });
+      await telegram.sendMessage(user.telegramId, text, {
+        parse_mode: "HTML",
+        reply_markup: { remove_keyboard: true },
+      });
       success += 1;
     } catch (error) {
       failed += 1;
