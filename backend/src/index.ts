@@ -20,6 +20,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import duelRoutes from "./routes/duelRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import { initDuelSocketService } from "./services/duelSocketService.js";
+import feedbackRoutes from "./routes/feedbackRoutes.js";
 import { Server } from "http";
 
 const app = express();
@@ -53,6 +54,7 @@ app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/games", authMiddleware, gamesRoutes);
 app.use("/api/profile", authMiddleware, profileRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 

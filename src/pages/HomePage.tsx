@@ -19,6 +19,8 @@ import { useUserStore } from "../store/userStore";
 import { useRepetitionStore } from "../store/repetitionStore";
 import { CookieMascot } from "../shared/ui/CookieMascot";
 import { apiClient } from "../shared/api/apiClient";
+import { MessageCircleWarning } from "lucide-react";
+import { FeedbackModal } from "../shared/ui/FeedbackModal";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -50,6 +52,7 @@ export const HomePage = () => {
 
   // Стейт для розсилки
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [broadcastText, setBroadcastText] = useState("");
   const [isBroadcasting, setIsBroadcasting] = useState(false);
 
@@ -156,6 +159,13 @@ export const HomePage = () => {
             <Trophy className="w-4 h-4" />
             <span>{totalScore || 0}</span>
           </div>
+
+          <button
+            onClick={() => setIsFeedbackOpen(true)}
+            className="p-2 rounded-full bg-[var(--bg-card)] text-[var(--text-main)] transition-colors active:opacity-70 border border-[var(--border-color)]"
+          >
+            <MessageCircleWarning className="w-5 h-5" />
+          </button>
 
           <StreakBadge streak={streak} />
 
@@ -360,6 +370,9 @@ export const HomePage = () => {
           </div>
         </Card>
       </div>
+      {isFeedbackOpen && (
+        <FeedbackModal onClose={() => setIsFeedbackOpen(false)} />
+      )}
     </Screen>
   );
 };
