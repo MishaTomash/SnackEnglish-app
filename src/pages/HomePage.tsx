@@ -160,19 +160,6 @@ export const HomePage = () => {
             <span>{totalScore || 0}</span>
           </div>
 
-          {/* Кнопка фідбеку — печиво з бейджем */}
-          <button
-            onClick={() => setIsFeedbackOpen(true)}
-            aria-label="Повідомити про проблему"
-            title="Повідомити про проблему"
-            className="relative w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center active:scale-95 transition-transform shrink-0"
-          >
-            <CookieMascot state="happy" size={32} />
-            <span className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full bg-[var(--accent-cta)] text-white flex items-center justify-center border-2 border-[var(--bg-card)] shadow-sm">
-              <MessageCircleWarning className="w-2.5 h-2.5" strokeWidth={3} />
-            </span>
-          </button>
-
           <StreakBadge streak={streak} />
 
           <Link
@@ -376,6 +363,18 @@ export const HomePage = () => {
           </div>
         </Card>
       </div>
+      {/* FAB — повідомити про проблему */}
+      <button
+        onClick={() => setIsFeedbackOpen(true)}
+        aria-label="Повідомити про проблему"
+        title="Повідомити про проблему"
+        className="fixed right-4 bottom-24 z-40 w-14 h-14 rounded-full bg-[var(--accent-cta)] shadow-xl shadow-black/25 flex items-center justify-center active:scale-95 transition-transform"
+      >
+        <CookieMascot state="happy" size={38} />
+        <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-white dark:bg-[var(--bg-card)] text-[var(--accent-cta)] flex items-center justify-center border-2 border-[var(--accent-cta)] shadow-sm">
+          <MessageCircleWarning className="w-3 h-3" strokeWidth={2.5} />
+        </span>
+      </button>
       {isFeedbackOpen && (
         <FeedbackModal onClose={() => setIsFeedbackOpen(false)} />
       )}
