@@ -12,7 +12,6 @@ const DEV_FALLBACK_INIT_DATA =
 function getTelegramInitData(): string {
   if (typeof window === "undefined") return "";
 
-  // 1. Спроба отримати з нативного об'єкта Telegram WebApp
   const tg = (
     window as unknown as {
       Telegram?: {
@@ -28,7 +27,6 @@ function getTelegramInitData(): string {
     return realInitData;
   }
 
-  // 2. Спроба витягнути з URL-хешу (#tgWebAppData=...)
   try {
     const hash = window.location.hash.slice(1);
     const hashParams = new URLSearchParams(hash);
@@ -40,13 +38,15 @@ function getTelegramInitData(): string {
     // Ігноруємо помилки парсингу хешу
   }
 
-  // 3. Фолбек для розробки поза Telegram
   return import.meta.env.DEV ? DEV_FALLBACK_INIT_DATA : "";
 }
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
+  // ЖОДНИХ Content-Type тут! Axios v1 сам виставить правильний:
+  // - application/json для звичайних об'єктів
+  // - multipart/form-data; boundary=... для FormData
 });
 
 apiClient.interceptors.request.use(
@@ -54,19 +54,14 @@ apiClient.interceptors.request.use(
     const initData = getTelegramInitData();
 
     if (initData && config.headers) {
-      config.headers.Authorization = `Bearer ${initData}`;
+      config.headers.set("Authorization", `Bearer ${initData}`);
     }
 
-    // ВАЖЛИВО: для FormData axios має сам виставити
-    // "multipart/form-data; boundary=..." — тому прибираємо будь-який
-    // Content-Type, який міг залишитися з дефолтів або бути виставленим вручну.
-    if (config.data instanceof FormData) {
-      if (config.headers) {
-        delete config.headers["Content-Type"];
-      }
-    } else if (config.headers && !config.headers["Content-Type"]) {
-      // Для звичайних JSON-запитів — стандартний заголовок
-      config.headers["Content-Type"] = "application/json";
+    // Страховка: якщо хтось явно виставив Content-Type у конкретному
+    // виклику для FormData — знімаємо його (axios v1 - це AxiosHeaders,
+    // тому використовуємо .set()/.delete(), а не delete obj[key])
+    if (config.data instanceof FormData && config.headers) {
+      config.headers.set("Content-Type", false as unknown as string);
     }
 
     return config;
