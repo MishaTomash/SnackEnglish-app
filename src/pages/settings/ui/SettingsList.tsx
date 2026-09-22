@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -29,7 +29,6 @@ export const SettingsList = ({
 }: Props) => {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
-  const [safeAvatarUrl, setSafeAvatarUrl] = useState<string | null>(null);
 
   const {
     level,
@@ -45,50 +44,6 @@ export const SettingsList = ({
   const currentDisplayName =
     customDisplayName || telegramFirstName || "Користувач";
   const currentPhotoUrl = resolveAvatarUrl(customAvatarUrl) || telegramPhotoUrl;
-
-  // Обхід блокування тунелів (localtunnel/ngrok) для зображень
-  useEffect(() => {
-    if (!currentPhotoUrl) {
-      setSafeAvatarUrl(null);
-      return;
-    }
-
-    setImgError(false);
-
-    // Якщо це телеграмівське фото або вже локальний Blob, обхід не потрібен
-    if (
-      currentPhotoUrl.includes("t.me") ||
-      currentPhotoUrl.startsWith("blob:") ||
-      currentPhotoUrl.startsWith("data:")
-    ) {
-      setSafeAvatarUrl(currentPhotoUrl);
-      return;
-    }
-
-    let isMounted = true;
-
-    // Фетчимо картинку з заголовками для обходу сторінки-попередження
-    fetch(currentPhotoUrl, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-        "Bypass-Tunnel-Reminder": "true",
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Image load failed");
-        return res.blob();
-      })
-      .then((blob) => {
-        if (isMounted) setSafeAvatarUrl(URL.createObjectURL(blob));
-      })
-      .catch(() => {
-        if (isMounted) setImgError(true);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentPhotoUrl]);
 
   return (
     <Screen className="justify-start p-4 space-y-6 bg-[var(--bg-app)] pb-20">
@@ -120,9 +75,9 @@ export const SettingsList = ({
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {safeAvatarUrl && !imgError ? (
+            {currentPhotoUrl && !imgError ? (
               <img
-                src={safeAvatarUrl}
+                src={currentPhotoUrl}
                 alt="Avatar"
                 className="w-12 h-12 rounded-full object-cover bg-[var(--bg-app)]"
                 onError={() => setImgError(true)}

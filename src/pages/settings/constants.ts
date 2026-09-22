@@ -13,18 +13,15 @@ export const resolveAvatarUrl = (url: string | null) => {
   if (!url) return null;
   if (url.startsWith("http")) return url;
 
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  let apiBase: string;
   try {
-    // Беремо URL з .env (наприклад "https://...ngrok-free.dev/api")
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
-    // Витягуємо тільки чистий домен "https://...ngrok-free.dev"
-    const urlObj = new URL(apiUrl);
-    const apiBase = urlObj.origin;
-
-    // Додаємо ngrok-skip-browser-warning, щоб ngrok не блокував картинку
-    return `${apiBase}${url}?ngrok-skip-browser-warning=true`;
-  } catch (e) {
-    // Якщо .env пустий або сталася помилка — використовуємо твій поточний ngrok як запасний варіант
-    return `https://trustable-kerchief-cringing.ngrok-free.dev${url}?ngrok-skip-browser-warning=true`;
+    apiBase = new URL(apiUrl).origin;
+  } catch {
+    // apiUrl відносний (наприклад "/api") — беремо поточний домен сторінки
+    apiBase = window.location.origin;
   }
+
+  return `${apiBase}${url}`;
 };
