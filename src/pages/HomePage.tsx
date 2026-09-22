@@ -10,6 +10,7 @@ import {
   Heart,
   Flame,
   ShieldCheck,
+  MessageCircleWarning,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
@@ -19,7 +20,6 @@ import { useUserStore } from "../store/userStore";
 import { useRepetitionStore } from "../store/repetitionStore";
 import { CookieMascot } from "../shared/ui/CookieMascot";
 import { apiClient } from "../shared/api/apiClient";
-import { MessageCircleWarning } from "lucide-react";
 import { FeedbackModal } from "../shared/ui/FeedbackModal";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -363,6 +363,7 @@ export const HomePage = () => {
           </div>
         </Card>
       </div>
+
       {/* FAB — повідомити про проблему */}
       <button
         onClick={() => setIsFeedbackOpen(true)}
@@ -375,6 +376,7 @@ export const HomePage = () => {
           <MessageCircleWarning className="w-3 h-3" strokeWidth={2.5} />
         </span>
       </button>
+
       {isFeedbackOpen && (
         <FeedbackModal onClose={() => setIsFeedbackOpen(false)} />
       )}

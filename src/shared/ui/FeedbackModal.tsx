@@ -49,11 +49,11 @@ export const FeedbackModal = ({ onClose }: Props) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm h-[100dvh]"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-[var(--bg-card)] rounded-t-3xl flex flex-col max-h-[90vh] shadow-2xl"
+        className="w-full max-w-md bg-[var(--bg-card)] rounded-t-3xl flex flex-col max-h-[85dvh] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
@@ -86,7 +86,7 @@ export const FeedbackModal = ({ onClose }: Props) => {
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
