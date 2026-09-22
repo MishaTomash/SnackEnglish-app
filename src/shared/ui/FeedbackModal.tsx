@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Camera, Send, AlertCircle } from "lucide-react";
 import { apiClient } from "../api/apiClient";
 import { CookieMascot } from "./CookieMascot";
@@ -47,13 +48,15 @@ export const FeedbackModal = ({ onClose }: Props) => {
 
   const canSend = text.trim().length > 0 && !isSending;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm h-[100dvh]"
+      className="fixed inset-0 z-[999] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+      style={{ height: "100dvh" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-[var(--bg-card)] rounded-t-3xl flex flex-col max-h-[85dvh] shadow-2xl"
+        className="w-full max-w-md bg-[var(--bg-card)] rounded-t-3xl flex flex-col shadow-2xl"
+        style={{ maxHeight: "85dvh" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
@@ -160,6 +163,7 @@ export const FeedbackModal = ({ onClose }: Props) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
