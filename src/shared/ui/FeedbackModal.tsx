@@ -36,6 +36,7 @@ export const FeedbackModal = ({ onClose }: Props) => {
       formData.append("text", text.trim());
       photos.forEach((photo) => formData.append("photos", photo));
 
+      // Content-Type виставляється автоматично в apiClient інтерцепторі
       await apiClient.post("/feedback", formData);
       onClose();
     } catch (err) {
@@ -148,7 +149,7 @@ export const FeedbackModal = ({ onClose }: Props) => {
           )}
         </div>
 
-        {/* Sticky footer — кнопка завжди видима */}
+        {/* Sticky footer */}
         <div
           className="px-5 pt-3 border-t border-[var(--border-color)] bg-[var(--bg-card)] shrink-0"
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}

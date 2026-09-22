@@ -18,6 +18,12 @@ export const sendFeedback = async (
       return;
     }
 
+    const files = (req.files as Express.Multer.File[]) || [];
+
+    // ТИМЧАСОВИЙ DEBUG — прибери після перевірки
+    console.log("[feedback] content-type:", req.headers["content-type"]);
+    console.log("[feedback] files received:", files.length);
+
     const telegramId = req.user?.id;
     const username = req.user?.username
       ? `@${req.user.username}`
@@ -29,8 +35,6 @@ export const sendFeedback = async (
       `Від: ${firstName} (${username})\n` +
       `Telegram ID: <code>${telegramId ?? "невідомо"}</code>\n\n` +
       `${text.trim()}`;
-
-    const files = (req.files as Express.Multer.File[]) || [];
 
     if (files.length === 0) {
       await bot.telegram.sendMessage(adminId, caption, {

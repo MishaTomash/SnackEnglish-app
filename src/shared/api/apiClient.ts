@@ -47,9 +47,6 @@ function getTelegramInitData(): string {
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 apiClient.interceptors.request.use(
@@ -58,6 +55,18 @@ apiClient.interceptors.request.use(
 
     if (initData && config.headers) {
       config.headers.Authorization = `Bearer ${initData}`;
+    }
+
+    // ВАЖЛИВО: для FormData axios має сам виставити
+    // "multipart/form-data; boundary=..." — тому прибираємо будь-який
+    // Content-Type, який міг залишитися з дефолтів або бути виставленим вручну.
+    if (config.data instanceof FormData) {
+      if (config.headers) {
+        delete config.headers["Content-Type"];
+      }
+    } else if (config.headers && !config.headers["Content-Type"]) {
+      // Для звичайних JSON-запитів — стандартний заголовок
+      config.headers["Content-Type"] = "application/json";
     }
 
     return config;
