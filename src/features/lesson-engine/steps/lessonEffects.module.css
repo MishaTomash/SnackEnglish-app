@@ -1,0 +1,160 @@
+/* Анімації степів. CSS-модуль: імена класів і keyframes локальні, index.css не чіпаємо */
+
+.fadeIn {
+    animation: fade-in 320ms ease-out both;
+}
+
+.bubbleIn {
+    animation: bubble-in 260ms ease-out both;
+}
+
+.pop {
+    animation: pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ---------- Ефекти EventStep ---------- */
+
+.shake {
+    animation: shake 600ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.flash {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: #fff;
+    pointer-events: none;
+    animation: flash 700ms ease-out forwards;
+}
+
+/* Дощ — два шари косих "штрихів" різної щільності, що зсуваються вниз.
+   Зсув дорівнює висоті тайла, тож цикл безшовний. Жодних DOM-краплин. */
+.rain {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-color: rgba(10, 20, 40, 0.28);
+    background-image:
+        repeating-linear-gradient(100deg,
+            transparent 0 22px,
+            rgba(174, 214, 241, 0.35) 22px 23px,
+            transparent 23px 48px),
+        repeating-linear-gradient(96deg,
+            transparent 0 34px,
+            rgba(174, 214, 241, 0.2) 34px 35px,
+            transparent 35px 70px);
+    background-size:
+        200px 200px,
+        280px 280px;
+    animation:
+        rain 0.55s linear infinite,
+        rain-in 600ms ease-out both;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes bubble-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes pop {
+    from {
+        opacity: 0;
+        transform: scale(0.4);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes shake {
+
+    10%,
+    90% {
+        transform: translateX(-2px);
+    }
+
+    20%,
+    80% {
+        transform: translateX(4px);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translateX(-8px);
+    }
+
+    40%,
+    60% {
+        transform: translateX(8px);
+    }
+}
+
+@keyframes flash {
+    from {
+        opacity: 0.9;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes rain {
+    to {
+        background-position:
+            0 200px,
+            0 280px;
+    }
+}
+
+@keyframes rain-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .fadeIn,
+    .bubbleIn,
+    .pop,
+    .shake {
+        animation: none;
+    }
+
+    /* Спалах лишаємо миттєвим; дощ — статичним */
+    .flash {
+        animation-duration: 1ms;
+    }
+
+    .rain {
+        animation: rain-in 1ms both;
+    }
+}

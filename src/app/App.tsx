@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -23,6 +24,15 @@ import { FriendsPage } from "../pages/FriendsPage";
 import { DuelRoomPage } from "../pages/DuelRoomPage";
 
 import { LearningHubPage } from "../pages/learning/LearningHubPage";
+import { ChapterMapPage } from "../pages/learning/ChapterMapPage";
+import { LessonRunnerPage } from "../pages/learning/LessonRunnerPage";
+import { StoryAdminPage } from "../pages/learning/admin/StoryAdminPage";
+import { StoryAdminChapterPage } from "../pages/learning/admin/StoryAdminChapterPage";
+import { useIsAdmin } from "../features/story-admin/lib/useIsAdmin";
+
+/** Сторінки лише для адміна. Справжній захист — на сервері (adminOnly) */
+const AdminOnly = ({ children }: { children: ReactNode }) =>
+  useIsAdmin() ? <>{children}</> : <Navigate to="/learning" replace />;
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
@@ -77,6 +87,8 @@ const AppContent = () => {
 
   const isDuel = location.pathname.includes("/room/");
   const isOnboarding = location.pathname === "/onboarding";
+  // Урок — повноекранний режим без нижнього меню
+  const isLesson = /^\/learning\/[^/]+\/lesson\//.test(location.pathname);
 
   if (!onboardingCompleted && !isOnboarding)
     return <Navigate to="/onboarding" replace />;
@@ -90,6 +102,28 @@ const AppContent = () => {
         <Route path="/settings" element={<SettingsPage />} />
 
         <Route path="/learning" element={<LearningHubPage />} />
+        {/* Статичний "admin" має пріоритет над :chapterId (slug "admin" зарезервовано на сервері) */}
+        <Route
+          path="/learning/admin"
+          element={
+            <AdminOnly>
+              <StoryAdminPage />
+            </AdminOnly>
+          }
+        />
+        <Route
+          path="/learning/admin/:chapterId"
+          element={
+            <AdminOnly>
+              <StoryAdminChapterPage />
+            </AdminOnly>
+          }
+        />
+        <Route path="/learning/:chapterId" element={<ChapterMapPage />} />
+        <Route
+          path="/learning/:chapterId/lesson/:nodeId"
+          element={<LessonRunnerPage />}
+        />
 
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/games" element={<GamesPage />} />
@@ -98,7 +132,7 @@ const AppContent = () => {
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/room/:roomId" element={<DuelRoomPage />} />
       </Routes>
-      {!isOnboarding && !isDuel && <BottomNav />}
+      {!isOnboarding && !isDuel && !isLesson && <BottomNav />}
     </div>
   );
 };
@@ -113,7 +147,7 @@ export const App = () => {
         if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
         if (tg.setBackgroundColor) tg.setBackgroundColor("#241812");
         if (tg.setHeaderColor) tg.setHeaderColor("#241812");
-      } catch (e) {}
+      } catch (e) { }
     }
 
     document.body.style.setProperty("background-color", "#241812", "important");
@@ -126,7 +160,7 @@ export const App = () => {
 
     try {
       initTelegramApp();
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   return (
