@@ -8,7 +8,7 @@ import { ConfirmLevel } from "./ui/ConfirmLevel";
 import { TestResult } from "./ui/TestResult";
 
 import { useUserStore } from "../../store/userStore";
-import { useLearningStore } from "../../store/learningStore";
+import { useStoryStore } from "../../store/storyStore";
 import type { EnglishLevel } from "../../entities/word/types";
 
 export type SettingsStep =
@@ -21,7 +21,6 @@ export type SettingsStep =
 export const SettingsPage = () => {
   const navigate = useNavigate();
   const { updateLevel } = useUserStore();
-  const { fetchCategories } = useLearningStore();
 
   const [step, setStep] = useState<SettingsStep>("list");
   const [pendingLevel, setPendingLevel] = useState<EnglishLevel | null>(null);
@@ -35,12 +34,14 @@ export const SettingsPage = () => {
     try {
       const success = await updateLevel(newLevel);
       if (success) {
-        await fetchCategories(newLevel);
+        // "Навчання" пам'ятає останній обраний рівень — скидаємо його,
+        // щоб розділи підвантажились уже для нового рівня юзера
+        useStoryStore.setState({ level: null, chapters: [] });
         navigate("/");
       } else {
         setGlobalError("Не вдалося оновити рівень. Спробуй ще раз.");
       }
-    } catch (err) {
+    } catch {
       setGlobalError("Помилка з'єднання. Перевір інтернет і спробуй ще раз.");
     } finally {
       setLocalLoading(null);

@@ -7,7 +7,6 @@ import { Button } from "../shared/ui/Button";
 import { Badge } from "../shared/ui/Badge";
 import { CookieMascot } from "../shared/ui/CookieMascot";
 import { useUserStore } from "../store/userStore";
-import { useLearningStore } from "../store/learningStore";
 import type { EnglishLevel } from "../entities/word/types";
 import { LevelPlacementTest } from "../shared/ui/LevelPlacementTest";
 
@@ -16,7 +15,6 @@ type OnboardingStep = "choice" | "manual" | "test" | "saving";
 export const OnboardingPage = () => {
   const navigate = useNavigate();
   const { completeOnboarding, isLoading, error } = useUserStore();
-  const fetchCategories = useLearningStore((state) => state.fetchCategories);
 
   const [step, setStep] = useState<OnboardingStep>("choice");
   const [determinedLevel, setDeterminedLevel] = useState<EnglishLevel | null>(
@@ -29,7 +27,6 @@ export const OnboardingPage = () => {
 
     const success = await completeOnboarding(level);
     if (success) {
-      await fetchCategories(level);
       navigate("/");
     }
   };
