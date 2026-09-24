@@ -1,4 +1,3 @@
-import { DailyPlan } from "../../models/DailyPlan.js";
 import type { DuelGameAdapter, DuelGameState } from "../types.js";
 import { WORDS_BY_LEVEL } from "../mockWords.js";
 
@@ -17,12 +16,10 @@ export class HotPotatoAdapter implements DuelGameAdapter {
 
   async generateRound(levelOfBothPlayers: (string | null)[]) {
     const level = this.config.level || "A1";
-    const plans = await DailyPlan.find({ level }).lean();
-    let allWords = plans.flatMap((p) => p.words || []);
-
-    if (allWords.length < 4) {
-      allWords = (WORDS_BY_LEVEL[level] || WORDS_BY_LEVEL["A1"]) as any;
-    }
+    let allWords =
+      (WORDS_BY_LEVEL as Record<string, any[]>)[level] ||
+      (WORDS_BY_LEVEL as Record<string, any[]>)["A1"] ||
+      [];
 
     const shuffled = shuffleArray(allWords);
     const correct = shuffled[0];
@@ -34,7 +31,7 @@ export class HotPotatoAdapter implements DuelGameAdapter {
     ]);
 
     return {
-      word: correct.word || (correct as any).text,
+      word: correct.word || correct.text,
       options,
       correctAnswer: correct.translation,
       roundStartTime: Date.now(),

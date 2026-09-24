@@ -11,13 +11,11 @@ import { initTelegramApp } from "../shared/lib/telegram";
 import { useUserStore } from "../store/userStore";
 import { OnboardingPage } from "../pages/OnboardingPage";
 import { HomePage } from "../pages/HomePage";
-import { PracticePage } from "../pages/PracticePage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
 import { LeaderboardPage } from "../pages/LeaderboardPage";
 import { BottomNav } from "../widgets/BottomNav";
 import { Screen } from "../shared/ui/Screen";
 import { CookieMascot } from "../shared/ui/CookieMascot";
-import { useLearningStore } from "../store/learningStore";
 import { GamesPage } from "../pages/GamesPage";
 import { GameRunnerPage } from "../pages/GameRunnerPage";
 import { ProfilePage } from "../pages/ProfilePage";
@@ -25,18 +23,6 @@ import { FriendsPage } from "../pages/FriendsPage";
 import { DuelRoomPage } from "../pages/DuelRoomPage";
 
 import { LearningHubPage } from "../pages/learning/LearningHubPage";
-import { CategoryPathPage } from "../pages/learning/CategoryPathPage";
-import { LessonRunner } from "../pages/learning/LessonRunner";
-import { AdminPage } from "../pages/admin/AdminPage";
-
-// Перевірка, чи поточний telegram id співпадає з адмін-id.
-// VITE_ADMIN_ID має бути задано у фронтенд .env (той самий id, що й у бекенда).
-const isAdminUser = (): boolean => {
-  const tg = (window as any).Telegram?.WebApp;
-  const currentId = tg?.initDataUnsafe?.user?.id;
-  const adminId = Number(import.meta.env.VITE_ADMIN_ID || "0");
-  return Boolean(currentId) && Number(currentId) === adminId;
-};
 
 const AppContent = () => {
   const { onboardingCompleted, fetchUser } = useUserStore();
@@ -66,15 +52,7 @@ const AppContent = () => {
 
   useEffect(() => {
     const initApp = async () => {
-      const cachedLevel = useUserStore.getState().level;
-      if (cachedLevel) {
-        await Promise.all([
-          fetchUser(),
-          useLearningStore.getState().fetchCategories(cachedLevel),
-        ]);
-      } else {
-        await fetchUser();
-      }
+      await fetchUser();
       setIsInitializing(false);
     };
     void initApp();
@@ -97,10 +75,8 @@ const AppContent = () => {
     );
   }
 
-  const isInsideLesson = location.pathname.startsWith("/learning/unit/");
   const isDuel = location.pathname.includes("/room/");
   const isOnboarding = location.pathname === "/onboarding";
-  const isAdminPage = location.pathname === "/admin";
 
   if (!onboardingCompleted && !isOnboarding)
     return <Navigate to="/onboarding" replace />;
@@ -114,27 +90,15 @@ const AppContent = () => {
         <Route path="/settings" element={<SettingsPage />} />
 
         <Route path="/learning" element={<LearningHubPage />} />
-        <Route
-          path="/learning/category/:categoryId"
-          element={<CategoryPathPage />}
-        />
-        <Route path="/learning/unit/:unitId" element={<LessonRunner />} />
 
-        <Route path="/practice" element={<PracticePage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/games" element={<GamesPage />} />
         <Route path="/games/:gameId" element={<GameRunnerPage />} />
         <Route path="/profile/:userId" element={<ProfilePage />} />
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/room/:roomId" element={<DuelRoomPage />} />
-        <Route
-          path="/admin"
-          element={isAdminUser() ? <AdminPage /> : <Navigate to="/" replace />}
-        />
       </Routes>
-      {!isInsideLesson && !isOnboarding && !isDuel && !isAdminPage && (
-        <BottomNav />
-      )}
+      {!isOnboarding && !isDuel && <BottomNav />}
     </div>
   );
 };

@@ -10,7 +10,6 @@ import { Game } from "./models/Game.js";
 import { UserGamePurchase } from "./models/UserGamePurchase.js";
 import { ManualPaymentRequest } from "./models/ManualPaymentRequest.js";
 import { Friendship } from "./models/Friendship.js";
-import { getLearnedWordsCount } from "./services/progressStatsService.js";
 import { broadcastMessage } from "./services/broadcastService.js";
 
 const botToken = process.env.BOT_TOKEN;
@@ -111,7 +110,6 @@ bot.command("profile", async (ctx) => {
       return ctx.reply("Спочатку запусти бота командою /start !");
     }
 
-    const wordsLearned = await getLearnedWordsCount(user._id);
     const displayName = user.username
       ? `@${user.username}`
       : user.telegramFirstName;
@@ -120,7 +118,6 @@ bot.command("profile", async (ctx) => {
       `👤 <b>Профіль:</b> ${displayName}\n\n` +
       `🏆 <b>Кубків:</b> ${user.totalScore || 0}\n` +
       `🔥 <b>Стрік:</b> ${user.streak || 0} днів\n` +
-      `📚 <b>Вивчено слів:</b> ${wordsLearned}\n` +
       `📈 <b>Рівень:</b> ${user.level || "Не обрано"}`;
 
     const appUrl = process.env.VITE_APP_URL?.trim() || "";

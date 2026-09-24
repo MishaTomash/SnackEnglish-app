@@ -1,4 +1,3 @@
-import { DailyPlan } from "../../models/DailyPlan.js";
 import type { DuelGameAdapter, DuelGameState } from "../types.js";
 import { WORDS_BY_LEVEL } from "../mockWords.js";
 
@@ -17,27 +16,24 @@ export class SpeedClashAdapter implements DuelGameAdapter {
 
   async generateRound(levelOfBothPlayers: (string | null)[]) {
     const level = this.config.level || "A1";
-    const plans = await DailyPlan.find({ level }).lean();
-    let allWords = plans.flatMap((p) => p.words || []);
+    let allWords =
+      (WORDS_BY_LEVEL as Record<string, any[]>)[level] ||
+      (WORDS_BY_LEVEL as Record<string, any[]>)["A1"] ||
+      [];
 
-    // Фолбек на локальний словник за обраним рівнем
-    if (allWords.length < 4) {
-      allWords = (WORDS_BY_LEVEL[level] || WORDS_BY_LEVEL["A1"]) as any;
-    }
-
-    // ВИПРАВЛЕНО: Надійне перемішування масиву слів
+    // Надійне перемішування масиву слів
     const shuffled = shuffleArray(allWords);
     const correct = shuffled[0];
     const wrong = shuffled.slice(1, 4);
 
-    // ВИПРАВЛЕНО: Надійне перемішування 4 варіантів відповідей
+    // Надійне перемішування 4 варіантів відповідей
     const options = shuffleArray([
       correct.translation,
       ...wrong.map((w: any) => w.translation),
     ]);
 
     return {
-      word: correct.word || (correct as any).text,
+      word: correct.word || correct.text,
       options,
       correctAnswer: correct.translation,
       roundStartTime: Date.now(),

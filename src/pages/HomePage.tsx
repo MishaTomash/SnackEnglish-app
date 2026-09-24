@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  BrainCircuit,
   Sparkles,
   MoreVertical,
   User as UserIcon,
@@ -9,7 +8,6 @@ import {
   Users,
   Heart,
   Flame,
-  ShieldCheck,
   MessageCircleWarning,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
@@ -17,7 +15,6 @@ import { Card } from "../shared/ui/Card";
 import { Badge } from "../shared/ui/Badge";
 import { StreakBadge } from "../entities/user/ui/StreakBadge";
 import { useUserStore } from "../store/userStore";
-import { useRepetitionStore } from "../store/repetitionStore";
 import { CookieMascot } from "../shared/ui/CookieMascot";
 import { apiClient } from "../shared/api/apiClient";
 import { FeedbackModal } from "../shared/ui/FeedbackModal";
@@ -46,8 +43,6 @@ export const HomePage = () => {
     fetchUser,
   } = useUserStore();
 
-  const { dailyQueue, loadDailyWords, status } = useRepetitionStore();
-
   const [stats, setStats] = useState({ likesCount: 0, friendsCount: 0 });
 
   // Стейт для розсилки
@@ -61,12 +56,6 @@ export const HomePage = () => {
   useEffect(() => {
     fetchUser(true);
   }, [fetchUser]);
-
-  useEffect(() => {
-    if (status === "idle") {
-      loadDailyWords();
-    }
-  }, [status, loadDailyWords]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -107,9 +96,6 @@ export const HomePage = () => {
       setIsBroadcasting(false);
     }
   };
-
-  const reviewWordsCount = dailyQueue.length;
-  const hasReviews = reviewWordsCount > 0;
 
   const currentDisplayName =
     customDisplayName || telegramFirstName || "Користувач";
@@ -171,17 +157,9 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Панель адміністратора (Кнопка розсилки + вхід в адмінку) */}
+      {/* Панель адміністратора (Кнопка розсилки) */}
       {isAdmin && (
         <Card className="p-3 bg-[var(--bg-card)] border-[var(--border-color)] flex flex-col gap-2">
-          <Link
-            to="/admin"
-            className="w-full py-2.5 rounded-xl bg-violet-500/10 text-violet-400 font-bold border border-violet-500/20 active:opacity-70 transition-opacity flex items-center justify-center gap-2 text-sm"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            Адмін-панель
-          </Link>
-
           {!isBroadcastOpen ? (
             <button
               onClick={() => setIsBroadcastOpen(true)}
@@ -274,7 +252,7 @@ export const HomePage = () => {
               Час для англійської!
             </h3>
             <p className="text-xs text-amber-800/80 dark:text-amber-200/80 font-medium leading-relaxed">
-              Снакі вже зачекався. Продовжимо вивчення нових слів?
+              Снакі вже зачекався. Погляньмо, що нового?
             </p>
           </div>
           <div className="absolute right-0 bottom-0 translate-x-2 translate-y-2">
@@ -284,8 +262,8 @@ export const HomePage = () => {
       </Link>
 
       {/* Сітка статистики — внизу */}
-      <div className="grid grid-cols-2 gap-3 pt-2">
-        <Card className="flex flex-col items-start gap-2 p-3.5 h-full">
+      <div className="grid grid-cols-3 gap-3 pt-2">
+        <Card className="flex flex-col items-center justify-center text-center gap-2 p-3.5 h-full">
           <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
           </div>
@@ -293,48 +271,14 @@ export const HomePage = () => {
             <div className="text-2xl font-black text-[var(--text-main)] leading-none">
               {wordsLearnedCount}
             </div>
-            <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
-              слів вивчено
+            <div className="text-[10px] text-[var(--text-muted)] mt-1 font-medium">
+              слів
             </div>
           </div>
         </Card>
 
-        <Link to="/practice" className="block h-full">
-          <Card
-            className={`flex flex-col items-start gap-2 p-3.5 h-full transition-all active:scale-[0.98] ${
-              hasReviews
-                ? "border-[var(--accent-success)] bg-[var(--accent-success)]/5 shadow-sm"
-                : "border-[var(--border-color)]"
-            }`}
-          >
-            <div
-              className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                hasReviews
-                  ? "bg-[var(--accent-success)]/20 text-[var(--accent-success)]"
-                  : "bg-[var(--text-muted)]/15 text-[var(--text-muted)]"
-              }`}
-            >
-              <BrainCircuit className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-2xl font-black text-[var(--text-main)] leading-none">
-                {reviewWordsCount}
-              </div>
-              <div
-                className={`text-xs mt-1 font-medium ${
-                  hasReviews
-                    ? "text-[var(--accent-success)] font-bold"
-                    : "text-[var(--text-muted)]"
-                }`}
-              >
-                {hasReviews ? "до Практики ➔" : "на сьогодні"}
-              </div>
-            </div>
-          </Card>
-        </Link>
-
         <Link to="/friends" className="block h-full">
-          <Card className="flex flex-col items-start gap-2 p-3.5 h-full transition-all active:scale-[0.98] border-[var(--border-color)] bg-[var(--bg-card)]">
+          <Card className="flex flex-col items-center justify-center text-center gap-2 p-3.5 h-full transition-all active:scale-[0.98] border-[var(--border-color)] bg-[var(--bg-card)]">
             <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
@@ -342,14 +286,14 @@ export const HomePage = () => {
               <div className="text-2xl font-black text-[var(--text-main)] leading-none">
                 {stats.friendsCount}
               </div>
-              <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
+              <div className="text-[10px] text-[var(--text-muted)] mt-1 font-medium">
                 друзів
               </div>
             </div>
           </Card>
         </Link>
 
-        <Card className="flex flex-col items-start gap-2 p-3.5 h-full border-[var(--border-color)] bg-[var(--bg-card)]">
+        <Card className="flex flex-col items-center justify-center text-center gap-2 p-3.5 h-full border-[var(--border-color)] bg-[var(--bg-card)]">
           <div className="w-8 h-8 rounded-xl bg-red-500/15 text-red-500 flex items-center justify-center">
             <Heart className="w-4 h-4" />
           </div>
@@ -357,7 +301,7 @@ export const HomePage = () => {
             <div className="text-2xl font-black text-[var(--text-main)] leading-none">
               {stats.likesCount}
             </div>
-            <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
+            <div className="text-[10px] text-[var(--text-muted)] mt-1 font-medium">
               вподобань
             </div>
           </div>

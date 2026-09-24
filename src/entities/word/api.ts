@@ -1,6 +1,5 @@
 import { apiClient } from "../../shared/api/apiClient";
 import type { EnglishLevel, Word } from "./types";
-import type { PracticeItem } from "../learning/types";
 
 export async function getWordsByIds(ids: string[]): Promise<Word[]> {
   if (!ids || ids.length === 0) return [];
@@ -25,38 +24,5 @@ export async function getWordById(id: string): Promise<Word | null> {
   const response = await apiClient.get<Word>(
     `/words/${encodeURIComponent(id)}`,
   );
-  return response.data;
-}
-
-// ВИПРАВЛЕНО: Тепер повертає масив PracticeItem
-export async function getPracticeWordsApi(): Promise<{
-  dueItems: PracticeItem[];
-}> {
-  const response = await apiClient.get<{ dueItems: PracticeItem[] }>(
-    "/progress/practice",
-  );
-  return response.data;
-}
-
-export async function reviewWordApi(
-  wordId: string,
-  quality: number,
-): Promise<{
-  success: boolean;
-  repetitions: number;
-  interval: number;
-  nextReviewDate: string;
-  wordsLearnedCount: number;
-}> {
-  const response = await apiClient.post<{
-    success: boolean;
-    repetitions: number;
-    interval: number;
-    nextReviewDate: string;
-    wordsLearnedCount: number;
-  }>("/progress/review", {
-    wordId,
-    quality,
-  });
   return response.data;
 }

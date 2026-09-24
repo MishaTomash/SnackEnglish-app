@@ -3,7 +3,6 @@ import path from "path";
 import sharp from "sharp";
 import { User } from "../models/User.js";
 import { AnalyticsEvent } from "../models/AnalyticsEvent.js";
-import { getLearnedWordsCount } from "../services/progressStatsService.js";
 
 export interface ExtendedTelegramUser {
   id: number;
@@ -78,12 +77,9 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    const wordsLearnedCount = await getLearnedWordsCount(user._id);
-
     res.status(200).json({
       ...user.toObject(),
       nickname: user.username || user.telegramFirstName || "User",
-      wordsLearnedCount,
     });
   } catch (error) {
     console.error("Error in getMe:", error);
@@ -353,7 +349,9 @@ export const getAnalyticsSummary = async (
         { $match: { createdAt: { $gte: sevenDaysAgo } } },
         {
           $group: {
-            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            _id: {
+              $dateToString: { format: "\%Y-\%m-\%d", date: "$createdAt" },
+            },
             count: { $sum: 1 },
           },
         },

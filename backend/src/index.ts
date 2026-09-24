@@ -9,7 +9,6 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { authMiddleware } from "./middlewares/authMiddleware.js";
-import progressRoutes from "./routes/progressRoutes.js";
 import { bot } from "./bot.js";
 import { initCronJobs } from "./services/cronService.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -47,10 +46,9 @@ app.use((req, res, next) => {
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
-app.use("/api/duels", authMiddleware, duelRoutes);
-app.use("/api/progress", authMiddleware, progressRoutes);
-app.use("/api/user", authMiddleware, userRoutes);
 
+app.use("/api/duels", authMiddleware, duelRoutes);
+app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/games", authMiddleware, gamesRoutes);
 app.use("/api/profile", authMiddleware, profileRoutes);
 app.use("/api/admin", adminRoutes);

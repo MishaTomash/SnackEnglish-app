@@ -5,8 +5,7 @@ import { UserGamePurchase } from "../models/UserGamePurchase.js";
 import { ManualPaymentRequest } from "../models/ManualPaymentRequest.js";
 import { bot } from "../bot.js";
 import { User } from "../models/User.js";
-// ВИПРАВЛЕНО: Імпортуємо DailyPlan замість contentService
-import { DailyPlan } from "../models/DailyPlan.js";
+import { WORDS_BY_LEVEL } from "../duels/mockWords.js"; // Беремо слова зі статичного моку
 
 export const getGamesList = async (
   req: Request,
@@ -211,7 +210,6 @@ export const getPaymentHistory = async (
   }
 };
 
-// ОНОВЛЕНО: Ендпоінт для отримання слів тепер бере їх із динамічних планів
 export const getWordsForGame = async (
   req: Request,
   res: Response,
@@ -223,11 +221,11 @@ export const getWordsForGame = async (
       return;
     }
 
-    // Дістаємо всі дні з бази для обраного рівня
-    const plans = await DailyPlan.find({ level }).lean();
-
-    // Збираємо всі слова з усіх планів у єдиний масив
-    const allLevelWords = plans.flatMap((plan) => plan.words || []);
+    // Тимчасовий фолбек на статичний мок слів
+    const allLevelWords =
+      (WORDS_BY_LEVEL as Record<string, any[]>)[level] ||
+      (WORDS_BY_LEVEL as Record<string, any[]>)["A1"] ||
+      [];
 
     const shuffled = allLevelWords
       .map((w: any, index: number) => ({

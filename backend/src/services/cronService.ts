@@ -1,55 +1,12 @@
 import cron from "node-cron";
 import { bot } from "../bot.js";
-import { User, UserProgress } from "../models/index.js";
+import { User } from "../models/index.js";
 import { processGiveawayEnd } from "../controllers/leaderboardController.js";
 
 export function initCronJobs(): void {
   const appUrl = process.env.VITE_APP_URL ?? "http://localhost:5173";
 
-  // Задача 1: Щодня о 10:00 — нагадування про слова на повторення
-  cron.schedule("0 10 * * *", async () => {
-    console.log(
-      "[CRON] Запуск щоденного нагадування про слова на повторення...",
-    );
-    try {
-      const now = new Date();
-      const overdueProgress = await UserProgress.find({
-        nextReviewDate: { $lte: now },
-      }).select("userId");
-      const userWordCountMap = new Map<string, number>();
-
-      overdueProgress.forEach((item) => {
-        const key = item.userId.toString();
-        userWordCountMap.set(key, (userWordCountMap.get(key) ?? 0) + 1);
-      });
-
-      for (const [userId, count] of userWordCountMap.entries()) {
-        const user = await User.findById(userId);
-        if (!user || !user.telegramId) continue;
-        try {
-          await bot.telegram.sendMessage(
-            user.telegramId,
-            `Час для англійського перекусу! 🍪\n\nСьогодні на тебе чекає слів для повторення: ${count}.\nКілька хвилин щодня — і вони закріпляться назавжди!`,
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: "Повторити слова 🧠", web_app: { url: appUrl } }],
-                ],
-              },
-            },
-          );
-        } catch (e) {
-          console.warn(
-            `Не вдалося надіслати повідомлення користувачу ${user.telegramId}`,
-          );
-        }
-      }
-    } catch (error) {
-      console.error("[CRON Error] Помилка нагадування слів:", error);
-    }
-  });
-
-  // Задача 2: Щодня о 19:00 — нагадування про збереження Streak
+  // Задача 1: Щодня о 19:00 — нагадування про збереження Streak
   cron.schedule("0 19 * * *", async () => {
     console.log("[CRON] Запуск нагадування про Streak...");
     try {
@@ -82,7 +39,7 @@ export function initCronJobs(): void {
     }
   });
 
-  // Задача 3: Щодня о 00:01 — Скидання втрачених стріків та відновлення HP
+  // Задача 2: Щодня о 00:01 — Скидання втрачених стріків та відновлення HP
   cron.schedule("1 0 * * *", async () => {
     console.log(
       "[CRON] Скидання втрачених стріків та відновлення життів (HP)...",
@@ -92,7 +49,7 @@ export function initCronJobs(): void {
       startOfYesterday.setDate(startOfYesterday.getDate() - 1);
       startOfYesterday.setHours(0, 0, 0, 0);
 
-      // ДОДАНО: Сповіщення користувачам про те, що стрік втрачено
+      // Сповіщення користувачам про те, що стрік втрачено
       const usersLosingStreak = await User.find({
         streak: { $gt: 0 },
         $or: [
@@ -139,7 +96,7 @@ export function initCronJobs(): void {
     }
   });
 
-  // Задача 4: Щонеділі о 20:00 — Завершення тижневого розіграшу
+  // Задача 3: Щонеділі о 20:00 — Завершення тижневого розіграшу
   cron.schedule("0 20 * * 0", async () => {
     console.log("[CRON] Запуск підсумків тижневого розіграшу...");
     try {

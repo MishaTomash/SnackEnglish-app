@@ -1,4 +1,3 @@
-import { DailyPlan } from "../../models/DailyPlan.js";
 import type { DuelGameAdapter, DuelGameState } from "../types.js";
 import { WORDS_BY_LEVEL } from "../mockWords.js";
 
@@ -17,34 +16,25 @@ export class TugOfWarAdapter implements DuelGameAdapter {
 
   async generateRound(levelOfBothPlayers: (string | null)[]) {
     const level = this.config.level || "A1";
-    const plans = await DailyPlan.find({ level }).lean();
-    const allWords = plans.flatMap((p) => p.words || []);
+    const mockWordsForLevel =
+      (WORDS_BY_LEVEL as Record<string, any[]>)[level] ||
+      (WORDS_BY_LEVEL as Record<string, any[]>)["A1"] ||
+      [];
 
-    // 1. Спочатку шукаємо довгі слова (від 5 літер) у базі даних
-    let longWords = allWords.filter((w) => {
-      const text = w.word || (w as any).text || "";
-      return text.length >= 5;
-    });
+    // Шукаємо довгі слова (від 5 літер) у моках
+    let longWords = mockWordsForLevel.filter(
+      (w: any) => (w.word || w.text || "").length >= 5,
+    );
 
-    // 2. Якщо в базі немає довгих слів, беремо з mockWords.ts
     if (longWords.length === 0) {
-      const mockWordsForLevel = (WORDS_BY_LEVEL[level] ||
-        WORDS_BY_LEVEL["A1"]) as any[];
-      longWords = mockWordsForLevel.filter(
-        (w: any) => (w.word || w.text || "").length >= 5,
-      );
-
-      // Якщо і в моках немає довгих слів (для підстраховки), беремо будь-які з моків
-      if (longWords.length === 0) {
-        longWords = mockWordsForLevel;
-      }
+      longWords = mockWordsForLevel;
     }
 
-    // 3. Надійно перемішуємо та беремо перше
+    // Надійно перемішуємо та беремо перше
     const shuffled = shuffleArray(longWords);
     const target = shuffled[0];
 
-    const rawWord = target.word || (target as any).text || "";
+    const rawWord = target.word || target.text || "";
     const wordEn = rawWord.toUpperCase().replace(/[^A-Z]/g, "");
 
     return {
