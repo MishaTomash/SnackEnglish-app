@@ -1,26 +1,13 @@
+// 📁 Файл: SnackEnglish-app/src/pages/FriendsPage.tsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Users, Shield } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
+import { apiClient } from "../shared/api/apiClient";
+import { resolveAvatarUrl } from "../shared/lib/avatarUrl";
+import { InviteFriendCard } from "../widgets/InviteFriendCard";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
-const getAuthHeaders = () => {
-  const initData =
-    window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${initData}`,
-  };
-};
-
-const resolveAvatarUrl = (url: string | null | undefined) => {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  const apiBase = API_URL.replace(/\/api$/, "").replace(/\/$/, "");
-  return `${apiBase}${url}?ngrok-skip-browser-warning=true`;
-};
 
 const UserAvatar = ({
   url,
@@ -61,12 +48,9 @@ export const FriendsPage = () => {
   useEffect(() => {
     const fetchFriends = async () => {
       try {
-        const res = await fetch(`${API_URL}/profile/me/friends`, {
-          headers: getAuthHeaders(),
-        });
-        if (!res.ok) throw new Error("Failed to fetch friends");
-        const data = await res.json();
-        setFriends(data);
+        const { data } = await apiClient.get("/profile/me/friends");
+        // Страховка: сервер може повернути і масив, і { friends: [...] }
+        setFriends(Array.isArray(data) ? data : data?.friends || []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -89,6 +73,8 @@ export const FriendsPage = () => {
           <Users className="w-6 h-6 text-blue-500" /> Мої друзі
         </h1>
       </div>
+
+      <InviteFriendCard />
 
       {isLoading ? (
         <div className="text-center py-10 text-[var(--text-muted)] font-bold animate-pulse">
@@ -137,7 +123,7 @@ export const FriendsPage = () => {
                     Балів
                   </div>
                   <div className="font-black text-[var(--accent-cta)] text-lg leading-none">
-                    {friend.totalScore || 0}
+                    {friend.weeklyScore || 0}
                   </div>
                 </div>
               </Card>

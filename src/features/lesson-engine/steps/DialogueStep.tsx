@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/features/lesson-engine/steps/DialogueStep.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FC } from "react";
 import type { DialogueLine } from "../../../entities/story/types";
@@ -8,6 +9,7 @@ import { RichText } from "../../../shared/ui/RichText";
 import { useCompleteOnce } from "../lib/useCompleteOnce";
 import type { StepComponent } from "../types";
 import { StepCta } from "../ui/StepCta";
+import { useLessonNode } from "../lib/lessonNodeContext";
 import styles from "./lessonEffects.module.css";
 
 // Дані з БД зберігаються як Mixed — відкидаємо биті репліки, а не падаємо
@@ -24,19 +26,29 @@ const sanitizeLines = (lines: unknown): DialogueLine[] =>
 interface BubbleProps {
     line: DialogueLine;
     canSpeak: boolean;
+    /** Ім'я персонажа уроку — над його репліками */
+    npcName: string;
 }
 
-const Bubble: FC<BubbleProps> = ({ line, canSpeak }) => {
+const Bubble: FC<BubbleProps> = ({ line, canSpeak, npcName }) => {
     const isUser = line.speaker === "user";
+    const isNpc = line.speaker === "npc";
 
     return (
         <div className={`flex ${isUser ? "justify-end" : "justify-start"} ${styles.bubbleIn}`}>
             <div
                 className={`max-w-[85%] rounded-3xl px-4 py-3 shadow-md ${isUser
-                        ? "rounded-br-md bg-[var(--accent-cta)] text-[var(--text-accent)]"
+                    ? "rounded-br-md bg-[var(--accent-cta)] text-[var(--text-accent)]"
+                    : isNpc
+                        ? "rounded-bl-md border border-sky-500/40 bg-sky-500/10 text-[var(--text-main)]"
                         : "rounded-bl-md border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-main)]"
                     }`}
             >
+                {isNpc && (
+                    <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-sky-400">
+                        {npcName || "Персонаж"}
+                    </p>
+                )}
                 <div className="flex items-start gap-2">
                     <p className="text-lg font-semibold leading-snug">
                         <RichText
@@ -82,7 +94,9 @@ export const DialogueStep: StepComponent<"dialogue"> = ({ step, onNext }) => {
 
     const visibleLines = lines.slice(0, visibleCount);
     const currentLine = visibleLines[visibleLines.length - 1];
-    const lastSnackyLine = [...visibleLines].reverse().find((l) => l.speaker !== "user");
+    // Маскот реагує лише на репліки Снекі (не юзера й не персонажа уроку)
+    const lastSnackyLine = [...visibleLines].reverse().find((l) => l.speaker === "snacky");
+    const { npcName } = useLessonNode();
     const isLastLine = visibleCount >= lines.length;
 
     // Нова репліка: озвучити і прокрутити до неї
@@ -109,7 +123,7 @@ export const DialogueStep: StepComponent<"dialogue"> = ({ step, onNext }) => {
             <div className="flex flex-col gap-3" aria-live="polite">
                 {visibleLines.map((line, i) => (
                     <div key={i} ref={i === visibleLines.length - 1 ? lastBubbleRef : undefined}>
-                        <Bubble line={line} canSpeak={canSpeak} />
+                        <Bubble line={line} canSpeak={canSpeak} npcName={npcName} />
                     </div>
                 ))}
             </div>

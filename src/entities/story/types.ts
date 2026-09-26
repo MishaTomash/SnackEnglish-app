@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/entities/story/types.ts
 import type { EnglishLevel } from "../word/types";
 
 // ==================== СТАТУСИ ====================
@@ -90,8 +91,11 @@ export interface SceneStep {
     text: string; // розмітка RichText: "Ти заходиш у <en>coffee shop</en>..."
 }
 
-/** Хто говорить: Снекі (маскот) чи сам юзер */
-export type DialogueSpeaker = "snacky" | "user";
+/**
+ * Хто говорить: Снекі (маскот), сам юзер або персонаж уроку (npc — бариста, офіціант…;
+ * ім'я — npcName уроку). Кожен озвучується своїм голосом.
+ */
+export type DialogueSpeaker = "snacky" | "user" | "npc";
 
 export interface DialogueLine {
     speaker: DialogueSpeaker;

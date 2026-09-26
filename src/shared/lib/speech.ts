@@ -1,69 +1,64 @@
+// 📁 Файл: SnackEnglish-app/src/shared/lib/speech.ts
 /**
- * Озвучка (Web Speech Synthesis), розпізнавання мовлення (Web Speech Recognition)
- * та утиліти порівняння відповіді юзера з еталоном.
+ * Озвучка (Web Speech Synthesis), розпізнавання мовлення та утиліти порівняння
+ * відповіді юзера з еталоном.
+ *
+ * Розпізнавання має три режими — їх обирає сервер (SPEECH_PROVIDER у backend/.env):
+ * - "server"  — запис MediaRecorder + транскрипція на бекенді (Groq безкоштовно або OpenAI);
+ * - "browser" — Web Speech Recognition браузера (безкоштовно, але лише Chrome/Edge);
+ * - "off"     — вимкнено, голосові вправи лише пропускаються.
  *
  * Підтримка у WebView Telegram залежить від платформи, тому степ-компоненти
  * мають перевіряти isSynthesisSupported() / isRecognitionSupported()
  * і показувати фолбек (наприклад, текст замість озвучки, кнопки замість голосу).
  */
 
+import { getCachedSpeechMode, loadSpeechMode, transcribeAudio, TranscribeError } from "../api/speechApi";
+import type { SpeechMode } from "../api/speechApi";
+import {
+  BrowserRecognitionError,
+  isBrowserRecognitionAvailable,
+  recognizeInBrowser,
+  stopBrowserRecognition,
+} from "./browserRecognition";
+import { isRecordingSupported, recordVoice, RecordError, stopRecording } from "./voiceRecorder";
+import type { RecordResult } from "./voiceRecorder";
+import { resolveMediaUrl } from "./avatarUrl";
+
+export { loadSpeechMode };
+export type { SpeechMode };
+
 const DEFAULT_LANG = "en-US";
-const DEFAULT_RATE = 0.9; // трохи повільніше за норму — для тих, хто вчиться
-const DEFAULT_LISTEN_TIMEOUT_MS = 8000;
+// Звичайна швидкість голосу телефона. Повільніше — лише кнопка "Повільно"
+const DEFAULT_RATE = 1;
+const DEFAULT_LISTEN_TIMEOUT_MS = 6000; // максимальна довжина запису фрази
+/** Менший запис — це випадковий тап, а не фраза: на сервер не шлемо */
+const MIN_AUDIO_BYTES = 800;
 
 // ==================== ПІДТРИМКА ====================
-
-// Типи Web Speech Recognition описані локально: у lib.dom їх немає
-interface RecognitionAlternativeLike {
-  readonly transcript: string;
-  readonly confidence: number;
-}
-
-interface RecognitionResultLike {
-  readonly length: number;
-  readonly isFinal: boolean;
-  readonly [index: number]: RecognitionAlternativeLike;
-}
-
-interface RecognitionEventLike {
-  readonly resultIndex: number;
-  readonly results: {
-    readonly length: number;
-    readonly [index: number]: RecognitionResultLike;
-  };
-}
-
-interface RecognitionLike {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  maxAlternatives: number;
-  onresult: ((event: RecognitionEventLike) => void) | null;
-  onerror: ((event: { readonly error: string }) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-
-type RecognitionCtor = new () => RecognitionLike;
-
-const getRecognitionCtor = (): RecognitionCtor | null => {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as {
-    SpeechRecognition?: RecognitionCtor;
-    webkitSpeechRecognition?: RecognitionCtor;
-  };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-};
 
 export const isSynthesisSupported = (): boolean =>
   typeof window !== "undefined" &&
   "speechSynthesis" in window &&
   typeof window.SpeechSynthesisUtterance === "function";
 
-export const isRecognitionSupported = (): boolean =>
-  getRecognitionCtor() !== null;
+/**
+ * Режим розпізнавання для цієї сесії. Поки loadSpeechMode() не відповів — null.
+ * listen() і isRecognitionSupported() до завантаження вважають режим "server".
+ */
+export const getSpeechMode = (): SpeechMode | null => getCachedSpeechMode();
+
+/** Чи можна в цьому середовищі розпізнати голос у поточному режимі */
+export const isRecognitionSupported = (): boolean => {
+  switch (getCachedSpeechMode() ?? "server") {
+    case "browser":
+      return isBrowserRecognitionAvailable();
+    case "off":
+      return false;
+    default:
+      return isRecordingSupported(); // getUserMedia + MediaRecorder на HTTPS
+  }
+};
 
 // ==================== ГОЛОСИ ====================
 
@@ -177,7 +172,7 @@ const estimateDurationMs = (text: string, rate: number): number => {
  * Promise завжди резолвиться (кінець, помилка або страховий таймаут) —
  * UI може безпечно робити `await speak(...)` і йти далі.
  */
-export function speak(text: string, options: SpeakOptions = {}): Promise<void> {
+function speakWithSynthesis(text: string, options: SpeakOptions = {}): Promise<void> {
   const trimmed = text.trim();
   if (!trimmed || !isSynthesisSupported()) return Promise.resolve();
 
@@ -227,18 +222,182 @@ export function speak(text: string, options: SpeakOptions = {}): Promise<void> {
 
 /** Зупиняє озвучку (наприклад, при виході з уроку) */
 export function stopSpeaking(): void {
+  stopClip();
   settleCurrentSpeech?.();
   if (isSynthesisSupported()) window.speechSynthesis.cancel();
 }
 
+// ==================== ОЗВУЧКА УРОКУ (ГОТОВЕ АУДІО) ====================
+
+/*
+ * Урок приходить з мапою "фраза -> mp3" (озвучка OpenAI, згенерована в адмінці).
+ * Якщо для фрази є файл — speak() грає його: однаковий природний голос на всіх
+ * пристроях. Немає файлу (гра, нова фраза) — голос телефона, як раніше.
+ */
+
+const MAX_PRELOADED_CLIPS = 40;
+const CLIP_TIMEOUT_MS = 20000;
+
+const lessonAudio = new Map<string, string>();
+const clipElements = new Map<string, HTMLAudioElement>();
+let currentClip: HTMLAudioElement | null = null;
+let settleCurrentClip: (() => void) | null = null;
+
+/**
+ * Ключ фрази — ТАКИЙ САМИЙ рахує сервер (ttsService → speechKey):
+ * без розмітки, з нормальними пробілами й апострофами, у нижньому регістрі.
+ */
+export const speechKey = (raw: string): string =>
+  raw
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[’‘`´]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+/** Реєструє озвучку уроку й заздалегідь підвантажує файли, щоб звук вмикався миттєво */
+export function setLessonAudio(map: Record<string, string>): void {
+  lessonAudio.clear();
+  clipElements.clear();
+  Object.entries(map).forEach(([key, url], index) => {
+    const resolved = resolveMediaUrl(url);
+    if (!resolved) return;
+    lessonAudio.set(key, resolved);
+    if (index < MAX_PRELOADED_CLIPS && typeof Audio !== "undefined") {
+      const audio = new Audio();
+      audio.preload = "auto";
+      audio.src = resolved;
+      clipElements.set(resolved, audio);
+    }
+  });
+}
+
+/** Прибирає озвучку уроку (вихід з уроку) */
+export function clearLessonAudio(): void {
+  stopClip();
+  lessonAudio.clear();
+  clipElements.clear();
+}
+
+/** Чи є готове аудіо для фрази */
+export const hasLessonAudio = (text: string): boolean => lessonAudio.has(speechKey(text));
+
+function stopClip(): void {
+  // ВИПРАВЛЕНО: спершу запам'ятовуємо файл, потім завершуємо його Promise.
+  // Раніше settle() обнуляв currentClip ДО pause() — попередня фраза грала далі,
+  // і при швидкому "Далі" кілька реплік звучали одночасно.
+  const clip = currentClip;
+  currentClip = null;
+  const settle = settleCurrentClip;
+  settleCurrentClip = null;
+  settle?.();
+  clip?.pause();
+}
+
+/** Нижче цієї швидкості — це кнопка "Повільно"; вище — звичайне відтворення */
+const SLOW_RATE_THRESHOLD = 0.75;
+
+/** Швидкість звичайного відтворення файлів (з адмінки: Озвучка → Швидкість у уроках) */
+let clipBaseRate = 1;
+
+export function setClipBaseRate(rate: number): void {
+  clipBaseRate = Number.isFinite(rate) ? Math.min(1.5, Math.max(0.8, rate)) : 1;
+}
+
+/**
+ * Швидкість файлу. Записи вже в зручному для новачків темпі (так налаштовано голос),
+ * тому звичайні виклики — завжди 1×, навіть якщо крок просить трохи повільніший голос
+ * телефона (0.8–0.9). Уповільнюємо лише явне "Повільно": rate 0.5 -> ~0.55× від запису.
+ */
+const clipPlaybackRate = (rate: number | undefined): number => {
+  if (rate === undefined || rate >= SLOW_RATE_THRESHOLD) return clipBaseRate;
+  // "Повільно" — від звичайної швидкості запису, незалежно від пришвидшення
+  return Math.max(0.5, Math.min(0.75, rate / 0.9));
+};
+
+/** Грає файл; якщо браузер не дав відтворити — голос телефона */
+function playClip(url: string, fallback: () => Promise<void>, rate?: number): Promise<void> {
+  stopClip();
+  settleCurrentSpeech?.();
+  if (isSynthesisSupported()) window.speechSynthesis.cancel();
+
+  const audio = clipElements.get(url) ?? new Audio(url);
+  audio.currentTime = 0;
+  // Уповільнення без "басу": тембр зберігається (preservesPitch — типово true, ставимо явно)
+  audio.preservesPitch = true;
+  audio.playbackRate = clipPlaybackRate(rate);
+  currentClip = audio;
+
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      audio.removeEventListener("ended", settle);
+      audio.removeEventListener("error", onError);
+      if (currentClip === audio) {
+        currentClip = null;
+        settleCurrentClip = null;
+      }
+      resolve();
+    };
+    const onError = () => {
+      if (settled) return;
+      settle();
+    };
+    // Уповільнений запис грає довше — запас часу пропорційний швидкості
+    const timer = setTimeout(settle, CLIP_TIMEOUT_MS / audio.playbackRate);
+    audio.addEventListener("ended", settle);
+    audio.addEventListener("error", onError);
+    settleCurrentClip = settle;
+
+    // play() — синхронно в межах тапу (важливо для iOS)
+    const playing = audio.play();
+    if (playing) {
+      playing.catch((error: unknown) => {
+        if (settled) return;
+        settle();
+        // AbortError — відтворення перервала наступна фраза: це нормально, голос телефона не потрібен
+        if ((error as { name?: string } | null)?.name === "AbortError") return;
+        void fallback(); // напр., автовідтворення без тапу заборонене — пробуємо голос телефона
+      });
+    }
+  });
+}
+
+/**
+ * Озвучує текст. Перериває попередню фразу.
+ * Є готове аудіо уроку — грає його, інакше голос телефона (Web Speech Synthesis).
+ * Promise завжди резолвиться — UI може безпечно робити `await speak(...)`.
+ */
+export function speak(text: string, options: SpeakOptions = {}): Promise<void> {
+  const trimmed = text.trim();
+  if (!trimmed) return Promise.resolve();
+  const clipUrl = lessonAudio.get(speechKey(trimmed));
+  if (clipUrl) return playClip(clipUrl, () => speakWithSynthesis(trimmed, options), options.rate);
+  return speakWithSynthesis(trimmed, options);
+}
+
 // ==================== РОЗПІЗНАВАННЯ ====================
 
+/*
+ * Web Speech Recognition надсилає звук на сервери Google/Microsoft і працює лише
+ * у звичайних Chrome та Edge: у WebView Telegram (Desktop, Android, iOS) конструктор є,
+ * але start() одразу закінчується помилкою "network". Тому основний режим — "server":
+ * запис через MediaRecorder (voiceRecorder) + транскрипція на бекенді (speechApi).
+ * Режим "browser" лишився як безкоштовний варіант для звичайного браузера.
+ * Публічний API (listen, stopListening, ListenError, ListenResult) лишився тим самим.
+ */
+
 export type ListenErrorCode =
-  | "not-supported"
-  | "not-allowed" // юзер/WebView заборонив мікрофон
-  | "no-speech"
-  | "audio-capture"
-  | "network"
+  | "not-supported" // розпізнавання неможливе в цьому середовищі / режимі
+  | "not-allowed" // юзер/WebView/ОС заборонили мікрофон
+  | "no-speech" // тиша або нічого не розпізнано
+  | "audio-capture" // мікрофона немає або він зайнятий
+  | "network" // немає зв'язку з сервером (у режимі "browser" — з сервісом браузера)
+  | "server" // сервер розпізнавання відповів помилкою
+  | "rate-limited" // забагато спроб поспіль
   | "language-not-supported"
   | "aborted"
   | "unknown";
@@ -253,139 +412,149 @@ export class ListenError extends Error {
   }
 }
 
-const mapRecognitionError = (error: string): ListenErrorCode => {
-  switch (error) {
-    case "not-allowed":
-    case "service-not-allowed":
-      return "not-allowed";
-    case "no-speech":
-    case "audio-capture":
-    case "network":
-    case "aborted":
-    case "language-not-supported":
-      return error;
-    default:
-      return "unknown";
-  }
-};
+/** Етап прослуховування — для UI: "Слухаю…" / "Розпізнаю…" */
+export type ListenPhase = "recording" | "processing";
 
 export interface ListenOptions {
+  /** Мова для режиму "browser"; сервер завжди розпізнає англійську (language: "en") */
   lang?: string;
-  /** Скільки варіантів розпізнавання повертати (для bestMatch) */
+  /** Кількість варіантів у режимі "browser"; сервер повертає один */
   maxAlternatives?: number;
-  /** Через скільки мс перестати слухати, якщо юзер мовчить або говорить довго */
+  /** Максимальна тривалість запису, мс (за замовчуванням 6000) */
   timeoutMs?: number;
-  /** Проміжний текст під час мовлення — для live-підпису */
+  /** Проміжний текст — лише в режимі "browser" */
   onInterim?: (transcript: string) => void;
   /** Скасування (наприклад, у cleanup useEffect) — Promise відхиляється з "aborted" */
   signal?: AbortSignal;
+  /** Рівень гучності 0..1 і час від початку запису — для анімованого індикатора */
+  onLevel?: (level: number, elapsedMs: number) => void;
+  /** Зміна етапу: запис -> розпізнавання на сервері */
+  onPhase?: (phase: ListenPhase) => void;
 }
 
 export interface ListenResult {
   transcript: string; // найімовірніший варіант
   alternatives: string[]; // усі варіанти, включно з transcript
-  confidence: number; // 0..1; деякі браузери завжди дають 0
+  confidence: number; // 0..1; серверне розпізнавання не повертає — 0
 }
 
-let activeListen: { recognition: RecognitionLike; cancel: () => void } | null =
-  null;
+const toListenError = (error: unknown): ListenError => {
+  if (error instanceof ListenError) return error;
+
+  // Коди браузерного розпізнавання збігаються з ListenErrorCode
+  if (error instanceof BrowserRecognitionError) return new ListenError(error.code, error.message);
+
+  if (error instanceof RecordError) {
+    switch (error.code) {
+      case "not-supported":
+      case "not-allowed":
+      case "aborted":
+        return new ListenError(error.code, error.message);
+      case "no-microphone":
+        return new ListenError("audio-capture", error.message);
+      default:
+        return new ListenError("unknown", error.message);
+    }
+  }
+
+  if (error instanceof TranscribeError) {
+    switch (error.code) {
+      case "network":
+      case "rate-limited":
+      case "aborted":
+        return new ListenError(error.code, error.message);
+      default:
+        return new ListenError("server", error.message);
+    }
+  }
+
+  return new ListenError("unknown", error instanceof Error ? error.message : undefined);
+};
+
+// У тексті має бути хоч одна літера чи цифра: "…" або "." — це не відповідь
+const hasWords = (text: string): boolean => /[\p{L}\p{N}]/u.test(text);
+
+/** Режим "browser": Web Speech Recognition, без запису й без сервера */
+const listenInBrowser = async (options: ListenOptions): Promise<ListenResult> => {
+  options.onPhase?.("recording");
+  // Рівня гучності браузер не дає — лише час, щоб рухалась смужка ліміту
+  const startedAt = performance.now();
+  const progressTimer = options.onLevel
+    ? setInterval(() => options.onLevel?.(0, performance.now() - startedAt), 100)
+    : undefined;
+
+  try {
+    const result = await recognizeInBrowser({
+      lang: options.lang,
+      maxAlternatives: options.maxAlternatives,
+      timeoutMs: options.timeoutMs ?? DEFAULT_LISTEN_TIMEOUT_MS,
+      onInterim: options.onInterim,
+      signal: options.signal,
+    });
+    return { transcript: result.transcript, alternatives: result.alternatives, confidence: result.confidence };
+  } catch (error) {
+    throw toListenError(error);
+  } finally {
+    clearInterval(progressTimer);
+  }
+};
+
+/** Режим "server": запис з мікрофона, потім розпізнавання на бекенді */
+const listenViaServer = async (options: ListenOptions): Promise<ListenResult> => {
+  if (!isRecordingSupported()) throw new ListenError("not-supported");
+
+  let recording: RecordResult;
+  try {
+    options.onPhase?.("recording");
+    recording = await recordVoice({
+      maxDurationMs: options.timeoutMs ?? DEFAULT_LISTEN_TIMEOUT_MS,
+      onLevel: options.onLevel,
+      signal: options.signal,
+    });
+  } catch (error) {
+    throw toListenError(error);
+  }
+
+  if (options.signal?.aborted) throw new ListenError("aborted");
+  // Тишу й випадкові тапи не відправляємо: економія запитів і чесне "не почули"
+  if (recording.silent === true || recording.blob.size < MIN_AUDIO_BYTES) {
+    throw new ListenError("no-speech");
+  }
+
+  let text: string;
+  try {
+    options.onPhase?.("processing");
+    text = await transcribeAudio(recording.blob, recording.mimeType, options.signal);
+  } catch (error) {
+    throw toListenError(error);
+  }
+
+  const transcript = text.trim();
+  if (!transcript || !hasWords(transcript)) throw new ListenError("no-speech");
+
+  return { transcript, alternatives: [transcript], confidence: 0 };
+};
 
 /**
- * Слухає одну фразу. Резолвиться результатом або відхиляється з ListenError.
- * Одночасно активне лише одне прослуховування — новий виклик скасовує попереднє.
+ * Слухає одну фразу в поточному режимі (див. getSpeechMode). Резолвиться результатом
+ * або відхиляється з ListenError. Одночасно активне лише одне прослуховування.
+ * Викликати з обробника тапу: iOS дає мікрофон лише у відповідь на жест юзера,
+ * тому режим береться синхронно з кешу, без await перед стартом запису.
  */
-export function listen(options: ListenOptions = {}): Promise<ListenResult> {
-  const Ctor = getRecognitionCtor();
-  if (!Ctor) return Promise.reject(new ListenError("not-supported"));
-  if (options.signal?.aborted) return Promise.reject(new ListenError("aborted"));
+export async function listen(options: ListenOptions = {}): Promise<ListenResult> {
+  if (options.signal?.aborted) throw new ListenError("aborted");
+
+  const mode = getCachedSpeechMode() ?? "server";
+  if (mode === "off") throw new ListenError("not-supported");
 
   stopSpeaking(); // інакше мікрофон "почує" нашу ж озвучку
-  activeListen?.cancel();
-
-  const recognition = new Ctor();
-  recognition.lang = options.lang ?? DEFAULT_LANG;
-  recognition.continuous = false;
-  recognition.interimResults = Boolean(options.onInterim);
-  recognition.maxAlternatives = options.maxAlternatives ?? 5;
-
-  return new Promise<ListenResult>((resolve, reject) => {
-    const timeoutMs = options.timeoutMs ?? DEFAULT_LISTEN_TIMEOUT_MS;
-    let result: ListenResult | null = null;
-    let error: ListenError | null = null;
-    let settled = false;
-
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(stopTimer);
-      clearTimeout(hardTimer);
-      options.signal?.removeEventListener("abort", cancel);
-      if (activeListen?.recognition === recognition) activeListen = null;
-      if (result && !error) resolve(result);
-      else reject(error ?? new ListenError("no-speech"));
-    };
-
-    const cancel = () => {
-      error = new ListenError("aborted");
-      result = null;
-      try {
-        recognition.abort();
-      } catch {
-        // вже зупинено
-      }
-      finish();
-    };
-
-    // stop() — м'яко: браузер ще віддасть те, що встиг розпізнати
-    const stopTimer = setTimeout(() => recognition.stop(), timeoutMs);
-    // Страховка: деякі реалізації не надсилають onend після помилки
-    const hardTimer = setTimeout(finish, timeoutMs + 3000);
-
-    recognition.onresult = (event) => {
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const res = event.results[i];
-        if (res.isFinal) {
-          const alternatives: string[] = [];
-          for (let k = 0; k < res.length; k++) {
-            const text = res[k].transcript.trim();
-            if (text) alternatives.push(text);
-          }
-          if (alternatives.length > 0) {
-            result = {
-              transcript: alternatives[0],
-              alternatives,
-              confidence: res[0]?.confidence ?? 0,
-            };
-          }
-        } else {
-          options.onInterim?.(res[0]?.transcript ?? "");
-        }
-      }
-    };
-
-    recognition.onerror = (event) => {
-      // no-speech після вже отриманого результату — не помилка
-      if (event.error === "no-speech" && result) return;
-      error = new ListenError(mapRecognitionError(event.error));
-    };
-
-    recognition.onend = finish;
-
-    options.signal?.addEventListener("abort", cancel, { once: true });
-    activeListen = { recognition, cancel };
-
-    try {
-      recognition.start();
-    } catch (e) {
-      error = new ListenError("unknown", e instanceof Error ? e.message : undefined);
-      finish();
-    }
-  });
+  return mode === "browser" ? listenInBrowser(options) : listenViaServer(options);
 }
 
 /** М'яко завершує поточне прослуховування (кнопка "Готово") — listen() віддасть почуте */
 export function stopListening(): void {
-  activeListen?.recognition.stop();
+  stopRecording();
+  stopBrowserRecognition();
 }
 
 // ==================== ПОРІВНЯННЯ ТЕКСТУ ====================

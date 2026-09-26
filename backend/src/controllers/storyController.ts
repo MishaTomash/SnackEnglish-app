@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/backend/src/controllers/storyController.ts
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import {
@@ -8,6 +9,16 @@ import {
     UserStoryProgress,
     type StoryNodeStatus,
 } from "../models/index.js";
+import {
+    buildDailyProgress,
+    getAppSettings,
+    startOfToday,
+} from "../services/settingsService.js";
+import type { AppSettingsData, DailyProgress } from "../services/settingsService.js";
+import { recordLessonActivity } from "../services/activityService.js";
+import { addWordsFromNode } from "../services/wordsService.js";
+import { rewardReferralIfEligible } from "../services/referralService.js";
+import { getAudioMapForSteps } from "../services/ttsService.js";
 
 // Та сама величина, що й за урок у progressController.completeLesson
 const STORY_NODE_REWARD = 10;
@@ -219,7 +230,50 @@ const syncNodeStatuses = async (
     return result;
 };
 
+/** Скільки НОВИХ уроків юзер завершив сьогодні (повтори не рахуються — вони не змінюють статус) */
+const countCompletedToday = (userId: Types.ObjectId): Promise<number> =>
+    UserStoryProgress.countDocuments({
+        userId,
+        status: "completed",
+        completedAt: { $gte: startOfToday() },
+    });
+
+/**
+ * Відповідь "на сьогодні нові уроки закінчились". 429 — щоб клієнт відрізняв
+ * від "урок закритий" (403). Пройдені уроки однаково можна повторювати.
+ */
+const sendDailyLimit = (res: Response, daily: DailyProgress): void => {
+    res.status(429).json({
+        error: "daily_limit",
+        message: "На сьогодні нові уроки закінчились — повертайся завтра!",
+        daily,
+    });
+};
+
+const isDailyLimitReached = (completedToday: number, settings: AppSettingsData): boolean =>
+    settings.dailyLessonLimit > 0 && completedToday >= settings.dailyLessonLimit;
+
 // ==================== ЕНДПОІНТИ ====================
+
+// GET /api/stories/daily — прогрес дня: пройдено нових уроків, ліміт, денна ціль
+export const getDailyProgress = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+    try {
+        const userId = await requireDbUserId(req, res);
+        if (!userId) return;
+
+        const [settings, completedToday] = await Promise.all([
+            getAppSettings(),
+            countCompletedToday(userId),
+        ]);
+        res.status(200).json(buildDailyProgress(completedToday, settings));
+    } catch (error) {
+        console.error("[getDailyProgress] Error:", error);
+        res.status(500).json({ error: "Failed to fetch daily progress" });
+    }
+};
 
 // GET /api/stories?level=B1
 // Без level — рівень юзера; якщо для нього ще немає контенту — перший доступний
@@ -362,11 +416,33 @@ export const getNodeContent = async (
             return;
         }
 
+        // Денний ліміт — лише для НОВИХ уроків; пройдені можна повторювати скільки завгодно
+        if (entry.status !== "completed") {
+            const [settings, completedToday] = await Promise.all([
+                getAppSettings(),
+                countCompletedToday(userId),
+            ]);
+            if (isDailyLimitReached(completedToday, settings)) {
+                req.logEvent("daily_limit_hit", { chapterId: String(chapterId), nodeId });
+                sendDailyLimit(res, buildDailyProgress(completedToday, settings));
+                return;
+            }
+        }
+
         const node = await StoryNode.findOne({ _id: nodeId, chapterId }).lean();
         if (!node) {
             res.status(404).json({ error: "Node not found" });
             return;
         }
+
+        // Озвучені фрази уроку: "фраза -> mp3". Нема аудіо — клієнт говорить голосом телефона
+        const ttsSettings = await getAppSettings();
+        const audio = ttsSettings.ttsEnabled
+            ? await getAudioMapForSteps(node.steps, ttsSettings).catch((ttsError: unknown) => {
+                console.error("[getNodeContent] audio map:", ttsError);
+                return {};
+            })
+            : {};
 
         res.status(200).json({
             id: String(node._id),
@@ -380,6 +456,7 @@ export const getNodeContent = async (
             cliffhanger: node.cliffhanger ?? null,
             steps: node.steps,
             status: entry.status,
+            audio,
         });
     } catch (error) {
         console.error("[getNodeContent] Error:", error);
@@ -418,6 +495,18 @@ export const completeNode = async (
             return;
         }
 
+        const settings = await getAppSettings();
+
+        // Ліміт перевіряється і тут: інакше урок можна "завершити" запитом до API,
+        // не відкриваючи його. Повтор пройденого уроку ліміт не зачіпає.
+        if (nodes[index].status !== "completed") {
+            const completedBefore = await countCompletedToday(userId);
+            if (isDailyLimitReached(completedBefore, settings)) {
+                sendDailyLimit(res, buildDailyProgress(completedBefore, settings));
+                return;
+            }
+        }
+
         const nextNode = nodes[index + 1]?.node ?? null;
         const chapterCompleted = nodes.every(
             (n, i) => i === index || n.status === "completed",
@@ -432,9 +521,12 @@ export const completeNode = async (
         );
 
         if (!flipped) {
-            const user = await User.findById(userId)
-                .select("totalScore weeklyScore")
-                .lean();
+            // Повтор пройденого уроку теж зараховує день у стрік
+            const activity = await recordLessonActivity(userId, false);
+            const [user, completedToday] = await Promise.all([
+                User.findById(userId).select("totalScore weeklyScore wordsLearnedCount").lean(),
+                countCompletedToday(userId),
+            ]);
             res.status(200).json({
                 success: true,
                 alreadyCompleted: true,
@@ -443,6 +535,12 @@ export const completeNode = async (
                 weeklyScore: user?.weeklyScore ?? 0,
                 nextNodeId: nextNode ? String(nextNode._id) : null,
                 chapterCompleted,
+                wordsLearnedCount: user?.wordsLearnedCount ?? 0,
+                daily: {
+                    ...buildDailyProgress(completedToday, settings, 0),
+                    streak: activity.streak,
+                    streakRestored: activity.streakRestored,
+                },
             });
             return;
         }
@@ -455,14 +553,41 @@ export const completeNode = async (
             );
         }
 
+        // День у стрік, слова з уроку, бонус за запрошення (якщо це перший урок запрошеного).
+        // Помилка будь-якого з цих кроків не повинна зламати збереження уроку.
+        const [activity, wordsLearnedCount, referralBonus] = await Promise.all([
+            recordLessonActivity(userId, true),
+            addWordsFromNode(userId, nodeId).catch((wordsError: unknown) => {
+                console.error("[completeNode] words:", wordsError);
+                return null;
+            }),
+            rewardReferralIfEligible(userId).catch((referralError: unknown) => {
+                console.error("[completeNode] referral:", referralError);
+                return 0;
+            }),
+        ]);
+        if (referralBonus > 0) req.logEvent("referral_rewarded", { bonus: referralBonus });
+
+        // Денна ціль: бонус нараховується рівно один раз — коли кількість
+        // пройдених сьогодні уроків саме зараз досягла цілі
+        const completedToday = await countCompletedToday(userId);
+        const goalJustReached =
+            settings.dailyGoalLessons > 0 && completedToday === settings.dailyGoalLessons;
+        const bonusXp = goalJustReached ? settings.dailyGoalBonus : 0;
+        const reward = STORY_NODE_REWARD + bonusXp;
+
         // Нарахування балів — той самий патерн, що й у completeLesson
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             {
-                $inc: { totalScore: STORY_NODE_REWARD, weeklyScore: STORY_NODE_REWARD },
+                $inc: { totalScore: reward, weeklyScore: reward },
             },
             { returnDocument: "after" },
         );
+
+        if (goalJustReached) {
+            req.logEvent("daily_goal_reached", { completedToday, bonusXp });
+        }
 
         req.logEvent("story_node_completed", {
             chapterId: String(chapterId),
@@ -474,11 +599,18 @@ export const completeNode = async (
         res.status(200).json({
             success: true,
             alreadyCompleted: false,
-            earnedXp: STORY_NODE_REWARD,
+            earnedXp: reward,
             totalScore: updatedUser?.totalScore ?? 0,
             weeklyScore: updatedUser?.weeklyScore ?? 0,
             nextNodeId: nextNode ? String(nextNode._id) : null,
             chapterCompleted,
+            ...(wordsLearnedCount !== null ? { wordsLearnedCount } : {}),
+            referralBonus,
+            daily: {
+                ...buildDailyProgress(completedToday, settings, bonusXp),
+                streak: activity.streak,
+                streakRestored: activity.streakRestored,
+            },
         });
     } catch (error) {
         console.error("[completeNode] Error:", error);

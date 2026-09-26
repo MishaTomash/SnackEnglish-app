@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+// 📁 Файл: SnackEnglish-app/src/features/lesson-engine/LessonEngine.tsx
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FC, ReactNode } from "react";
 import type { StoryNodeContent } from "../../entities/story/types";
 import { preloadVoices, stopSpeaking } from "../../shared/lib/speech";
@@ -15,6 +16,7 @@ import {
 import { stepRegistry } from "./steps";
 import type { StepComponentProps } from "./types";
 import { StepCtaSlotContext } from "./ui/stepCtaSlot";
+import { LessonNodeContext } from "./lib/lessonNodeContext";
 import styles from "./steps/lessonEffects.module.css";
 
 export interface LessonSummary {
@@ -81,6 +83,8 @@ export const LessonEngine: FC<LessonEngineProps> = ({
     const progress = useLessonRuntimeStore(selectProgress);
 
     const [slot, setSlot] = useState<HTMLElement | null>(null);
+    // Персонаж уроку для кроків (репліки npc у діалозі)
+    const nodeInfo = useMemo(() => ({ npc: node.npc, npcName: node.npcName }), [node.npc, node.npcName]);
     const [confirmExit, setConfirmExit] = useState(false);
     // Номер спроби: після "Почати знову" кроки монтуються заново навіть з тим самим stepIndex
     const [run, setRun] = useState(0);
@@ -159,15 +163,17 @@ export const LessonEngine: FC<LessonEngineProps> = ({
             <main className="flex-1 overflow-y-auto px-5 py-4">
                 <div className="mx-auto flex min-h-full max-w-md flex-col">
                     {isReady && step && Step && (
-                        <StepCtaSlotContext.Provider value={slot}>
-                            <Step
-                                key={`${run}-${stepIndex}`}
-                                step={step}
-                                onNext={nextStep}
-                                onLoseLife={loseLife}
-                                onInsertSteps={insertSteps}
-                            />
-                        </StepCtaSlotContext.Provider>
+                        <LessonNodeContext.Provider value={nodeInfo}>
+                            <StepCtaSlotContext.Provider value={slot}>
+                                <Step
+                                    key={`${run}-${stepIndex}`}
+                                    step={step}
+                                    onNext={nextStep}
+                                    onLoseLife={loseLife}
+                                    onInsertSteps={insertSteps}
+                                />
+                            </StepCtaSlotContext.Provider>
+                        </LessonNodeContext.Provider>
                     )}
                 </div>
             </main>

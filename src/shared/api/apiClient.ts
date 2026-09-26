@@ -9,7 +9,11 @@ const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) || "/api";
 const DEV_FALLBACK_INIT_DATA =
   "query_id=AAHdF6IQAAAAAN0XohDhrPqM&user=%7B%22id%22%3A100000001%2C%22first_name%22%3A%22Developer%22%2C%22username%22%3A%22dev_user%22%2C%22language_code%22%3A%22en%22%7D&auth_date=1700000000&hash=mock_hash_for_dev_mode";
 
-function getTelegramInitData(): string {
+/**
+ * initData Telegram для авторизації. Спільна для HTTP (apiClient) і сокета дуелей.
+ * Поза Telegram у режимі розробки — мок (бекенд приймає його лише з ALLOW_DEV_AUTH=true).
+ */
+export function getTelegramInitData(): string {
   if (typeof window === "undefined") return "";
 
   const tg = (
@@ -55,6 +59,12 @@ apiClient.interceptors.request.use(
 
     if (initData && config.headers) {
       config.headers.set("Authorization", `Bearer ${initData}`);
+    }
+
+    // Якщо бекенд відкрито через ngrok — без цього заголовка ngrok може віддати
+    // HTML-сторінку-попередження замість JSON. На проді заголовок ні на що не впливає.
+    if (config.headers) {
+      config.headers.set("ngrok-skip-browser-warning", "true");
     }
 
     // Страховка: якщо хтось явно виставив Content-Type у конкретному

@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/backend/src/bot.ts
 import path from "path";
 import dotenv from "dotenv";
 
@@ -5,12 +6,31 @@ import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 import { Telegraf, Markup } from "telegraf";
+import type { Context } from "telegraf";
 import { User } from "./models/User.js";
 import { Game } from "./models/Game.js";
 import { UserGamePurchase } from "./models/UserGamePurchase.js";
 import { ManualPaymentRequest } from "./models/ManualPaymentRequest.js";
 import { Friendship } from "./models/Friendship.js";
-import { broadcastMessage } from "./services/broadcastService.js";
+import { broadcastMessage, isBroadcastRunning } from "./services/broadcastService.js";
+import { getAppSettings } from "./services/settingsService.js";
+import { applyReferral } from "./services/referralService.js";
+import {
+  buildHelpText,
+  buildInvite,
+  buildRemindersText,
+  buildStatusCard,
+  buildTopText,
+  buildWelcomeText,
+  escapeHtml,
+  hasValidAppUrl,
+  getAppUrl,
+  loadUserSnapshot,
+  remindersKeyboard,
+  setupBotProfile,
+  statusKeyboard,
+  welcomeKeyboard,
+} from "./services/botUi.js";
 
 const botToken = process.env.BOT_TOKEN;
 
@@ -20,16 +40,46 @@ if (!botToken) {
 
 export const bot = new Telegraf(botToken);
 
-// Встановлюємо системне меню команд
-bot.telegram
-  .setMyCommands([
-    { command: "start", description: "Запустити застосунок" },
-    { command: "profile", description: "Моя статистика" },
-  ])
-  .catch(console.error);
+// "Обличчя" бота: опис до /start, команди в меню, кнопка "🍪 Вчити" біля поля вводу
+void setupBotProfile(bot.telegram);
+
+/** Привітання за часом доби (час сервера — Київ) */
+const greetingByTime = (): string => {
+  const hour = new Date().getHours();
+  if (hour < 5) return "Доброї ночі";
+  if (hour < 12) return "Доброго ранку";
+  if (hour < 18) return "Доброго дня";
+  return "Доброго вечора";
+};
+
+/** Картка прогресу з кнопками — для /start, /progress і відповіді на довільний текст */
+const sendStatusCard = async (ctx: Context, greeting: string, footer = ""): Promise<void> => {
+  if (!ctx.from) return;
+  const snapshot = await loadUserSnapshot(ctx.from.id, ctx.from.first_name);
+  if (!snapshot) {
+    await ctx.reply("Натисни /start, щоб почати 🍪");
+    return;
+  }
+  await ctx.reply(`${buildStatusCard(snapshot, greeting)}${footer}`, { parse_mode: "HTML", ...statusKeyboard(snapshot) });
+};
+
+/** Привітання новачка — з картинкою, якщо її задано в адмінці */
+const sendWelcome = async (ctx: Context, text: string, imageUrl: string): Promise<void> => {
+  if (imageUrl) {
+    try {
+      await ctx.replyWithPhoto(imageUrl, { caption: text, parse_mode: "HTML", ...welcomeKeyboard() });
+      return;
+    } catch (error) {
+      console.error("[bot] Картинку привітання не надіслано, шлю текст:", error instanceof Error ? error.message : error);
+    }
+  }
+  await ctx.reply(text, { parse_mode: "HTML", ...welcomeKeyboard() });
+};
 
 bot.start(async (ctx) => {
   try {
+    // Бот працює в особистому чаті; у групах /start ігноруємо
+    if (ctx.chat?.type !== "private") return;
     const telegramUser = ctx.from;
     if (!telegramUser) return;
 
@@ -43,21 +93,32 @@ bot.start(async (ctx) => {
         telegramFirstName: telegramUser.first_name ?? undefined,
         level: null,
         weakAreas: [],
-        streak: 1,
+        // Стрік рахується за уроками — починається з першого уроку
+        streak: 0,
         hp: 5,
         lastActivityDate: new Date(),
         onboardingCompleted: false,
+        wordsBackfilled: true,
       });
+    } else if (user.botBlockedAt) {
+      // Юзер знову написав боту — отже, розблокував його: нагадування знову можна слати
+      await User.updateOne({ _id: user._id }, { $set: { botBlockedAt: null } });
     }
 
-    const appUrl = process.env.VITE_APP_URL?.trim();
+    // Запрошення від друга: t.me/<бот>?start=ref_<код>. Лише для нових юзерів
+    const startPayload = ctx.payload;
+    let invitedByFriend = false;
+    if (isNewUser && startPayload && startPayload.startsWith("ref_")) {
+      invitedByFriend = await applyReferral(user._id, startPayload.slice(4)).catch(() => false);
+    }
 
-    if (!appUrl || !appUrl.startsWith("https://")) {
+    if (!hasValidAppUrl()) {
       await ctx.reply(
         `Привіт, ${telegramUser.first_name}! 🍪\n\nСервер ще налаштовує захищене HTTPS-з'єднання. Будь ласка, перевірте VITE_APP_URL у файлі .env.`,
       );
       return;
     }
+    const appUrl = getAppUrl();
 
     const payload = ctx.payload;
 
@@ -67,7 +128,7 @@ bot.start(async (ctx) => {
       const webAppUrl = `${appUrl}?startapp=duel_${roomId}`;
 
       await ctx.reply(
-        `⚔️ <b>${telegramUser.first_name}</b>, тебе викликали на дуель!\n\nТицяй кнопку нижче, щоб приєднатися та показати свої знання:`,
+        `⚔️ <b>${escapeHtml(telegramUser.first_name)}</b>, тебе викликали на дуель!\n\nТицяй кнопку нижче, щоб приєднатися та показати свої знання:`,
         {
           parse_mode: "HTML",
           ...Markup.inlineKeyboard([
@@ -78,22 +139,19 @@ bot.start(async (ctx) => {
       return;
     }
 
-    // 2. ПРИВІТАННЯ (Новий або існуючий юзер)
+    // 2. НОВАЧОК — знайомство зі Снекі
     if (isNewUser) {
-      await ctx.reply(
-        `Привіт, ${telegramUser.first_name}! 🍪\n\nЛаскаво просимо до SnackEnglish — твоїх щоденних швидких та смачних уроків англійської.\n\nНатискай кнопку нижче, щоб відкрити застосунок та спробувати свій перший снек!`,
-        Markup.inlineKeyboard([
-          [Markup.button.webApp("Відкрити SnackEnglish 🚀", appUrl)],
-        ]),
+      const settings = await getAppSettings();
+      const text = buildWelcomeText(
+        telegramUser.first_name,
+        invitedByFriend && settings.referralBonus > 0 ? settings.referralBonus : null,
       );
-    } else {
-      await ctx.reply(
-        `З поверненням, ${telegramUser.first_name}! 🍪\n\nТвій поточний вогник: 🔥 ${user.streak} днів.\nПродовжимо навчання?`,
-        Markup.inlineKeyboard([
-          [Markup.button.webApp("Відкрити застосунок 🚀", appUrl)],
-        ]),
-      );
+      await sendWelcome(ctx, text, settings.botWelcomeImage);
+      return;
     }
+
+    // 3. ТОЙ, ХТО ПОВЕРНУВСЯ — картка прогресу й кнопка "Продовжити"
+    await sendStatusCard(ctx, greetingByTime());
   } catch (error: unknown) {
     console.error("Помилка в обробнику /start бота:", error);
     await ctx.reply(
@@ -102,34 +160,81 @@ bot.start(async (ctx) => {
   }
 });
 
-// НОВА КОМАНДА: /profile
-bot.command("profile", async (ctx) => {
+// ==================== КОМАНДИ ====================
+
+// /progress (і старе /profile) — картка прогресу
+bot.command(["progress", "profile"], async (ctx) => {
   try {
-    const user = await User.findOne({ telegramId: ctx.from.id });
-    if (!user) {
-      return ctx.reply("Спочатку запусти бота командою /start !");
-    }
-
-    const displayName = user.username
-      ? `@${user.username}`
-      : user.telegramFirstName;
-
-    const message =
-      `👤 <b>Профіль:</b> ${displayName}\n\n` +
-      `🏆 <b>Кубків:</b> ${user.totalScore || 0}\n` +
-      `🔥 <b>Стрік:</b> ${user.streak || 0} днів\n` +
-      `📈 <b>Рівень:</b> ${user.level || "Не обрано"}`;
-
-    const appUrl = process.env.VITE_APP_URL?.trim() || "";
-
-    await ctx.reply(message, {
-      parse_mode: "HTML",
-      ...Markup.inlineKeyboard([
-        [Markup.button.webApp("Вчити англійську 🚀", appUrl)],
-      ]),
-    });
+    await sendStatusCard(ctx, "Твій прогрес");
   } catch (error) {
-    console.error("Помилка команди /profile:", error);
+    console.error("Помилка команди /progress:", error);
+  }
+});
+
+const sendTop = async (ctx: Context): Promise<void> => {
+  if (!ctx.from) return;
+  const text = await buildTopText(ctx.from.id);
+  await ctx.reply(text, {
+    parse_mode: "HTML",
+    ...(hasValidAppUrl()
+      ? Markup.inlineKeyboard([[Markup.button.webApp("🏆 Відкрити рейтинг", `${getAppUrl().replace(/\/$/, "")}/leaderboard`)]])
+      : {}),
+  });
+};
+
+const sendInvite = async (ctx: Context): Promise<void> => {
+  if (!ctx.from) return;
+  const invite = await buildInvite(ctx.from.id);
+  if (!invite) {
+    await ctx.reply("Натисни /start, щоб почати 🍪");
+    return;
+  }
+  await ctx.reply(invite.text, { parse_mode: "HTML", ...invite.keyboard });
+};
+
+const sendReminders = async (ctx: Context): Promise<void> => {
+  if (!ctx.from) return;
+  const user = await User.findOne({ telegramId: ctx.from.id }).select("remindersEnabled").lean<{ remindersEnabled?: boolean }>();
+  const enabled = user?.remindersEnabled !== false;
+  await ctx.reply(buildRemindersText(enabled), { parse_mode: "HTML", ...remindersKeyboard(enabled) });
+};
+
+const sendHelp = async (ctx: Context): Promise<void> => {
+  await ctx.reply(await buildHelpText(), {
+    parse_mode: "HTML",
+    ...(hasValidAppUrl() ? Markup.inlineKeyboard([[Markup.button.webApp("🚀 До уроків", getAppUrl())]]) : {}),
+  });
+};
+
+bot.command("top", (ctx) => sendTop(ctx).catch((error) => console.error("Помилка /top:", error)));
+bot.command("invite", (ctx) => sendInvite(ctx).catch((error) => console.error("Помилка /invite:", error)));
+bot.command("reminders", (ctx) => sendReminders(ctx).catch((error) => console.error("Помилка /reminders:", error)));
+bot.command("help", (ctx) => sendHelp(ctx).catch((error) => console.error("Помилка /help:", error)));
+
+// Кнопки під повідомленнями бота
+bot.action(/^ui:(top|invite|help|reminders|progress)$/, async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    const action = ctx.match[1];
+    if (action === "top") await sendTop(ctx);
+    else if (action === "invite") await sendInvite(ctx);
+    else if (action === "help") await sendHelp(ctx);
+    else if (action === "reminders") await sendReminders(ctx);
+    else await sendStatusCard(ctx, "Твій прогрес");
+  } catch (error) {
+    console.error("Помилка кнопки бота:", error);
+  }
+});
+
+// Увімкнути / вимкнути нагадування — змінюємо те саме повідомлення
+bot.action(/^ui:remind_(on|off)$/, async (ctx) => {
+  try {
+    const enabled = ctx.match[1] === "on";
+    await User.updateOne({ telegramId: ctx.from?.id }, { $set: { remindersEnabled: enabled } });
+    await ctx.answerCbQuery(enabled ? "Нагадування увімкнено 🔔" : "Нагадування вимкнено 🔕");
+    await ctx.editMessageText(buildRemindersText(enabled), { parse_mode: "HTML", ...remindersKeyboard(enabled) });
+  } catch (error) {
+    console.error("Помилка перемикання нагадувань:", error);
   }
 });
 
@@ -154,14 +259,22 @@ bot.command("copy", async (ctx) => {
     const sourceChatId = message.chat.id;
     const sourceMessageId = repliedMessage.message_id;
 
+    // Одна розсилка за раз — інакше юзери отримали б повідомлення двічі
+    if (isBroadcastRunning()) {
+      return ctx.reply("⏳ Попередня розсилка ще триває. Дочекайся її завершення.");
+    }
+
     await ctx.reply("📨 Розсилку розпочато, це може зайняти деякий час...");
 
-    void broadcastMessage(ctx.telegram, sourceChatId, sourceMessageId).then(
-      (result) =>
+    void broadcastMessage(ctx.telegram, sourceChatId, sourceMessageId)
+      .then((result) =>
         ctx.reply(
           `✅ Розсилку завершено.\nУспішно: ${result.success}\nНе вдалося: ${result.failed}`,
         ),
-    );
+      )
+      .catch((error: unknown) =>
+        ctx.reply(`⚠️ Розсилку зупинено: ${error instanceof Error ? error.message : "невідома помилка"}`),
+      );
   } catch (error) {
     console.error("Помилка команди /copy:", error);
   }
@@ -171,6 +284,12 @@ bot.command("copy", async (ctx) => {
 
 bot.on("pre_checkout_query", async (ctx) => {
   try {
+    // Оплату вимкнено в адмінці — старе посилання на рахунок не повинно списати Зірки
+    const settings = await getAppSettings();
+    if (!settings.paymentsEnabled) {
+      return ctx.answerPreCheckoutQuery(false, "Оплата зараз вимкнена — усі ігри безкоштовні 🎉");
+    }
+
     const payload = JSON.parse(ctx.preCheckoutQuery.invoice_payload);
     const { gameId, telegramId } = payload;
 
@@ -202,11 +321,17 @@ bot.on("successful_payment", async (ctx) => {
     const payload = JSON.parse(paymentInfo.invoice_payload);
     const { gameId, telegramId } = payload;
 
-    await UserGamePurchase.create({
-      telegramId,
-      gameId,
-      telegramPaymentChargeId: paymentInfo.telegram_payment_charge_id,
-    });
+    // ВИПРАВЛЕНО: create падав з помилкою дубліката, якщо гру вже відкрили вручну
+    // (або Telegram надіслав подію повторно) — юзер заплатив, але не бачив підтвердження.
+    // upsert: запис створюється один раз, повтор нічого не ламає.
+    await UserGamePurchase.updateOne(
+      { telegramId, gameId },
+      {
+        $set: { telegramPaymentChargeId: paymentInfo.telegram_payment_charge_id },
+        $setOnInsert: { purchasedAt: new Date() },
+      },
+      { upsert: true },
+    );
 
     await ctx.reply(
       "✨ Дякуємо за покупку! Гру успішно розблоковано в додатку.",
@@ -293,19 +418,24 @@ bot.action(/^(approve|reject)_(.+)$/, async (ctx) => {
       return ctx.answerCbQuery("Відмовлено в доступі.");
     }
 
-    const request = await ManualPaymentRequest.findById(requestId);
-    if (!request || request.status !== "pending") {
+    // ВИПРАВЛЕНО: атомарно pending -> approved/rejected. Раніше подвійне натискання
+    // кнопки могло обробити заявку двічі (дві покупки, два повідомлення юзеру)
+    const request = await ManualPaymentRequest.findOneAndUpdate(
+      { _id: requestId, status: "pending" },
+      { $set: { status: action === "approve" ? "approved" : "rejected" } },
+      { returnDocument: "after" },
+    );
+    if (!request) {
       return ctx.answerCbQuery("Заявка вже оброблена або не існує.");
     }
 
     if (action === "approve") {
-      request.status = "approved";
-      await request.save();
-
-      await UserGamePurchase.create({
-        telegramId: request.telegramId,
-        gameId: request.gameId,
-      });
+      // upsert: якщо юзер тим часом купив гру Зірками — не падаємо на дублікаті
+      await UserGamePurchase.updateOne(
+        { telegramId: request.telegramId, gameId: request.gameId },
+        { $setOnInsert: { purchasedAt: new Date() } },
+        { upsert: true },
+      );
       await ctx.telegram.sendMessage(
         request.telegramId,
         "✅ Вашу оплату підтверджено! Гра розблокована.",
@@ -317,9 +447,6 @@ bot.action(/^(approve|reject)_(.+)$/, async (ctx) => {
           : "";
       await ctx.editMessageCaption(`${caption}\n\n✅ ПІДТВЕРДЖЕНО`);
     } else {
-      request.status = "rejected";
-      await request.save();
-
       await ctx.telegram.sendMessage(
         request.telegramId,
         "❌ Вашу оплату відхилено. Зверніться до підтримки, якщо сталася помилка.",
@@ -408,25 +535,38 @@ bot.action(/^f_(acc|rej)_(.+)$/, async (ctx) => {
   }
 });
 
-// НОВИЙ ФОЛБЕК: Обробка невідомих повідомлень
+// ФОЛБЕК: довільні повідомлення в особистому чаті
 bot.on("message", async (ctx, next) => {
-  // Ловимо тільки текст, стікери або інші звичайні повідомлення, пропускаючи системні
-  if (
-    "text" in ctx.message ||
-    "sticker" in ctx.message ||
-    "voice" in ctx.message ||
-    "animation" in ctx.message
-  ) {
-    const appUrl = process.env.VITE_APP_URL?.trim() || "";
-    if (!appUrl) return;
+  if (ctx.chat.type !== "private") return next();
+  const message = ctx.message;
 
-    await ctx.reply(
-      "Я тут для того, щоб допомагати тобі з англійською! 🍪\nТисни кнопку нижче, щоб відкрити застосунок 👇",
-      Markup.inlineKeyboard([
-        [Markup.button.webApp("Відкрити SnackEnglish 🚀", appUrl)],
-      ]),
-    );
-  } else {
-    return next();
+  try {
+    if ("voice" in message || "video_note" in message) {
+      await ctx.reply(
+        "Голосові я поки не слухаю 🙈\n\nАле в уроках є вправи «Скажи вголос» — там Снекі перевірить твою вимову! 🎤",
+        hasValidAppUrl() ? Markup.inlineKeyboard([[Markup.button.webApp("🎤 До уроків", getAppUrl())]]) : {},
+      );
+      return;
+    }
+    if ("sticker" in message || "animation" in message) {
+      await ctx.reply(
+        "Класний стікер! 😄🍪 А тепер — маленький урок?",
+        hasValidAppUrl() ? Markup.inlineKeyboard([[Markup.button.webApp("🚀 Відкрити SnackEnglish", getAppUrl())]]) : {},
+      );
+      return;
+    }
+    if ("text" in message) {
+      // Невідома команда — підказуємо, які є
+      if (message.text.startsWith("/")) {
+        await sendHelp(ctx);
+        return;
+      }
+      await sendStatusCard(ctx, "Я тут", "\n\n<i>Я не чат-бот для розмов, але допоможу з англійською — тисни кнопку 👇</i>");
+      return;
+    }
+  } catch (error) {
+    console.error("Помилка відповіді на повідомлення:", error);
+    return;
   }
+  return next();
 });

@@ -1,15 +1,5 @@
 import { create } from "zustand";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
-const getAuthHeaders = () => {
-  const initData =
-    window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${initData}`,
-  };
-};
+import { apiClient } from "../shared/api/apiClient";
 
 export interface LeaderboardUser {
   _id: string;
@@ -35,6 +25,11 @@ export interface GiveawayHistoryData {
   winners: GiveawayWinner[];
 }
 
+interface LeaderboardResponse {
+  top?: LeaderboardUser[];
+  currentUserRank?: LeaderboardUser | null;
+}
+
 interface LeaderboardState {
   topUsers: LeaderboardUser[];
   currentUserRank: LeaderboardUser | null;
@@ -55,46 +50,35 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
   fetchLeaderboard: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/user/leaderboard`, {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error("Не вдалося завантажити рейтинг");
-      const data = await res.json();
-
+      const { data } = await apiClient.get<LeaderboardResponse>("/user/leaderboard");
       set({
         topUsers: data.top || [],
-        currentUserRank: data.currentUser || null,
+        // ВИПРАВЛЕНО: сервер повертає currentUserRank, а читалось data.currentUser —
+        // тому місце юзера ніколи не показувалось, а замість балів тижня брався totalScore
+        currentUserRank: data.currentUserRank ?? null,
         isLoading: false,
       });
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Невідома помилка";
-      set({ error: message, isLoading: false });
+      console.error(error);
+      set({ error: "Не вдалося завантажити рейтинг", isLoading: false });
     }
   },
   fetchGiveawayHistory: async () => {
     try {
-      const res = await fetch(`${API_URL}/user/giveaway-history`, {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error("Не вдалося завантажити історію");
-      const data = await res.json();
-      set({ giveawayHistory: data });
+      const { data } = await apiClient.get<GiveawayHistoryData[]>("/user/giveaway-history");
+      set({ giveawayHistory: Array.isArray(data) ? data : [] });
     } catch (error: unknown) {
       console.error(error);
     }
   },
   forceEndGiveaway: async () => {
     try {
-      const res = await fetch(`${API_URL}/user/giveaway/force-end`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error("Помилка при завершенні розіграшу");
+      await apiClient.post("/user/giveaway/force-end");
       await get().fetchLeaderboard();
       await get().fetchGiveawayHistory();
     } catch (error: unknown) {
       console.error(error);
+      throw new Error("Помилка при завершенні розіграшу");
     }
   },
 }));

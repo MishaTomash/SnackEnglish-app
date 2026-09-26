@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/pages/settings/ui/SettingsList.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,6 +14,7 @@ import { useUserStore } from "../../../store/userStore";
 import type { EnglishLevel } from "../../../entities/word/types";
 import type { SettingsStep } from "../SettingsPage";
 import { LEVELS, resolveAvatarUrl } from "../constants";
+import { SupportCard } from "../../../widgets/SupportCard";
 
 interface Props {
   error: string | null;
@@ -125,6 +127,9 @@ export const SettingsList = ({
         </div>
       </Card>
 
+      {/* Підтримка проєкту — видно лише якщо увімкнено в адмінці */}
+      <SupportCard place="settings" />
+
       <div className="space-y-3">
         <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] ml-1">
           Змінити рівень
@@ -138,11 +143,10 @@ export const SettingsList = ({
               key={lvl.id}
               onClick={() => onSelectLevel(lvl.id)}
               disabled={isLoading || localLoading !== null}
-              className={`w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between shadow-sm disabled:opacity-50 ${
-                isActive
+              className={`w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between shadow-sm disabled:opacity-50 ${isActive
                   ? "bg-[var(--accent-cta)] border-[var(--accent-cta-active)] text-[var(--text-accent)]"
                   : "bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-main)] hover:bg-[var(--bg-card-elevated)] active:opacity-70"
-              }`}
+                }`}
             >
               <div>
                 <span className="font-bold text-lg mr-3">{lvl.id}</span>

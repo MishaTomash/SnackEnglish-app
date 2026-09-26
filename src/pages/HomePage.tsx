@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/pages/HomePage.tsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -7,7 +8,6 @@ import {
   Trophy,
   Users,
   Heart,
-  Flame,
   MessageCircleWarning,
 } from "lucide-react";
 import { Screen } from "../shared/ui/Screen";
@@ -18,22 +18,21 @@ import { useUserStore } from "../store/userStore";
 import { CookieMascot } from "../shared/ui/CookieMascot";
 import { apiClient } from "../shared/api/apiClient";
 import { FeedbackModal } from "../shared/ui/FeedbackModal";
+import { resolveAvatarUrl } from "../shared/lib/avatarUrl";
+import { WeekActivityCard } from "../widgets/WeekActivityCard";
+import { InviteFriendCard } from "../widgets/InviteFriendCard";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
-const resolveAvatarUrl = (url: string | null) => {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  const apiBase = API_URL.replace(/\/api$/, "").replace(/\/$/, "");
-  return `${apiBase}${url}?ngrok-skip-browser-warning=true`;
-};
+interface ProfileStats {
+  likesCount: number;
+  friendsCount: number;
+}
 
 export const HomePage = () => {
   const {
     telegramId,
     level,
     streak,
-    totalScore,
+    weeklyScore,
     wordsLearnedCount,
     telegramFirstName,
     telegramUsername,
@@ -43,13 +42,11 @@ export const HomePage = () => {
     fetchUser,
   } = useUserStore();
 
-  const [stats, setStats] = useState({ likesCount: 0, friendsCount: 0 });
+  const [stats, setStats] = useState<ProfileStats>({ likesCount: 0, friendsCount: 0 });
+  // Адреси аватарів, які не завантажились (протермінований telegramPhotoUrl, видалений файл)
+  const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<ReadonlySet<string>>(() => new Set());
 
-  // Стейт для розсилки
-  const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [broadcastText, setBroadcastText] = useState("");
-  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   const isAdmin = telegramId === Number(import.meta.env.VITE_ADMIN_ID);
 
@@ -60,20 +57,12 @@ export const HomePage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const initData =
-          window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-        const res = await fetch(`${API_URL}/profile/me/stats`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${initData}`,
-            "ngrok-skip-browser-warning": "true",
-            "Bypass-Tunnel-Reminder": "true",
-          },
+        // Через apiClient: правильна адреса API на телефоні й справжній initData
+        const { data } = await apiClient.get<Partial<ProfileStats>>("/profile/me/stats");
+        setStats({
+          likesCount: data.likesCount ?? 0,
+          friendsCount: data.friendsCount ?? 0,
         });
-        if (res.ok) {
-          const data = await res.json();
-          setStats(data);
-        }
       } catch (error) {
         console.error("Failed to fetch profile stats:", error);
       }
@@ -81,30 +70,13 @@ export const HomePage = () => {
     if (telegramId) fetchStats();
   }, [telegramId]);
 
-  const handleBroadcast = async () => {
-    if (!broadcastText.trim()) return;
-    setIsBroadcasting(true);
-    try {
-      await apiClient.post("/admin/broadcast", { text: broadcastText });
-      setIsBroadcastOpen(false);
-      setBroadcastText("");
-      alert("Розсилку успішно запущено!");
-    } catch (error) {
-      console.error("Broadcast failed:", error);
-      alert("Помилка при запуску розсилки");
-    } finally {
-      setIsBroadcasting(false);
-    }
-  };
-
   const currentDisplayName =
     customDisplayName || telegramFirstName || "Користувач";
-  const currentPhotoUrl = resolveAvatarUrl(customAvatarUrl) || telegramPhotoUrl;
-
-  // Тижнева активність
-  const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
-  const jsDay = new Date().getDay();
-  const currentDayIndex = jsDay === 0 ? 6 : jsDay - 1;
+  // Свій аватар, інакше фото з Telegram; якщо картинка не вантажиться — показуємо іконку
+  const currentPhotoUrl =
+    [resolveAvatarUrl(customAvatarUrl), telegramPhotoUrl].find(
+      (url): url is string => Boolean(url) && !brokenPhotoUrls.has(url as string),
+    ) ?? null;
 
   return (
     <Screen className="space-y-4 pb-24">
@@ -114,7 +86,10 @@ export const HomePage = () => {
           {currentPhotoUrl ? (
             <img
               src={currentPhotoUrl}
-              alt="Avatar"
+              alt=""
+              onError={() =>
+                setBrokenPhotoUrls((prev) => new Set(prev).add(currentPhotoUrl))
+              }
               className="w-12 h-12 rounded-full object-cover bg-[var(--bg-app)] border border-[var(--border-color)] shrink-0"
             />
           ) : (
@@ -143,7 +118,8 @@ export const HomePage = () => {
         <div className="flex items-center gap-2 shrink-0">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cta)]/10 border border-[var(--accent-cta)]/20 text-[var(--accent-cta)] font-black text-sm shadow-sm">
             <Trophy className="w-4 h-4" />
-            <span>{totalScore || 0}</span>
+            {/* Кубки тижня — ті самі, що в рейтингу */}
+            <span>{weeklyScore || 0}</span>
           </div>
 
           <StreakBadge streak={streak} />
@@ -157,92 +133,21 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Панель адміністратора (Кнопка розсилки) */}
+      {/* Вхід в адмін-панель (лише для адміна; доступ перевіряє і сервер) */}
       {isAdmin && (
-        <Card className="p-3 bg-[var(--bg-card)] border-[var(--border-color)] flex flex-col gap-2">
-          {!isBroadcastOpen ? (
-            <button
-              onClick={() => setIsBroadcastOpen(true)}
-              className="w-full py-2.5 rounded-xl bg-blue-500/10 text-blue-500 font-bold border border-blue-500/20 active:opacity-70 transition-opacity flex items-center justify-center gap-2 text-sm"
-            >
-              🔔 Сповістити про оновлення
-            </button>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <h3 className="font-bold text-sm text-[var(--text-main)]">
-                Текст розсилки:
-              </h3>
-              <textarea
-                value={broadcastText}
-                onChange={(e) => setBroadcastText(e.target.value)}
-                className="w-full p-3 rounded-xl bg-[var(--bg-app)] border border-[var(--border-color)] text-[var(--text-main)] text-sm resize-none focus:outline-none focus:border-[var(--accent-cta)]"
-                rows={3}
-                placeholder="Введіть повідомлення для всіх користувачів..."
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setIsBroadcastOpen(false)}
-                  className="flex-1 py-2 rounded-xl bg-[var(--bg-app)] text-[var(--text-muted)] font-bold border border-[var(--border-color)] active:opacity-70 text-sm"
-                  disabled={isBroadcasting}
-                >
-                  Скасувати
-                </button>
-                <button
-                  onClick={handleBroadcast}
-                  disabled={isBroadcasting || !broadcastText.trim()}
-                  className="flex-1 py-2 rounded-xl bg-[var(--accent-cta)] text-white font-bold active:opacity-70 disabled:opacity-50 text-sm"
-                >
-                  {isBroadcasting ? "Відправка..." : "Надіслати"}
-                </button>
-              </div>
-            </div>
-          )}
-        </Card>
+        <Link
+          to="/admin"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-500/20 bg-blue-500/10 py-3 text-sm font-bold text-blue-400 transition-opacity active:opacity-70"
+        >
+          🛠 Адмін-панель
+        </Link>
       )}
 
-      {/* Тижнева активність */}
-      <Card className="p-4 bg-[var(--bg-card)] border-[var(--border-color)]">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-black text-sm text-[var(--text-main)] flex items-center gap-1.5">
-            <Flame className="w-4 h-4 text-orange-500" /> Активність
-          </h3>
-          <span className="text-xs font-bold text-[var(--text-muted)]">
-            Цього тижня
-          </span>
-        </div>
-        <div className="flex justify-between items-center">
-          {weekDays.map((day, index) => {
-            const isToday = index === currentDayIndex;
-            const isPast = index < currentDayIndex;
-            const isCompletedMock = isPast && currentDayIndex - index <= streak;
+      {/* Тижнева активність — справжні дні з уроками + стан серії */}
+      <WeekActivityCard />
 
-            return (
-              <div key={day} className="flex flex-col items-center gap-1.5">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all border-2 ${
-                    isCompletedMock
-                      ? "bg-orange-500 border-orange-500 text-white shadow-sm"
-                      : isToday
-                        ? "bg-orange-100 border-orange-500 text-orange-600 dark:bg-orange-900/30"
-                        : "bg-transparent border-[var(--border-color)] text-[var(--text-muted)]"
-                  }`}
-                >
-                  {isCompletedMock ? "✓" : ""}
-                </div>
-                <span
-                  className={`text-[10px] font-bold ${
-                    isToday
-                      ? "text-[var(--text-main)]"
-                      : "text-[var(--text-muted)]"
-                  }`}
-                >
-                  {day}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
+      {/* Запроси друга */}
+      <InviteFriendCard />
 
       {/* Мотивація від Маскота */}
       <Link to="/learning" className="block">

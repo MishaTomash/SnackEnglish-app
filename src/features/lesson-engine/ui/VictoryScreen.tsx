@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+// 📁 Файл: SnackEnglish-app/src/features/lesson-engine/ui/VictoryScreen.tsx
+import { useEffect, useState } from "react";
 import type { FC } from "react";
 import type { CompleteNodeResponse } from "../../../entities/story/types";
 import { hapticNotify } from "../../../shared/lib/haptics";
@@ -7,6 +8,10 @@ import { Card } from "../../../shared/ui/Card";
 import { CookieMascot } from "../../../shared/ui/CookieMascot";
 import type { LessonSummary } from "../LessonEngine";
 import styles from "../steps/lessonEffects.module.css";
+import { useDailyProgressStore } from "../../../store/dailyProgressStore";
+import { markSupportPromptShown, shouldShowSupportPrompt } from "../../../shared/lib/supportPrompt";
+import { SupportCard } from "../../../widgets/SupportCard";
+import { useAppConfigStore } from "../../../store/appConfigStore";
 
 export type SaveStatus = "saving" | "saved" | "error";
 
@@ -35,6 +40,21 @@ export const VictoryScreen: FC<VictoryScreenProps> = ({
     useEffect(() => {
         hapticNotify("success");
     }, []);
+
+    const daily = useDailyProgressStore((s) => s.daily);
+    const hasSupport = useAppConfigStore((s) => Boolean(s.config?.support));
+    const loadConfig = useAppConfigStore((s) => s.load);
+    useEffect(() => {
+        void loadConfig();
+    }, [loadConfig]);
+    // Рішення показати заклик "Підтримати" — один раз на екран, не частіше за раз на кілька днів
+    const [supportAllowed] = useState(() => shouldShowSupportPrompt());
+    const showSupport = saveStatus === "saved" && supportAllowed && hasSupport;
+    useEffect(() => {
+        if (showSupport) markSupportPromptShown();
+    }, [showSupport]);
+
+    const bonusXp = saveStatus === "saved" && daily?.bonusXp ? daily.bonusXp : 0;
 
     const xpText =
         saveStatus === "saving"
@@ -79,6 +99,33 @@ export const VictoryScreen: FC<VictoryScreenProps> = ({
                     </p>
                 )}
 
+                {saveStatus === "saved" && daily?.streakRestored && (
+                    <Card className="mt-4 w-full p-4" style={{ borderColor: "#f97316" }}>
+                        <p className="font-bold">🔥 Серію врятовано!</p>
+                        <p className="text-sm text-[var(--text-muted)]">
+                            Учора був пропуск, але ти повернувся вчасно — серія {daily.streak ?? ""} днів триває.
+                            Наступний шанс — через тиждень.
+                        </p>
+                    </Card>
+                )}
+
+                {bonusXp > 0 && (
+                    <Card className="mt-4 w-full p-4" style={{ borderColor: "var(--accent-success)" }}>
+                        <p className="font-bold">🎯 Денну ціль виконано!</p>
+                        <p className="text-sm text-[var(--text-muted)]">
+                            +{bonusXp} бонусних кубків (уже в сумі вище). Так тримати!
+                        </p>
+                    </Card>
+                )}
+
+                {saveStatus === "saved" && daily && daily.limit > 0 && (
+                    <p className="mt-4 text-sm text-[var(--text-muted)]">
+                        {daily.limitReached
+                            ? "На сьогодні нові уроки закінчились — мозку треба відпочити, щоб усе запам'яталось 🌙 Повторювати пройдене й грати в ігри можна й далі."
+                            : `Сьогодні нових уроків: ${daily.completedToday} з ${daily.limit}`}
+                    </p>
+                )}
+
                 {result?.chapterCompleted && (
                     // borderColor через style: клас конфліктував би з border-класом Card
                     <Card className="mt-4 w-full p-4" style={{ borderColor: "var(--accent-cta)" }}>
@@ -95,6 +142,8 @@ export const VictoryScreen: FC<VictoryScreenProps> = ({
                         <p className="mt-1 italic">{cliffhanger}</p>
                     </div>
                 )}
+
+                {showSupport && <SupportCard place="victory" className="mt-4" />}
 
                 <div className="mt-auto flex w-full flex-col gap-2 pt-8">
                     {saveStatus === "error" ? (

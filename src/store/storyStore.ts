@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/store/storyStore.ts
 import { create } from "zustand";
 import axios from "axios";
 import * as storyApi from "../entities/story/api";
@@ -10,6 +11,7 @@ import type {
 } from "../entities/story/types";
 import type { EnglishLevel } from "../entities/word/types";
 import { useUserStore } from "./userStore";
+import { parseDailyProgress, useDailyProgressStore } from "./dailyProgressStore";
 
 // Без persist: прогрес живе на сервері, а збережені в localStorage
 // статуси locked/active швидко ставали б неактуальними.
@@ -245,10 +247,25 @@ export const useStoryStore = create<StoryState>()((set, get) => ({
             // Окремий try: збій persist у userStore (переповнений / недоступний
             // localStorage) не повинен відкочувати вже збережене на сервері проходження
             try {
-                useUserStore.setState({ totalScore: result.totalScore });
+                // Кубки тижня — ті, що бачить юзер (головна, рейтинг)
+                const weekly: unknown = "weeklyScore" in result ? result.weeklyScore : undefined;
+                useUserStore.setState({
+                    totalScore: result.totalScore,
+                    ...(typeof weekly === "number" ? { weeklyScore: weekly } : {}),
+                });
             } catch (syncError) {
                 console.error("[storyStore] Failed to sync totalScore", syncError);
             }
+
+            // Прогрес дня (ліміт, ціль, бонус) приходить разом із результатом уроку
+            const daily = parseDailyProgress("daily" in result ? result.daily : undefined);
+            if (daily) {
+                useDailyProgressStore.getState().setDaily(daily);
+                // Стрік рахується за уроками — одразу показуємо новий у шапці
+                if (typeof daily.streak === "number") useUserStore.setState({ streak: daily.streak });
+            }
+            const words: unknown = "wordsLearnedCount" in result ? result.wordsLearnedCount : undefined;
+            if (typeof words === "number") useUserStore.setState({ wordsLearnedCount: words });
 
             // Розблокування наступного розділу або невідомий заздалегідь стан —
             // тихо перечитуємо список розділів поточного рівня

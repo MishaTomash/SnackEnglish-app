@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/backend/src/controllers/storyAdminController.ts
 import { Request, Response } from "express";
 import type { Types } from "mongoose";
 import { Chapter, StoryNode, UserStoryProgress } from "../models/index.js";
@@ -10,6 +11,7 @@ import {
     type LessonContent,
 } from "../services/storyContentValidator.js";
 import { slugify, uniqueSlug } from "../utils/slugify.js";
+import { voiceNewContent } from "../services/ttsService.js";
 
 /**
  * Адмін-API історій. Монтується під /api/stories/admin з authMiddleware + adminOnly.
@@ -363,6 +365,8 @@ export const createNodes = async (req: Request, res: Response): Promise<void> =>
         });
 
         const created = await StoryNode.insertMany(docs);
+        // Нові фрази озвучуються одразу у фоні (якщо озвучку увімкнено в адмінці)
+        voiceNewContent(created.map((n) => String(n._id)));
         res.status(201).json({ nodes: created.map((n) => toNodeDto(n.toObject())) });
     } catch (error) {
         if (isDuplicateKeyError(error)) {
@@ -426,6 +430,7 @@ export const updateNode = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
+        voiceNewContent([String(updated._id)]);
         res.status(200).json({ node: toNodeDto(updated), lesson: toLessonJson(updated) });
     } catch (error) {
         if (isDuplicateKeyError(error)) {

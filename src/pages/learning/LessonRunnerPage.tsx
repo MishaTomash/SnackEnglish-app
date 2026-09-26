@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/pages/learning/LessonRunnerPage.tsx
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,6 +11,19 @@ import type { SaveStatus } from "../../features/lesson-engine/ui/VictoryScreen";
 import { Button } from "../../shared/ui/Button";
 import { CookieMascot } from "../../shared/ui/CookieMascot";
 import { useStoryStore } from "../../store/storyStore";
+import { clearLessonAudio, setClipBaseRate, setLessonAudio } from "../../shared/lib/speech";
+import { useAppConfigStore } from "../../store/appConfigStore";
+
+/** Мапа озвучки уроку "фраза -> mp3" з відповіді сервера (перевіряємо формат) */
+const readAudioMap = (node: StoryNodeContent): Record<string, string> => {
+    const raw: unknown = "audio" in node ? node.audio : undefined;
+    if (typeof raw !== "object" || raw === null) return {};
+    const map: Record<string, string> = {};
+    Object.entries(raw as Record<string, unknown>).forEach(([key, url]) => {
+        if (typeof url === "string") map[key] = url;
+    });
+    return map;
+};
 
 type Phase =
     | { kind: "loading" }
@@ -29,6 +43,14 @@ const describeLoadError = (error: unknown): { message: string; canRetry: boolean
         return { message: "Цей урок ще закритий. Спершу пройди попередні.", canRetry: false };
     }
     if (status === 404) return { message: "Урок не знайдено.", canRetry: false };
+    if (status === 429) {
+        // Денний ліміт нових уроків (пройдені можна повторювати)
+        return {
+            message:
+                "На сьогодні нові уроки закінчились — мозку треба відпочити, щоб усе запам'яталось 🌙 Повертайся завтра! А поки можна повторити пройдені уроки або пограти в ігри.",
+            canRetry: false,
+        };
+    }
     return { message: "Не вдалося завантажити урок.", canRetry: true };
 };
 
@@ -43,19 +65,33 @@ export const LessonRunnerPage = () => {
     const [phase, setPhase] = useState<Phase>({ kind: "loading" });
     const [loadAttempt, setLoadAttempt] = useState(0);
 
+    // Швидкість озвучки з адмінки (звичайне відтворення; "Повільно" — окремо)
+    const playbackRate = useAppConfigStore((s) => s.config?.ttsPlaybackRate ?? 1);
+    const loadAppConfig = useAppConfigStore((s) => s.load);
+    useEffect(() => {
+        void loadAppConfig();
+    }, [loadAppConfig]);
+    useEffect(() => {
+        setClipBaseRate(playbackRate);
+    }, [playbackRate]);
+
     useEffect(() => {
         let cancelled = false;
         setPhase({ kind: "loading" });
         storyApi
             .getNodeContent(chapterId, nodeId)
             .then((node) => {
-                if (!cancelled) setPhase({ kind: "playing", node });
+                if (cancelled) return;
+                // Природна озвучка фраз уроку (якщо її згенеровано в адмінці)
+                setLessonAudio(readAudioMap(node));
+                setPhase({ kind: "playing", node });
             })
             .catch((error: unknown) => {
                 if (!cancelled) setPhase({ kind: "error", ...describeLoadError(error) });
             });
         return () => {
             cancelled = true;
+            clearLessonAudio();
         };
     }, [chapterId, nodeId, loadAttempt]);
 

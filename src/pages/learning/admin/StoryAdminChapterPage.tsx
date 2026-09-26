@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/pages/learning/admin/StoryAdminChapterPage.tsx
 import { useCallback, useEffect, useState } from "react";
 import type { FC } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -11,7 +12,7 @@ import type {
 } from "../../../entities/story/adminTypes";
 import { AdminSheet } from "../../../features/story-admin/ui/AdminSheet";
 import { ChapterForm } from "../../../features/story-admin/ui/ChapterForm";
-import { LessonJsonEditor } from "../../../features/story-admin/ui/LessonJsonEditor";
+import { LessonVisualEditor } from "../../../features/story-admin/ui/visual/LessonVisualEditor";
 import { LessonPreview } from "../../../features/story-admin/ui/LessonPreview";
 import { Button } from "../../../shared/ui/Button";
 import { ConfirmDialog } from "../../../shared/ui/ConfirmDialog";
@@ -19,7 +20,7 @@ import { CookieMascot } from "../../../shared/ui/CookieMascot";
 
 type EditorState =
     | { mode: "create" }
-    | { mode: "edit"; node: AdminNode; text: string };
+    | { mode: "edit"; node: AdminNode; lesson: LessonJson };
 
 const STEP_LABELS: Record<string, string> = {
     scene: "сцена",
@@ -90,8 +91,8 @@ const LessonRow: FC<LessonRowProps> = ({ node, isFirst, isLast, isBusy, onMove, 
                 <Button size="sm" variant="secondary" onClick={onPreview} disabled={isBusy} aria-label={`Переглянути «${node.label}»`}>
                     ▶ Переглянути
                 </Button>
-                <Button size="sm" variant="secondary" onClick={onEdit} disabled={isBusy} aria-label={`Редагувати JSON «${node.label}»`}>
-                    ✏️ JSON
+                <Button size="sm" variant="secondary" onClick={onEdit} disabled={isBusy} aria-label={`Редагувати «${node.label}»`}>
+                    ✏️ Редагувати
                 </Button>
                 <Button size="sm" variant="ghost" onClick={onDelete} disabled={isBusy} aria-label={`Видалити «${node.label}»`}>
                     🗑 Видалити
@@ -186,7 +187,7 @@ export const StoryAdminChapterPage = () => {
         act(
             async () => {
                 const details = await adminApi.getNode(node.id);
-                setEditor({ mode: "edit", node, text: JSON.stringify(details.lesson, null, 2) });
+                setEditor({ mode: "edit", node, lesson: details.lesson });
             },
             { reload: false },
         );
@@ -331,7 +332,7 @@ export const StoryAdminChapterPage = () => {
                 <div className="mb-3 flex items-center justify-between gap-2">
                     <h2 className="text-lg font-extrabold">Уроки ({nodes.length})</h2>
                     <Button size="sm" onClick={() => setEditor({ mode: "create" })} disabled={isBusy}>
-                        + Додати уроки
+                        + Додати урок
                     </Button>
                 </div>
 
@@ -339,8 +340,8 @@ export const StoryAdminChapterPage = () => {
                     <div className="rounded-3xl border-2 border-dashed border-[var(--border-color)] p-6 text-center">
                         <p className="font-bold">Уроків ще немає</p>
                         <p className="mt-1 text-sm text-[var(--text-muted)]">
-                            Натисніть «Додати уроки» і вставте JSON: один урок {"{ … }"} або кілька масивом {"[ … ]"}.
-                            У редакторі є кнопка «Вставити шаблон» з прикладом усіх типів кроків.
+                            Натисніть «Додати урок» — відкриється візуальний редактор: кроки додаються кнопкою, поля
+                            заповнюються як форма. Кілька уроків одразу можна вставити JSON-ом на вкладці «{"{ }"} JSON».
                         </p>
                     </div>
                 ) : (
@@ -374,10 +375,12 @@ export const StoryAdminChapterPage = () => {
             )}
 
             {editor && (
-                <LessonJsonEditor
+                <LessonVisualEditor
                     mode={editor.mode}
-                    title={editor.mode === "create" ? `Нові уроки · ${chapter.title}` : `Урок «${editor.node.label}»`}
-                    initialText={editor.mode === "edit" ? editor.text : ""}
+                    title={editor.mode === "create" ? `Новий урок · ${chapter.title}` : `Урок «${editor.node.label}»`}
+                    initialLesson={editor.mode === "edit" ? editor.lesson : null}
+                    // Чернетка зберігається окремо для кожного уроку й для нового уроку в розділі
+                    draftKey={editor.mode === "edit" ? `snack:lesson-draft:${editor.node.id}` : `snack:lesson-draft:new:${chapterId}`}
                     onSave={saveLessons}
                     onClose={() => setEditor(null)}
                 />

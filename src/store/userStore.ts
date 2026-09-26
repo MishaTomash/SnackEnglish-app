@@ -1,27 +1,61 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import axios from "axios";
 import type { EnglishLevel } from "../entities/word/types";
+import { apiClient } from "../shared/api/apiClient";
 
-const getAuthHeaders = () => {
-  const initData =
-    window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${initData}`,
-    "ngrok-skip-browser-warning": "true",
-    "Bypass-Tunnel-Reminder": "true",
-  };
+/**
+ * Запити йдуть через apiClient — як і в решті застосунку:
+ * - та сама адреса API ("/api" за замовчуванням, а не http://localhost:3000, що не працює на телефоні);
+ * - той самий initData (з Telegram або з URL; мок — лише в режимі розробки);
+ * - заголовок для ngrok і таймаут уже налаштовані в apiClient.
+ */
+
+/** Повідомлення про помилку: текст із сервера, якщо він є, інакше запасний */
+const toErrorMessage = (error: unknown, fallback: string): string => {
+  if (axios.isAxiosError(error)) {
+    const data: unknown = error.response?.data;
+    if (typeof data === "object" && data !== null && "error" in data) {
+      const message = (data as { error: unknown }).error;
+      if (typeof message === "string" && message) return message;
+    }
+    return fallback;
+  }
+  return error instanceof Error && error.message ? error.message : fallback;
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+/** Поля профілю, які віддає GET /user/me */
+interface MeResponse {
+  telegramId: number;
+  level: EnglishLevel | null;
+  onboardingCompleted: boolean;
+  streak?: number;
+  hp?: number;
+  totalScore?: number;
+  weeklyScore?: number;
+  wordsLearnedCount?: number;
+  telegramFirstName?: string | null;
+  username?: string | null;
+  telegramPhotoUrl?: string | null;
+  customDisplayName?: string | null;
+  customAvatarUrl?: string | null;
+}
+
+interface ProfileResponse {
+  customDisplayName?: string | null;
+  customAvatarUrl?: string | null;
+  hp?: number;
+}
 
 export interface UserState {
   telegramId: number | null;
   level: EnglishLevel | null;
   onboardingCompleted: boolean;
   streak: number;
-  hp: number; // ДОДАНО: Стейт життів
+  hp: number; // Стейт життів
   totalScore: number;
+  /** Кубки тижня — їх бачить юзер; щонеділі скидаються разом із рейтингом */
+  weeklyScore: number;
   wordsLearnedCount: number;
   isLoading: boolean;
   error: string | null;
@@ -47,6 +81,9 @@ export interface UserState {
   ) => Promise<boolean>;
 }
 
+// Один запит профілю на всіх: StrictMode і кілька компонентів можуть викликати fetchUser одночасно
+let fetchUserRequest: Promise<void> | null = null;
+
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
@@ -56,6 +93,7 @@ export const useUserStore = create<UserState>()(
       streak: 0,
       hp: 5,
       totalScore: 0,
+      weeklyScore: 0,
       wordsLearnedCount: 0,
       isLoading: false,
       error: null,
@@ -81,16 +119,9 @@ export const useUserStore = create<UserState>()(
         try {
           const formData = new FormData();
           formData.append("hp", newHp.toString());
-
-          // Видаляємо Content-Type, щоб браузер сам згенерував multipart/form-data boundary,
-          // але залишаємо ngrok/localtunnel заголовки.
-          const { "Content-Type": _, ...headers } = getAuthHeaders();
-
-          await fetch(`${API_URL}/user/profile`, {
-            method: "PATCH",
-            headers,
-            body: formData,
-          });
+          // Сервер лише зменшує hp ($min) і повертає актуальне значення
+          const { data } = await apiClient.patch<ProfileResponse>("/user/profile", formData);
+          if (typeof data.hp === "number") set({ hp: data.hp });
         } catch (e) {
           console.error("Failed to sync HP", e);
         }
@@ -99,97 +130,88 @@ export const useUserStore = create<UserState>()(
       updateLevel: async (level: EnglishLevel) => {
         set({ isLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/user/level`, {
-            method: "PATCH",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ level }),
-          });
-          if (!res.ok) throw new Error("Помилка оновлення рівня");
+          await apiClient.patch("/user/level", { level });
           set({ level, isLoading: false, lastActiveUnitId: null });
           return true;
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          set({ error: toErrorMessage(error, "Помилка оновлення рівня"), isLoading: false });
           return false;
         }
       },
 
       fetchUser: async (force = false) => {
         if (get().hasLoadedProfile && !force) return;
-        set({ isLoading: true, error: null });
-        try {
-          const res = await fetch(`${API_URL}/user/me`, {
-            headers: getAuthHeaders(),
-          });
-          if (!res.ok) throw new Error("Failed to fetch user");
-          const data = await res.json();
-          set({
-            telegramId: data.telegramId,
-            level: data.level,
-            onboardingCompleted: data.onboardingCompleted,
-            streak: data.streak ?? 0,
-            hp: data.hp ?? 5, // Підтягуємо HP
-            totalScore: data.totalScore ?? 0,
-            wordsLearnedCount: data.wordsLearnedCount ?? 0,
-            telegramFirstName: data.telegramFirstName,
-            telegramUsername: data.username ?? null,
-            telegramPhotoUrl: data.telegramPhotoUrl,
-            customDisplayName: data.customDisplayName,
-            customAvatarUrl: data.customAvatarUrl,
-            hasLoadedProfile: true,
-            isLoading: false,
-          });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-        }
+        if (fetchUserRequest) return fetchUserRequest;
+
+        fetchUserRequest = (async () => {
+          set({ isLoading: true, error: null });
+          try {
+            const { data } = await apiClient.get<MeResponse>("/user/me");
+            set({
+              telegramId: data.telegramId,
+              level: data.level,
+              onboardingCompleted: data.onboardingCompleted,
+              streak: data.streak ?? 0,
+              hp: data.hp ?? 5, // Підтягуємо HP
+              totalScore: data.totalScore ?? 0,
+              weeklyScore: data.weeklyScore ?? 0,
+              wordsLearnedCount: data.wordsLearnedCount ?? 0,
+              telegramFirstName: data.telegramFirstName ?? null,
+              telegramUsername: data.username ?? null,
+              telegramPhotoUrl: data.telegramPhotoUrl ?? null,
+              customDisplayName: data.customDisplayName ?? null,
+              customAvatarUrl: data.customAvatarUrl ?? null,
+              hasLoadedProfile: true,
+              isLoading: false,
+            });
+          } catch (error) {
+            set({ error: toErrorMessage(error, "Failed to fetch user"), isLoading: false });
+          } finally {
+            fetchUserRequest = null;
+          }
+        })();
+
+        return fetchUserRequest;
       },
 
       completeOnboarding: async (level: EnglishLevel) => {
         set({ isLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/user/onboarding`, {
-            method: "PATCH",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ level }),
-          });
-          if (!res.ok) throw new Error("Помилка збереження. Спробуй ще раз.");
+          await apiClient.patch("/user/onboarding", { level });
           set({ level, onboardingCompleted: true, isLoading: false });
           return true;
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          set({ error: toErrorMessage(error, "Помилка збереження. Спробуй ще раз."), isLoading: false });
           return false;
         }
       },
 
-      updateProfile: async (
-        displayName: string | null,
-        avatarFile: File | null,
-      ) => {
+      updateProfile: async (displayName: string | null, avatarFile: File | null) => {
         set({ isLoading: true, error: null });
         try {
           const formData = new FormData();
           if (displayName) formData.append("customDisplayName", displayName);
           if (avatarFile) formData.append("avatar", avatarFile);
 
-          // Видаляємо Content-Type, щоб браузер сам згенерував boundary,
-          // інакше multer не зможе розпарсити файл.
-          const { "Content-Type": _, ...headers } = getAuthHeaders();
-
-          const res = await fetch(`${API_URL}/user/profile`, {
-            method: "PATCH",
-            headers,
-            body: formData,
+          // apiClient сам прибирає Content-Type для FormData — браузер додасть boundary
+          const { data } = await apiClient.patch<ProfileResponse>("/user/profile", formData, {
+            timeout: 30000, // завантаження фото на повільному мобільному інтернеті
           });
 
-          if (!res.ok) throw new Error("Помилка оновлення профілю");
-          const data = await res.json();
           set({
-            customDisplayName: data.customDisplayName,
-            customAvatarUrl: data.customAvatarUrl,
+            customDisplayName: data.customDisplayName ?? null,
+            customAvatarUrl: data.customAvatarUrl ?? null,
             isLoading: false,
           });
           return true;
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const message =
+            axios.isAxiosError(error) && error.response?.status === 413
+              ? "Фото завелике. Максимум 5 МБ."
+              : axios.isAxiosError(error) && error.response?.status === 429
+                ? "Забагато змін аватара. Спробуй трохи пізніше."
+                : toErrorMessage(error, "Помилка оновлення профілю");
+          set({ error: message, isLoading: false });
           return false;
         }
       },
@@ -203,6 +225,7 @@ export const useUserStore = create<UserState>()(
         streak: state.streak,
         hp: state.hp,
         totalScore: state.totalScore,
+        weeklyScore: state.weeklyScore,
         wordsLearnedCount: state.wordsLearnedCount,
         lastActiveUnitId: state.lastActiveUnitId,
         telegramFirstName: state.telegramFirstName,

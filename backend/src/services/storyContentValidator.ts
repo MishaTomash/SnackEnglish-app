@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/backend/src/services/storyContentValidator.ts
 /**
  * Валідація контенту історій, що надходить з адмін-панелі.
  *
@@ -51,7 +52,8 @@ const EMOTIONS = [
     "sad",
 ];
 const EVENT_EFFECTS = ["flash", "shake", "rain"];
-const SPEAKERS = ["snacky", "user"];
+// npc — персонаж уроку (npcName): бариста, офіціант… Говорить своїм голосом
+const SPEAKERS = ["snacky", "user", "npc"];
 const QUALITIES = ["good", "ok", "bad"];
 const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const MAX_BRANCH_DEPTH = 3; // choice усередині outcome усередині choice…

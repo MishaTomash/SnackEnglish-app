@@ -18,10 +18,10 @@ import { DUEL_REGISTRY } from "../duels/registry";
 import { useUserStore } from "../store/userStore";
 import { Button } from "../shared/ui/Button";
 import { Card } from "../shared/ui/Card";
+import { apiClient } from "../shared/api/apiClient";
 
 const BOT_USERNAME =
   import.meta.env.VITE_BOT_USERNAME || "snack_english_test_bot";
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 type DuelUiState =
   | "connecting"
@@ -159,7 +159,9 @@ const DuelRoomContent = () => {
           }));
         }
         // Оновлюємо власний рахунок посеред раунду (потрібно для канату)
-        if (data.newScores && data.newScores[telegramId]) {
+        // ВИПРАВЛЕНО: раніше рахунок 0 не оновлювався (0 — "хибне" значення),
+        // тож після штрафу в канаті на екрані лишався старий рахунок
+        if (data.newScores && data.newScores[telegramId] !== undefined) {
           setMyScore(data.newScores[telegramId]);
         }
       });
@@ -180,6 +182,12 @@ const DuelRoomContent = () => {
 
       socket.on("duel:match_over", () => setUiState("finished"));
 
+      // Кімната зайнята (третій гравець) або код уже використовується
+      socket.on("duel:room_error", () => {
+        setUiState("disconnected");
+        setTimeout(() => navigate("/games"), 2500);
+      });
+
       socket.on("duel:opponent_disconnected", () => {
         setUiState("disconnected");
         setTimeout(() => navigate("/games"), 2500);
@@ -192,7 +200,7 @@ const DuelRoomContent = () => {
       if (socketRef.current) {
         try {
           socketRef.current.disconnect();
-        } catch (e) {}
+        } catch (e) { }
       }
     };
   }, [roomId, telegramId, navigate]);
@@ -202,16 +210,9 @@ const DuelRoomContent = () => {
       const fetchFriends = async () => {
         setIsLoadingFriends(true);
         try {
-          const initData =
-            window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-          const res = await fetch(`${API_URL}/profile/me/friends`, {
-            headers: { Authorization: `Bearer ${initData}` },
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            setFriends(Array.isArray(data) ? data : data?.friends || []);
-          }
+          // Через apiClient: та сама адреса API й авторизація, що й у решті застосунку
+          const { data } = await apiClient.get("/profile/me/friends");
+          setFriends(Array.isArray(data) ? data : data?.friends || []);
         } catch (e) {
           console.error(e);
         } finally {
@@ -258,16 +259,7 @@ const DuelRoomContent = () => {
   const handleInviteFriend = async (friendId: string) => {
     try {
       setInvitingId(friendId);
-      const initData =
-        window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-      await fetch(`${API_URL}/duels/invite`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${initData}`,
-        },
-        body: JSON.stringify({ targetUserId: friendId, roomId: roomId }),
-      });
+      await apiClient.post("/duels/invite", { targetUserId: friendId, roomId });
       setInvitedFriends((prev) => new Set(prev).add(friendId));
     } catch (e) {
       console.error(e);

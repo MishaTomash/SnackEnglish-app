@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/pages/LeaderboardPage.tsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -18,21 +19,32 @@ import {
   useLeaderboardStore,
   type GiveawayHistoryData,
 } from "../store/leaderboardStore";
+import { resolveAvatarUrl } from "../shared/lib/avatarUrl";
+import { SupportCard } from "../widgets/SupportCard";
 
 type Tab = "rating" | "giveaway";
 
-const resolveAvatarUrl = (url: string | null | undefined) => {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:3000")
-    .replace(/\/api$/, "")
-    .replace(/\/$/, "");
-  return `${apiBase}${url}?ngrok-skip-browser-warning=true`;
+/** Розіграш завершує сервер щонеділі о 20:00 за Києвом (cron з timezone Europe/Kyiv) */
+const GIVEAWAY_TIMEZONE = "Europe/Kyiv";
+
+/**
+ * "Настінний" час у заданому поясі як Date (для розрахунків різниці).
+ * ВИПРАВЛЕНО: раніше відлік ішов від часу телефона — юзер в іншому часовому поясі
+ * (або з неправильним поясом на телефоні) бачив неправильний таймер.
+ */
+const nowInZone = (timeZone: string): Date => {
+  const now = new Date();
+  try {
+    const zoned = new Date(now.toLocaleString("en-US", { timeZone }));
+    return Number.isNaN(zoned.getTime()) ? now : zoned;
+  } catch {
+    return now; // дуже старий WebView без підтримки часових поясів
+  }
 };
 
 const calculateTimeLeft = () => {
-  const now = new Date();
-  const nextSunday = new Date();
+  const now = nowInZone(GIVEAWAY_TIMEZONE);
+  const nextSunday = new Date(now);
   nextSunday.setDate(now.getDate() + ((7 - now.getDay()) % 7));
   nextSunday.setHours(20, 0, 0, 0);
 
@@ -145,7 +157,7 @@ export const LeaderboardPage = () => {
     telegramUsername,
     telegramPhotoUrl,
     customAvatarUrl,
-    totalScore,
+    weeklyScore,
   } = useUserStore();
 
   const {
@@ -167,8 +179,8 @@ export const LeaderboardPage = () => {
 
   const myDisplayName = telegramUsername || telegramFirstName || "User";
 
-  const myLocalScore = totalScore || 0;
-  const myScore = currentUserRank?.score ?? myLocalScore;
+  // Рейтинг — за балами тижня. Раніше тут підставлявся totalScore (бали за весь час)
+  const myScore = currentUserRank?.score ?? weeklyScore ?? 0;
 
   useEffect(() => {
     if (telegramId) fetchLeaderboard();
@@ -187,8 +199,12 @@ export const LeaderboardPage = () => {
     if (
       window.confirm("Закінчити розіграш і визначити переможців прямо зараз?")
     ) {
-      await forceEndGiveaway();
-      alert("Розіграш успішно завершено! Бали рейтингу скинуто.");
+      try {
+        await forceEndGiveaway();
+        alert("Розіграш успішно завершено! Бали рейтингу скинуто.");
+      } catch {
+        alert("Не вдалося завершити розіграш. Спробуй ще раз.");
+      }
     }
   };
 
@@ -203,21 +219,19 @@ export const LeaderboardPage = () => {
       <div className="flex bg-[var(--bg-card)] rounded-xl p-1 border border-[var(--border-color)]">
         <button
           onClick={() => setActiveTab("rating")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${
-            activeTab === "rating"
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === "rating"
               ? "bg-[var(--accent-cta)] text-white shadow-sm"
               : "text-[var(--text-muted)]"
-          }`}
+            }`}
         >
           <Trophy className="w-4 h-4" /> Рейтинг
         </button>
         <button
           onClick={() => setActiveTab("giveaway")}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${
-            activeTab === "giveaway"
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === "giveaway"
               ? "bg-[var(--accent-success)] text-white shadow-sm"
               : "text-[var(--text-muted)]"
-          }`}
+            }`}
         >
           <Gift className="w-4 h-4" /> Розіграш
         </button>
@@ -296,18 +310,16 @@ export const LeaderboardPage = () => {
                     className="block hover:scale-[1.02] transition-transform"
                   >
                     <Card
-                      className={`flex items-center gap-3 transition-all ${
-                        isTop3
+                      className={`flex items-center gap-3 transition-all ${isTop3
                           ? "p-4 border-[var(--accent-cta)]/50 bg-[var(--accent-cta)]/5"
                           : "p-2.5 bg-[var(--bg-card)]"
-                      }`}
+                        }`}
                     >
                       <div
-                        className={`w-8 text-center font-black ${
-                          isTop3
+                        className={`w-8 text-center font-black ${isTop3
                             ? "text-2xl"
                             : "text-sm text-[var(--text-muted)]"
-                        }`}
+                          }`}
                       >
                         {user.position === 1
                           ? "🥇"
@@ -322,25 +334,22 @@ export const LeaderboardPage = () => {
                           user.customAvatarUrl || user.telegramPhotoUrl,
                         )}
                         name={user.nickname}
-                        className={`${
-                          isTop3
+                        className={`${isTop3
                             ? "w-12 h-12 border-2 border-[var(--accent-cta)]/30"
                             : "w-9 h-9 border border-[var(--border-color)]"
-                        } rounded-full object-cover`}
+                          } rounded-full object-cover`}
                       />
                       <div className="flex-1 overflow-hidden">
                         <div
-                          className={`font-bold text-[var(--text-main)] truncate ${
-                            isTop3 ? "text-lg" : "text-sm"
-                          }`}
+                          className={`font-bold text-[var(--text-main)] truncate ${isTop3 ? "text-lg" : "text-sm"
+                            }`}
                         >
                           {user.nickname}
                         </div>
                       </div>
                       <div
-                        className={`font-black text-[var(--accent-cta)] ${
-                          isTop3 ? "text-xl" : "text-base"
-                        }`}
+                        className={`font-black text-[var(--accent-cta)] ${isTop3 ? "text-xl" : "text-base"
+                          }`}
                       >
                         {user.score}
                       </div>
@@ -436,6 +445,9 @@ export const LeaderboardPage = () => {
               </p>
             </div>
           </Card>
+
+          {/* Призи — з донатів; блок видно лише якщо підтримку увімкнено в адмінці */}
+          <SupportCard place="giveaway" />
 
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] ml-1 mb-3 flex items-center gap-2">

@@ -17,26 +17,9 @@ import { Screen } from "../shared/ui/Screen";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { useUserStore } from "../store/userStore";
+import { apiClient } from "../shared/api/apiClient";
+import { resolveAvatarUrl } from "../shared/lib/avatarUrl";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
-const getAuthHeaders = () => {
-  const initData =
-    window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${initData}`,
-  };
-};
-
-const resolveAvatarUrl = (url: string | null | undefined) => {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:3000")
-    .replace(/\/api$/, "")
-    .replace(/\/$/, "");
-  return `${apiBase}${url}?ngrok-skip-browser-warning=true`;
-};
 
 const UserAvatar = ({
   url,
@@ -80,6 +63,8 @@ interface ProfileData {
   streak: number;
   wordsLearnedCount: number;
   likesCount: number;
+  /** Чи вже лайкнув поточний юзер (раніше не передавалось — серце завжди було порожнім) */
+  likedByMe?: boolean;
   friendStatus: "none" | "pending_sent" | "pending_received" | "friends";
 }
 
@@ -95,12 +80,9 @@ export const ProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${API_URL}/profile/${userId}`, {
-          headers: getAuthHeaders(),
-        });
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
+        const { data } = await apiClient.get<ProfileData>(`/profile/${userId}`);
         setProfile(data);
+        setIsLikedByMe(Boolean(data.likedByMe));
       } catch (error) {
         console.error(error);
       } finally {
@@ -124,12 +106,16 @@ export const ProfilePage = () => {
     );
 
     try {
-      const res = await fetch(`${API_URL}/profile/${userId}/like`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-      });
-      const data = await res.json();
-      setIsLikedByMe(data.liked);
+      const { data } = await apiClient.post<{ liked?: boolean }>(`/profile/${userId}/like`);
+      if (typeof data.liked === "boolean") {
+        setIsLikedByMe(data.liked);
+        // Сервер лишив попередній стан (напр., паралельний тап) — відкочуємо лічильник
+        if (data.liked === wasLiked) {
+          setProfile((prev) =>
+            prev ? { ...prev, likesCount: prev.likesCount + (wasLiked ? 1 : -1) } : null,
+          );
+        }
+      }
     } catch {
       setIsLikedByMe(wasLiked);
       setProfile((prev) =>
@@ -146,10 +132,9 @@ export const ProfilePage = () => {
       prev ? { ...prev, friendStatus: "pending_sent" } : null,
     );
     try {
-      await fetch(`${API_URL}/profile/${userId}/friend-request`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-      });
+      // ВИПРАВЛЕНО: fetch не кидав помилку на 4xx/5xx — кнопка лишалась "Запит надіслано",
+      // навіть якщо сервер відмовив. apiClient кидає, і стан відкочується
+      await apiClient.post(`/profile/${userId}/friend-request`);
     } catch {
       setProfile((prev) => (prev ? { ...prev, friendStatus: "none" } : null));
     }
@@ -162,11 +147,7 @@ export const ProfilePage = () => {
       prev ? { ...prev, friendStatus: accept ? "friends" : "none" } : null,
     );
     try {
-      await fetch(`${API_URL}/profile/${userId}/friend-respond`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ accept }),
-      });
+      await apiClient.post(`/profile/${userId}/friend-respond`, { accept });
     } catch {
       setProfile((prev) =>
         prev ? { ...prev, friendStatus: oldStatus } : null,
@@ -261,21 +242,18 @@ export const ProfilePage = () => {
 
       <div className="flex gap-3">
         <Card
-          className={`flex-1 p-4 flex flex-col items-center justify-center gap-2 transition-all shadow-sm border-[var(--border-color)] ${
-            !isMe ? "cursor-pointer active:scale-95" : "opacity-50"
-          } ${
-            isLikedByMe
+          className={`flex-1 p-4 flex flex-col items-center justify-center gap-2 transition-all shadow-sm border-[var(--border-color)] ${!isMe ? "cursor-pointer active:scale-95" : "opacity-50"
+            } ${isLikedByMe
               ? "bg-red-500/10 border-red-500/30"
               : "bg-[var(--bg-card)]"
-          }`}
+            }`}
           onClick={handleLike}
         >
           <Heart
-            className={`w-8 h-8 transition-colors ${
-              isLikedByMe
+            className={`w-8 h-8 transition-colors ${isLikedByMe
                 ? "text-red-500 fill-red-500"
                 : "text-[var(--text-muted)]"
-            }`}
+              }`}
           />
           <span className="font-bold text-[var(--text-main)] text-sm">
             {profile.likesCount}

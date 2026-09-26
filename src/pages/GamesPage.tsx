@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/pages/GamesPage.tsx
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -19,17 +20,9 @@ import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { DUEL_REGISTRY } from "../duels/registry";
 import { GAME_REGISTRY } from "../games/registry";
+import { apiClient } from "../shared/api/apiClient";
+import { useAppConfigStore } from "../store/appConfigStore";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
-const getAuthHeaders = () => {
-  const initData =
-    window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${initData}`,
-  };
-};
 
 interface BackendGame {
   _id: string;
@@ -74,12 +67,17 @@ export const GamesPage = () => {
 
   const fetchGamesAndPayments = async () => {
     try {
-      const [gamesRes, payRes] = await Promise.all([
-        fetch(`${API_URL}/games`, { headers: getAuthHeaders() }),
-        fetch(`${API_URL}/games/payments`, { headers: getAuthHeaders() }),
+      // allSettled: якщо історія платежів не завантажилась, ігри однаково показуємо
+      const [gamesRes, payRes] = await Promise.allSettled([
+        apiClient.get<BackendGame[]>("/games"),
+        apiClient.get<PaymentHistoryItem[]>("/games/payments"),
       ]);
-      if (gamesRes.ok) setGames(await gamesRes.json());
-      if (payRes.ok) setPayments(await payRes.json());
+      if (gamesRes.status === "fulfilled" && Array.isArray(gamesRes.value.data)) {
+        setGames(gamesRes.value.data);
+      }
+      if (payRes.status === "fulfilled" && Array.isArray(payRes.value.data)) {
+        setPayments(payRes.value.data);
+      }
     } catch (error) {
       console.error("Failed to fetch data", error);
     } finally {
@@ -94,12 +92,7 @@ export const GamesPage = () => {
   const handleStarsPayment = async (gameId: string) => {
     try {
       setProcessingId(gameId);
-      const res = await fetch(`${API_URL}/games/invoice`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ gameId }),
-      });
-      const data = await res.json();
+      const { data } = await apiClient.post<{ invoiceLink?: string }>("/games/invoice", { gameId });
 
       if (data.invoiceLink) {
         const tg = (window as any).Telegram?.WebApp;
@@ -126,12 +119,10 @@ export const GamesPage = () => {
   const handleManualPaymentClick = async (gameId: string) => {
     try {
       setProcessingId(gameId);
-      const res = await fetch(`${API_URL}/games/manual-payment`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ gameId }),
-      });
-      const data = await res.json();
+      const { data } = await apiClient.post<{ uniqueCode?: string; cardNumber?: string }>(
+        "/games/manual-payment",
+        { gameId },
+      );
 
       if (data.uniqueCode && data.cardNumber) {
         setReceiptFile(null);
@@ -172,28 +163,27 @@ export const GamesPage = () => {
       formData.append("receipt", receiptFile);
       formData.append("uniqueCode", manualModal.uniqueCode);
 
-      const initData =
-        window.Telegram?.WebApp?.initData || "mock_hash_for_dev_mode";
-      const res = await fetch(`${API_URL}/games/receipt`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${initData}` },
-        body: formData,
-      });
-
-      if (res.ok) {
-        setManualModal({ ...manualModal, step: "success" });
-        fetchGamesAndPayments();
-      } else {
-        alert("Помилка відправки квитанції. Спробуйте ще раз.");
-      }
+      // Фото квитанції на мобільному інтернеті може йти довше за звичайний запит
+      await apiClient.post("/games/receipt", formData, { timeout: 30000 });
+      setManualModal({ ...manualModal, step: "success" });
+      fetchGamesAndPayments();
     } catch (error) {
       console.error(error);
+      alert("Помилка відправки квитанції. Спробуйте ще раз.");
     } finally {
       setIsUploading(false);
     }
   };
 
   const hasPendingPayments = payments.some((p) => p.status === "pending");
+
+  // Оплату вимкнено в адмінці — ігри безкоштовні (сервер віддає їх уже відкритими),
+  // а кнопку історії платежів ховаємо. Поки конфіг не прийшов — теж ховаємо.
+  const paymentsEnabled = useAppConfigStore((s) => s.config?.paymentsEnabled ?? false);
+  const loadAppConfig = useAppConfigStore((s) => s.load);
+  useEffect(() => {
+    void loadAppConfig();
+  }, [loadAppConfig]);
 
   // Фільтруємо ігри, щоб показувати лише ті, що є у GAME_REGISTRY
   const singleGames = games.filter((dbGame) =>
@@ -209,15 +199,18 @@ export const GamesPage = () => {
           </div>
           <h1 className="text-2xl font-black text-[var(--text-main)]">Ігри</h1>
         </div>
-        <button
-          onClick={() => setShowHistoryModal(true)}
-          className="relative p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] active:scale-95 transition-transform"
-        >
-          <Receipt className="w-5 h-5" />
-          {hasPendingPayments && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-[var(--bg-app)]"></span>
-          )}
-        </button>
+        {(paymentsEnabled || payments.length > 0) && (
+          <button
+            onClick={() => setShowHistoryModal(true)}
+            aria-label="Мої платежі"
+            className="relative p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] active:scale-95 transition-transform"
+          >
+            <Receipt className="w-5 h-5" />
+            {hasPendingPayments && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-[var(--bg-app)]"></span>
+            )}
+          </button>
+        )}
       </div>
 
       <div className="flex bg-[var(--bg-card)] p-1 rounded-xl border border-[var(--border-color)]">

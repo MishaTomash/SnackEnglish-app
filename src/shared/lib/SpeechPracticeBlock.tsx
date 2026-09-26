@@ -1,9 +1,30 @@
 import { useCallback, useState, useEffect } from "react";
-import { Mic, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
+import { Mic, AlertCircle, CheckCircle2, RotateCcw, Loader2 } from "lucide-react";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { useSpeechRecognition } from "../lib/useSpeechRecognition";
 import { calculateSimilarity } from "../lib/similarity";
+import type { ListenErrorCode } from "./speech";
+
+// Мікрофон недоступний або сервіс не відповідає — одразу дозволяємо йти далі
+const BLOCKING_ERRORS: ReadonlySet<ListenErrorCode> = new Set([
+  "not-supported",
+  "not-allowed",
+  "audio-capture",
+  "network",
+  "server",
+  "rate-limited",
+  "language-not-supported",
+]);
+
+const ERROR_MESSAGES: Partial<Record<ListenErrorCode, string>> = {
+  "not-allowed": "Немає дозволу на мікрофон. Дозволь доступ у налаштуваннях Telegram або браузера.",
+  "audio-capture": "Мікрофон не знайдено або він зайнятий іншою програмою.",
+  "no-speech": "Не почули 🤔 Скажи фразу голосніше й ближче до мікрофона.",
+  network: "Немає зв'язку з сервером. Перевір інтернет.",
+  server: "Сервіс розпізнавання тимчасово не працює.",
+  "rate-limited": "Забагато спроб поспіль. Зачекай хвилинку.",
+};
 
 interface SpeechPracticeBlockProps {
   targetText: string;
@@ -48,8 +69,10 @@ export const SpeechPracticeBlock = ({
 
   const {
     isListening,
+    isProcessing,
     transcript,
     isSupported,
+    errorMessage,
     startListening,
     stopListening,
     resetTranscript,
@@ -59,7 +82,9 @@ export const SpeechPracticeBlock = ({
   });
 
   const isPassed = (similarityScore ?? 0) >= threshold;
-  const canSkip = attempts >= maxAttempts;
+  const isBlockedByError = errorMessage !== null && BLOCKING_ERRORS.has(errorMessage);
+  // Якщо мікрофон/сервіс недоступні — не змушуємо витрачати всі спроби
+  const canSkip = attempts >= maxAttempts || isBlockedByError;
   const canProceed = isPassed || canSkip;
 
   // Повідомляємо батьківський компонент, чи можна йти далі
@@ -70,6 +95,7 @@ export const SpeechPracticeBlock = ({
   }, [hasEvaluated, canProceed, isSupported, onStatusChange]);
 
   const handleMicClick = () => {
+    if (isProcessing) return;
     if (isListening) stopListening();
     else {
       setHasEvaluated(false);
@@ -118,7 +144,16 @@ export const SpeechPracticeBlock = ({
       )}
 
       <div className="pt-2 flex flex-col items-center gap-3">
-        {!isListening && !hasEvaluated && (
+        {isProcessing && (
+          <div className="flex flex-col items-center gap-2" aria-live="polite">
+            <div className="w-16 h-16 rounded-full bg-[var(--accent-cta)]/60 text-[var(--text-accent)] flex items-center justify-center">
+              <Loader2 className="w-7 h-7 animate-spin" />
+            </div>
+            <span className="text-xs font-medium text-[var(--text-muted)]">Розпізнаю…</span>
+          </div>
+        )}
+
+        {!isListening && !isProcessing && !hasEvaluated && (
           <button
             onClick={handleMicClick}
             className="w-16 h-16 rounded-full bg-[var(--accent-cta)] text-[var(--text-accent)] flex items-center justify-center shadow-lg active:scale-95 transition-transform"
@@ -135,20 +170,18 @@ export const SpeechPracticeBlock = ({
           </button>
         )}
 
-        {!isListening && hasEvaluated && (
+        {!isListening && !isProcessing && hasEvaluated && (
           <div
-            className={`w-full p-4 border rounded-2xl ${
-              isPassed
+            className={`w-full p-4 border rounded-2xl ${isPassed
                 ? "bg-[var(--accent-success)]/10 border-[var(--accent-success)]/30"
                 : "bg-[var(--accent-error)]/10 border-[var(--accent-error)]/30"
-            }`}
+              }`}
           >
             <div
-              className={`flex items-center justify-center gap-1.5 font-bold ${
-                isPassed
+              className={`flex items-center justify-center gap-1.5 font-bold ${isPassed
                   ? "text-[var(--accent-success)]"
                   : "text-[var(--accent-error)]"
-              }`}
+                }`}
             >
               {isPassed ? (
                 <CheckCircle2 className="w-5 h-5" />
@@ -157,6 +190,12 @@ export const SpeechPracticeBlock = ({
               )}
               <span>Збіг: {similarityScore}%</span>
             </div>
+
+            {errorMessage && ERROR_MESSAGES[errorMessage] && (
+              <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">
+                {ERROR_MESSAGES[errorMessage]}
+              </p>
+            )}
 
             {!isPassed && (
               <>
@@ -172,7 +211,9 @@ export const SpeechPracticeBlock = ({
                   </Button>
                 ) : (
                   <div className="mt-3 text-xs text-[var(--text-muted)] font-medium">
-                    Ви вичерпали спроби, але можете йти далі 🍪
+                    {isBlockedByError
+                      ? "Цю вправу можна пропустити — йди далі 🍪"
+                      : "Ви вичерпали спроби, але можете йти далі 🍪"}
                   </div>
                 )}
               </>

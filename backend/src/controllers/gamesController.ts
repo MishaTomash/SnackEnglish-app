@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/backend/src/controllers/gamesController.ts
 import crypto from "crypto";
 import { Request, Response } from "express";
 import { Game } from "../models/Game.js";
@@ -6,6 +7,42 @@ import { ManualPaymentRequest } from "../models/ManualPaymentRequest.js";
 import { bot } from "../bot.js";
 import { User } from "../models/User.js";
 import { WORDS_BY_LEVEL } from "../duels/mockWords.js"; // Беремо слова зі статичного моку
+import { getAppSettings } from "../services/settingsService.js";
+
+/** Оплату вимкнено в адмінці — купувати нічого не можна, усі ігри безкоштовні */
+const paymentsDisabled = async (res: Response): Promise<boolean> => {
+  const settings = await getAppSettings();
+  if (settings.paymentsEnabled) return false;
+  res.status(403).json({ error: "Payments are disabled" });
+  return true;
+};
+
+type PurchasableGameCheck =
+  | { ok: true; game: NonNullable<Awaited<ReturnType<typeof Game.findOne>>>; priceStars: number }
+  | { ok: false; status: number; error: string };
+
+/**
+ * Перевіряє, що гру можна купити: вона існує, платна, вже доступна (не "coming_soon")
+ * і юзер її ще не має. Спільна для оплати Зірками та ручного переказу.
+ */
+const checkPurchasableGame = async (telegramId: number, gameId: unknown): Promise<PurchasableGameCheck> => {
+  if (typeof gameId !== "string" || !gameId) {
+    return { ok: false, status: 400, error: "Missing data" };
+  }
+
+  const game = await Game.findOne({ gameId });
+  const priceStars = game?.priceStars;
+  if (!game || game.isFree || !priceStars || game.get("status") === "coming_soon") {
+    return { ok: false, status: 400, error: "Invalid game for purchase" };
+  }
+
+  const alreadyOwned = await UserGamePurchase.exists({ telegramId, gameId });
+  if (alreadyOwned) {
+    return { ok: false, status: 409, error: "Game already purchased" };
+  }
+
+  return { ok: true, game, priceStars };
+};
 
 export const getGamesList = async (
   req: Request,
@@ -18,13 +55,17 @@ export const getGamesList = async (
       return;
     }
 
-    const games = await Game.find().lean();
-    const purchases = await UserGamePurchase.find({ telegramId }).lean();
+    const [games, purchases, settings] = await Promise.all([
+      Game.find().lean(),
+      UserGamePurchase.find({ telegramId }).lean(),
+      getAppSettings(),
+    ]);
     const purchasedGameIds = new Set(purchases.map((p) => p.gameId));
 
+    // Оплату вимкнено — усі доступні ігри відкриті для всіх (код оплати лишається на майбутнє)
     const gamesWithStatus = games.map((game) => ({
       ...game,
-      isPurchased: game.isFree || purchasedGameIds.has(game.gameId),
+      isPurchased: !settings.paymentsEnabled || game.isFree || purchasedGameIds.has(game.gameId),
     }));
 
     res.status(200).json(gamesWithStatus);
@@ -39,18 +80,20 @@ export const createGameInvoice = async (
 ): Promise<void> => {
   try {
     const telegramId = req.user?.id;
-    const { gameId } = req.body;
-
-    if (!telegramId || !gameId) {
-      res.status(400).json({ error: "Missing data" });
+    if (!telegramId) {
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
+    if (await paymentsDisabled(res)) return;
 
-    const game = await Game.findOne({ gameId });
-    if (!game || game.isFree || !game.priceStars) {
-      res.status(400).json({ error: "Invalid game for invoice" });
+    // ВИПРАВЛЕНО: можна було створити рахунок на гру "coming_soon" або вже куплену
+    const check = await checkPurchasableGame(telegramId, req.body?.gameId);
+    if (!check.ok) {
+      res.status(check.status).json({ error: check.error });
       return;
     }
+    const { game, priceStars } = check;
+    const gameId = game.gameId;
 
     const payload = JSON.stringify({ gameId, telegramId });
     const invoiceLink = await bot.telegram.createInvoiceLink({
@@ -59,7 +102,7 @@ export const createGameInvoice = async (
       payload: payload,
       provider_token: "", // Порожній токен для Telegram Stars
       currency: "XTR",
-      prices: [{ label: game.title, amount: game.priceStars }],
+      prices: [{ label: game.title, amount: priceStars }],
     });
 
     res.status(200).json({ invoiceLink });
@@ -75,18 +118,41 @@ export const createManualPaymentRequest = async (
 ): Promise<void> => {
   try {
     const telegramId = req.user?.id;
-    const { gameId } = req.body;
+    if (!telegramId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    if (await paymentsDisabled(res)) return;
 
-    if (!telegramId || !gameId) {
-      res.status(400).json({ error: "Missing data" });
+    // ВИПРАВЛЕНО: заявку можна було створити на неіснуючу, безкоштовну чи вже куплену гру
+    const check = await checkPurchasableGame(telegramId, req.body?.gameId);
+    if (!check.ok) {
+      res.status(check.status).json({ error: check.error });
+      return;
+    }
+    const gameId = check.game.gameId;
+
+    const cardNumber = process.env.PAYMENT_CARD_NUMBER?.trim();
+    if (!cardNumber) {
+      // Раніше юзер бачив "Номер картки не налаштовано" замість картки
+      console.error("[payments] PAYMENT_CARD_NUMBER не задано в .env");
+      res.status(503).json({ error: "Manual payments are not configured" });
+      return;
+    }
+
+    // ВИПРАВЛЕНО: кожен тап створював нову заявку з новим кодом — юзер плутався,
+    // який код писати в призначенні платежу, а база засмічувалась.
+    // Тепер для тієї ж гри повертаємо вже відкриту заявку.
+    const existing = await ManualPaymentRequest.findOne({ telegramId, gameId, status: "pending" })
+      .select("uniqueCode")
+      .lean();
+    if (existing?.uniqueCode) {
+      res.status(200).json({ uniqueCode: existing.uniqueCode, cardNumber });
       return;
     }
 
     const uniqueCode = crypto.randomBytes(4).toString("hex").toUpperCase();
     await ManualPaymentRequest.create({ telegramId, gameId, uniqueCode });
-
-    const cardNumber =
-      process.env.PAYMENT_CARD_NUMBER || "Номер картки не налаштовано в .env";
 
     res.status(200).json({ uniqueCode, cardNumber });
   } catch (error) {
@@ -107,6 +173,7 @@ export const uploadPaymentReceipt = async (
       res.status(400).json({ error: "Missing data or file" });
       return;
     }
+    if (await paymentsDisabled(res)) return;
 
     const request = await ManualPaymentRequest.findOne({
       uniqueCode,
@@ -117,37 +184,52 @@ export const uploadPaymentReceipt = async (
       return;
     }
 
-    const user = await User.findOne({ telegramId });
-    const game = await Game.findOne({ gameId: request.gameId });
     const adminId = process.env.VITE_ADMIN_ID;
-
-    if (adminId) {
-      const msg = await bot.telegram.sendPhoto(
-        adminId,
-        { source: req.file.path },
-        {
-          caption: `📝 Новий ручний платіж (з додатку)!\nКористувач: @${user?.username || user?.telegramFirstName || telegramId}\nГра: ${game?.title}\nКод: ${uniqueCode}`,
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "✅ Підтвердити",
-                  callback_data: `approve_${request._id}`,
-                },
-                {
-                  text: "❌ Відхилити",
-                  callback_data: `reject_${request._id}`,
-                },
-              ],
-            ],
-          },
-        },
-      );
-
-      request.screenshotFileId = msg.photo[msg.photo.length - 1].file_id;
-      request.status = "pending";
-      await request.save();
+    if (!adminId) {
+      // Раніше юзер бачив "успішно", хоча квитанція нікуди не йшла
+      console.error("[payments] VITE_ADMIN_ID не задано — квитанцію нікому переслати");
+      res.status(503).json({ error: "Manual payments are not configured" });
+      return;
     }
+
+    const [user, game] = await Promise.all([
+      User.findOne({ telegramId }).select("username telegramFirstName").lean(),
+      Game.findOne({ gameId: request.gameId }).select("title").lean(),
+    ]);
+
+    const caption = `📝 Новий ручний платіж (з додатку)!\nКористувач: @${user?.username || user?.telegramFirstName || telegramId}\nГра: ${game?.title ?? request.gameId}\nКод: ${uniqueCode}`;
+    const extra = {
+      caption,
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "✅ Підтвердити", callback_data: `approve_${request._id}` },
+            { text: "❌ Відхилити", callback_data: `reject_${request._id}` },
+          ],
+        ],
+      },
+    };
+
+    // ВИПРАВЛЕНО: файл більше не лежить на диску — надсилаємо прямо з пам'яті.
+    // Фото (скріншот) — як фото; PDF-квитанцію банку або "незручне" фото — як документ.
+    const file = { source: req.file.buffer, filename: req.file.originalname || "receipt" };
+    let fileId: string;
+    if (req.file.mimetype.startsWith("image/")) {
+      try {
+        const msg = await bot.telegram.sendPhoto(adminId, file, extra);
+        fileId = msg.photo[msg.photo.length - 1].file_id;
+      } catch {
+        // Telegram відхиляє фото з дуже великими чи дивними розмірами — документ проходить завжди
+        const msg = await bot.telegram.sendDocument(adminId, file, extra);
+        fileId = msg.document.file_id;
+      }
+    } else {
+      const msg = await bot.telegram.sendDocument(adminId, file, extra);
+      fileId = msg.document.file_id;
+    }
+
+    request.screenshotFileId = fileId;
+    await request.save();
 
     res.status(200).json({ success: true });
   } catch (error) {
@@ -215,25 +297,27 @@ export const getWordsForGame = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const level = req.query.level as string;
+    const level = typeof req.query.level === "string" ? req.query.level : "";
     if (!level) {
       res.status(400).json({ error: "Level is required" });
       return;
     }
 
     // Тимчасовий фолбек на статичний мок слів
-    const allLevelWords =
-      (WORDS_BY_LEVEL as Record<string, any[]>)[level] ||
-      (WORDS_BY_LEVEL as Record<string, any[]>)["A1"] ||
-      [];
+    const wordsByLevel = WORDS_BY_LEVEL as unknown as Record<string, Record<string, unknown>[] | undefined>;
+    const allLevelWords = wordsByLevel[level] || wordsByLevel["A1"] || [];
 
-    const shuffled = allLevelWords
-      .map((w: any, index: number) => ({
-        ...w,
-        id: w.id || `game_word_${index}`,
-      }))
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 20);
+    const withIds = allLevelWords.map((w, index) => ({
+      ...w,
+      id: w.id || `game_word_${index}`,
+    }));
+
+    // Чесне перемішування (Fisher–Yates): sort(() => 0.5 - Math.random()) дає перекіс
+    for (let i = withIds.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [withIds[i], withIds[j]] = [withIds[j], withIds[i]];
+    }
+    const shuffled = withIds.slice(0, 20);
 
     req.logEvent("game_started", { level });
 

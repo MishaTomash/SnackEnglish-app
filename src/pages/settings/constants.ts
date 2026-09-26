@@ -9,19 +9,10 @@ export const LEVELS: { id: EnglishLevel; desc: string }[] = [
   { id: "C2", desc: "Просунутий+ (Proficiency)" },
 ];
 
-export const resolveAvatarUrl = (url: string | null) => {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
-  let apiBase: string;
-  try {
-    apiBase = new URL(apiUrl).origin;
-  } catch {
-    // apiUrl відносний (наприклад "/api") — беремо поточний домен сторінки
-    apiBase = window.location.origin;
-  }
-
-  return `${apiBase}${url}`;
-};
+/**
+ * Адреса аватара — спільна функція для всього застосунку (shared/lib/avatarUrl).
+ * Раніше тут була своя копія з http://localhost:3000 за замовчуванням —
+ * на телефонах юзерів аватари в налаштуваннях не вантажились.
+ * Реекспорт лишає старий імпорт з "./constants" робочим.
+ */
+export { resolveAvatarUrl } from "../../shared/lib/avatarUrl";
