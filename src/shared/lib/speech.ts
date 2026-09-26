@@ -342,9 +342,11 @@ function playClip(url: string, fallback: () => Promise<void>, rate?: number): Pr
       }
       resolve();
     };
+    // Файл не завантажився (немає на сервері, збій мережі) — фраза не повинна мовчати
     const onError = () => {
       if (settled) return;
       settle();
+      void fallback();
     };
     // Уповільнений запис грає довше — запас часу пропорційний швидкості
     const timer = setTimeout(settle, CLIP_TIMEOUT_MS / audio.playbackRate);
