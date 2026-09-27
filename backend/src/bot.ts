@@ -8,6 +8,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 import { Telegraf, Markup } from "telegraf";
 import type { Context } from "telegraf";
 import { withStyle } from "./services/buttonStyle.js";
+import { sendRichMessage } from "./services/richMessage.js";
 import { User } from "./models/User.js";
 import { Game } from "./models/Game.js";
 import { UserGamePurchase } from "./models/UserGamePurchase.js";
@@ -30,6 +31,7 @@ import {
   remindersKeyboard,
   setupBotProfile,
   statusKeyboard,
+  buildStatusRich,
   welcomeKeyboard,
 } from "./services/botUi.js";
 
@@ -53,15 +55,27 @@ const greetingByTime = (): string => {
   return "Доброго вечора";
 };
 
-/** Картка прогресу з кнопками — для /start, /progress і відповіді на довільний текст */
+/**
+ * Картка прогресу з кнопками — для /start, /progress і відповіді на довільний текст.
+ * Спершу — як Rich Message (кнопки всередині повідомлення); якщо Telegram його не прийняв —
+ * звичайне повідомлення з кнопками під ним, щоб юзер завжди отримав картку.
+ * footer — звичайний текст (без HTML), показується курсивом наприкінці.
+ */
 const sendStatusCard = async (ctx: Context, greeting: string, footer = ""): Promise<void> => {
-  if (!ctx.from) return;
+  if (!ctx.from || !ctx.chat) return;
   const snapshot = await loadUserSnapshot(ctx.from.id, ctx.from.first_name);
   if (!snapshot) {
     await ctx.reply("Натисни /start, щоб почати 🍪");
     return;
   }
-  await ctx.reply(`${buildStatusCard(snapshot, greeting)}${footer}`, { parse_mode: "HTML", ...statusKeyboard(snapshot) });
+  try {
+    await sendRichMessage(ctx.telegram, ctx.chat.id, buildStatusRich(snapshot, greeting, footer));
+    return;
+  } catch (error) {
+    console.error("[bot] Rich-картку не надіслано, шлю звичайну:", error instanceof Error ? error.message : error);
+  }
+  const footerHtml = footer ? `\n\n<i>${escapeHtml(footer)}</i>` : "";
+  await ctx.reply(`${buildStatusCard(snapshot, greeting)}${footerHtml}`, { parse_mode: "HTML", ...statusKeyboard(snapshot) });
 };
 
 /** Привітання новачка — з картинкою, якщо її задано в адмінці */
@@ -568,7 +582,7 @@ bot.on("message", async (ctx, next) => {
         await sendHelp(ctx);
         return;
       }
-      await sendStatusCard(ctx, "Я тут", "\n\n<i>Я не чат-бот для розмов, але допоможу з англійською — тисни кнопку 👇</i>");
+      await sendStatusCard(ctx, "Я тут", "Я не чат-бот для розмов, але допоможу з англійською — тисни кнопку 👇");
       return;
     }
   } catch (error) {

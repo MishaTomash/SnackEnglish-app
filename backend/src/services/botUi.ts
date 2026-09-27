@@ -13,6 +13,8 @@ import { getAppSettings } from "./settingsService.js";
 import { ensureReferralCode, getBotUsername, getReferralStats } from "./referralService.js";
 import { GIVEAWAY_TIME_LABEL, nextGiveawayDate } from "./giveawaySchedule.js";
 import { withStyle } from "./buttonStyle.js";
+import { bold, buttonBlocksFromKeyboard, divider, heading, italic, paragraph } from "./richMessage.js";
+import type { InputRichMessage, RichBlock } from "./richMessage.js";
 
 /**
  * Усе, що бачить юзер у чаті з ботом: тексти, кнопки, картка прогресу.
@@ -282,6 +284,42 @@ export const statusKeyboard = (s: UserSnapshot | null) => {
     rows.push([Markup.button.callback("🏆 Топ тижня", "ui:top"), withStyle(Markup.button.callback("🎁 Запросити друга", "ui:invite"), "success")]);
     rows.push([Markup.button.callback("🔔 Нагадування", "ui:reminders"), Markup.button.callback("❓ Як це працює", "ui:help")]);
     return Markup.inlineKeyboard(rows);
+};
+
+/**
+ * Картка прогресу як Rich Message (заголовок, абзаци, кнопки ВСЕРЕДИНІ повідомлення).
+ * Ті самі дані й кнопки, що й у buildStatusCard/statusKeyboard — лише інший вигляд.
+ * footer — додатковий рядок курсивом (напр., відповідь на довільний текст).
+ */
+export const buildStatusRich = (s: UserSnapshot, greeting: string, footer = ""): InputRichMessage => {
+    const blocks: RichBlock[] = [heading(`🍪 ${greeting}, ${s.name}!`)];
+
+    if (s.streak > 0) {
+        blocks.push(paragraph(["🔥 Серія: ", bold(`${s.streak} ${pluralDays(s.streak)}`)]));
+        blocks.push(paragraph(italic(STREAK_HINTS[s.streakStatus](s.streak))));
+    } else {
+        blocks.push(paragraph(["🔥 ", italic(STREAK_HINTS[s.streakStatus](0))]));
+    }
+
+    if (s.dailyLimit > 0 || s.dailyGoal > 0) {
+        const target = s.dailyLimit > 0 ? s.dailyLimit : s.dailyGoal;
+        const goalMark = s.dailyGoal > 0 ? (s.lessonsToday >= s.dailyGoal ? " · 🎯 ціль виконано" : ` · 🎯 ціль ${s.dailyGoal}`) : "";
+        blocks.push(paragraph(`📚 Сьогодні: ${progressBar(s.lessonsToday, target)} ${s.lessonsToday}/${target}${goalMark}`));
+    }
+
+    blocks.push(
+        s.weeklyPlace
+            ? paragraph(["🏆 Тиждень: ", bold(String(s.weeklyScore)), " кубків · ", bold(String(s.weeklyPlace)), " місце"])
+            : paragraph("🏆 Тиждень: ще без кубків — перший урок, і ти в рейтингу"),
+    );
+    blocks.push(paragraph(["📖 Слів вивчено: ", bold(String(s.words)), " · уроків: ", bold(String(s.lessonsTotal))]));
+
+    if (s.next || footer) blocks.push(divider());
+    if (s.next) blocks.push(paragraph(italic(`Далі: ${s.next.icon} ${s.next.label}`)));
+    if (footer) blocks.push(paragraph(italic(footer)));
+
+    blocks.push(...buttonBlocksFromKeyboard(statusKeyboard(s).reply_markup.inline_keyboard));
+    return { blocks };
 };
 
 /** Привітання нового юзера */
