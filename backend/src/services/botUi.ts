@@ -5,6 +5,7 @@ import type { Types } from "mongoose";
 import { User } from "../models/User.js";
 import { UserDailyActivity } from "../models/UserDailyActivity.js";
 import { Chapter, PUBLISHED_FILTER, StoryNode, UserStoryProgress } from "../models/index.js";
+import type { ChapterLevel } from "../models/Chapter.js";
 import { HAS_NAME_FILTER, RANK_SORT, getUserPosition } from "../controllers/leaderboardController.js";
 import { dayKeyAgo, getStreakState } from "./activityService.js";
 import type { StreakStatus } from "./activityService.js";
@@ -101,24 +102,95 @@ export interface UserSnapshot {
 const USER_FIELDS =
     "_id telegramId telegramFirstName customDisplayName username level streak streakLastDay streakFreezeUsedAt lastActivityDate weeklyScore wordsLearnedCount remindersEnabled onboardingCompleted";
 
-/** Наступний урок юзера: останній відкритий (active) у опублікованому розділі */
-const findNextLesson = async (userId: Types.ObjectId): Promise<UserSnapshot["next"]> => {
-    const active = await UserStoryProgress.find({ userId, status: "active" })
-        .sort({ _id: -1 })
-        .limit(5)
-        .select("chapterId nodeId")
-        .lean<{ chapterId: Types.ObjectId; nodeId: Types.ObjectId }[]>();
+/** Порядок рівнів — щоб за потреби обрати розділ найближчого до юзера рівня */
+const LEVEL_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
-    for (const entry of active) {
-        const chapter = await Chapter.findOne({ _id: entry.chapterId, ...PUBLISHED_FILTER })
-            .select("slug")
-            .lean<{ slug?: string }>();
-        if (!chapter?.slug) continue;
-        const node = await StoryNode.findById(entry.nodeId).select("label icon").lean<{ label?: string; icon?: string }>();
-        if (!node) continue;
-        return { label: node.label || "Наступний урок", icon: node.icon || "📖", path: `/learning/${chapter.slug}` };
+type ActiveEntry = { chapterId: Types.ObjectId; nodeId: Types.ObjectId };
+type ChapterRow = { _id: Types.ObjectId; slug?: string; level?: string; order?: number };
+
+/**
+ * Наступний урок юзера — куди веде кнопка "Продовжити".
+ *
+ * Раніше бралося просто останнє створене "active": але активний перший урок з'являється
+ * вже тоді, коли юзер лише ВІДКРИЄ карту розділу (syncNodeStatuses). Тож достатньо було
+ * заглянути в розділ C2 — і бот пропонував "продовжити" C2 юзеру з рівнем B1.
+ *
+ * Тепер пріоритет такий:
+ *  1. розділ, у якому юзер востаннє ЗАВЕРШИВ урок (там, де він справді навчається);
+ *  2. розділ рівня юзера (перший за порядком);
+ *  3. розділ найближчого до юзера рівня.
+ */
+const findNextLesson = async (
+    userId: Types.ObjectId,
+    userLevel: string | null,
+): Promise<UserSnapshot["next"]> => {
+    const active = await UserStoryProgress.find({ userId, status: "active" })
+        .select("chapterId nodeId")
+        .lean<ActiveEntry[]>();
+
+    const chapters = await Chapter.find({ _id: { $in: active.map((a) => a.chapterId) }, ...PUBLISHED_FILTER })
+        .select("slug level order")
+        .lean<ChapterRow[]>();
+    const chapterById = new Map(chapters.map((c) => [String(c._id), c]));
+    const candidates = active.filter((a) => chapterById.get(String(a.chapterId))?.slug);
+
+    const chapterOf = (entry: ActiveEntry): ChapterRow => chapterById.get(String(entry.chapterId)) as ChapterRow;
+    const levelIndex = (level?: string | null): number => {
+        const index = LEVEL_ORDER.indexOf(level ?? "");
+        return index === -1 ? 0 : index;
+    };
+    const userIndex = levelIndex(userLevel);
+
+    // 1. Де юзер востаннє завершив урок
+    const lastCompleted = await UserStoryProgress.findOne({
+        userId,
+        status: "completed",
+        chapterId: { $in: candidates.map((c) => c.chapterId) },
+    })
+        .sort({ completedAt: -1 })
+        .select("chapterId")
+        .lean<{ chapterId: Types.ObjectId }>();
+
+    const byLevelThenOrder = [...candidates].sort((a, b) => {
+        const distance = Math.abs(levelIndex(chapterOf(a).level) - userIndex) - Math.abs(levelIndex(chapterOf(b).level) - userIndex);
+        if (distance !== 0) return distance;
+        const levelDiff = levelIndex(chapterOf(a).level) - levelIndex(chapterOf(b).level);
+        if (levelDiff !== 0) return levelDiff;
+        return (chapterOf(a).order ?? 0) - (chapterOf(b).order ?? 0);
+    });
+
+    const toNext = async (nodeId: Types.ObjectId, slug: string): Promise<UserSnapshot["next"]> => {
+        const node = await StoryNode.findById(nodeId).select("label icon").lean<{ label?: string; icon?: string }>();
+        if (!node) return null;
+        return { label: node.label || "Наступний урок", icon: node.icon || "📖", path: `/learning/${slug}` };
+    };
+
+    // 1. Розділ, де юзер навчається
+    const current = lastCompleted && candidates.find((c) => String(c.chapterId) === String(lastCompleted.chapterId));
+    if (current) return toNext(current.nodeId, chapterOf(current).slug as string);
+
+    // 2. Уже відкритий розділ рівня юзера
+    const sameLevel = byLevelThenOrder.find((c) => userLevel && chapterOf(c).level === userLevel);
+    if (sameLevel) return toNext(sameLevel.nodeId, chapterOf(sameLevel).slug as string);
+
+    // 3. Розділ рівня юзера, який він ще не відкривав (напр., імпортовані зі старої бази)
+    if (userLevel) {
+        const firstChapter = await Chapter.findOne({ level: userLevel as ChapterLevel, ...PUBLISHED_FILTER })
+            .sort({ order: 1 })
+            .select("_id slug")
+            .lean<{ _id: Types.ObjectId; slug?: string }>();
+        if (firstChapter?.slug) {
+            const firstNode = await StoryNode.findOne({ chapterId: firstChapter._id })
+                .sort({ order: 1 })
+                .select("_id")
+                .lean<{ _id: Types.ObjectId }>();
+            if (firstNode) return toNext(firstNode._id, firstChapter.slug);
+        }
     }
-    return null;
+
+    // 4. Відкритий розділ найближчого рівня
+    const nearest = byLevelThenOrder[0];
+    return nearest ? toNext(nearest.nodeId, chapterOf(nearest).slug as string) : null;
 };
 
 export const loadUserSnapshot = async (telegramId: number, fallbackName = "друже"): Promise<UserSnapshot | null> => {
@@ -135,7 +207,7 @@ export const loadUserSnapshot = async (telegramId: number, fallbackName = "др�
         (user.weeklyScore ?? 0) > 0
             ? getUserPosition({ _id: user._id, weeklyScore: user.weeklyScore, streak: user.streak })
             : Promise.resolve(null),
-        findNextLesson(user._id),
+        findNextLesson(user._id, user.level ?? null),
     ]);
 
     return {

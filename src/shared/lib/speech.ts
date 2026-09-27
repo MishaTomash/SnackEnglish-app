@@ -243,6 +243,62 @@ const lessonAudio = new Map<string, string>();
 /** Та сама озвучка, проіндексована «вільним» ключем (див. looseKey) */
 const lessonAudioLoose = new Map<string, string>();
 const clipElements = new Map<string, HTMLAudioElement>();
+
+/*
+ * ОДИН спільний плеєр для всіх фраз уроку.
+ *
+ * iOS (і частина Android WebView у Telegram) дозволяє audio.play() без тапу лише тому
+ * елементу <audio>, який уже хоч раз грав у відповідь на дотик. Раніше кожна фраза мала
+ * власний new Audio(): репліка, що вмикалася сама (useEffect після "Далі" чи після
+ * завантаження уроку), часто отримувала NotAllowedError — і звучав голос телефона.
+ * Звідси "то працює, то ні, перезайшов — знову ні".
+ *
+ * Тепер усі фрази грають через один елемент, який розблоковується першим дотиком
+ * до екрана (тихий звук), — і далі може грати будь-яку фразу без тапу.
+ * clipElements лишаються лише для попереднього завантаження файлів у кеш.
+ */
+let sharedPlayer: HTMLAudioElement | null = null;
+let playerUnlocked = false;
+
+/** Найкоротший тихий WAV — для розблокування плеєра */
+const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+const UNLOCK_EVENTS = ["pointerdown", "touchend", "click", "keydown"] as const;
+
+const getPlayer = (): HTMLAudioElement | null => {
+  if (typeof Audio === "undefined") return null;
+  if (!sharedPlayer) {
+    sharedPlayer = new Audio();
+    sharedPlayer.preload = "auto";
+  }
+  return sharedPlayer;
+};
+
+const removeUnlockListeners = (): void => {
+  if (typeof window === "undefined") return;
+  UNLOCK_EVENTS.forEach((event) => window.removeEventListener(event, unlockPlayer, true));
+};
+
+/** Викликається на першому дотику: програє тишу, і плеєр стає "дозволеним" */
+function unlockPlayer(): void {
+  if (playerUnlocked) return removeUnlockListeners();
+  const player = getPlayer();
+  // Плеєр уже щось грає (фраза за тапом) — він і так розблокований цим тапом
+  if (!player || currentClip === player) return;
+  player.src = SILENT_WAV;
+  const attempt = player.play();
+  if (!attempt) return;
+  attempt
+    .then(() => {
+      playerUnlocked = true;
+      removeUnlockListeners();
+      if (currentClip !== player) player.pause();
+    })
+    .catch(() => undefined); // спробуємо на наступному дотику
+}
+
+if (typeof window !== "undefined") {
+  UNLOCK_EVENTS.forEach((event) => window.addEventListener(event, unlockPlayer, { capture: true, passive: true }));
+}
 let currentClip: HTMLAudioElement | null = null;
 let settleCurrentClip: (() => void) | null = null;
 
@@ -345,10 +401,13 @@ function playClip(url: string, fallback: () => Promise<void>, rate?: number): Pr
   settleCurrentSpeech?.();
   if (isSynthesisSupported()) window.speechSynthesis.cancel();
 
-  const audio = clipElements.get(url) ?? new Audio(url);
+  const audio = getPlayer() ?? new Audio(url);
+  if (audio.src !== url) audio.src = url;
   audio.currentTime = 0;
   // Уповільнення без "басу": тембр зберігається (preservesPitch — типово true, ставимо явно)
   audio.preservesPitch = true;
+  // Нове джерело скидає швидкість до defaultPlaybackRate — задаємо обидві
+  audio.defaultPlaybackRate = clipPlaybackRate(rate);
   audio.playbackRate = clipPlaybackRate(rate);
   currentClip = audio;
 
@@ -381,6 +440,12 @@ function playClip(url: string, fallback: () => Promise<void>, rate?: number): Pr
     // play() — синхронно в межах тапу (важливо для iOS)
     const playing = audio.play();
     if (playing) {
+      playing.then(() => {
+        if (audio === sharedPlayer) {
+          playerUnlocked = true;
+          removeUnlockListeners();
+        }
+      }, () => undefined);
       playing.catch((error: unknown) => {
         if (settled) return;
         settle();
