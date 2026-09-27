@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/backend/src/routes/storyAdminRoutes.ts
 import { Router } from "express";
 import {
     createChapter,
@@ -13,6 +14,7 @@ import {
     updateNode,
     validateLessonsHandler,
 } from "../controllers/storyAdminController.js";
+import { coverUpload, deleteChapterCover, uploadChapterCover } from "../controllers/chapterCoverController.js";
 
 // authMiddleware + adminOnly підключаються при монтуванні в index.ts:
 // app.use("/api/stories/admin", authMiddleware, adminOnly, storyAdminRoutes)
@@ -24,6 +26,9 @@ router.post("/chapters", createChapter);
 router.patch("/chapters/:chapterId", updateChapter);
 router.delete("/chapters/:chapterId", deleteChapter);
 router.post("/chapters/:chapterId/move", moveChapter);
+// Фото-обкладинка розділу (multipart, поле "image")
+router.post("/chapters/:chapterId/cover", coverUpload, uploadChapterCover);
+router.delete("/chapters/:chapterId/cover", deleteChapterCover);
 
 // Уроки
 router.get("/chapters/:chapterId/nodes", listNodes);

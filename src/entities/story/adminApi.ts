@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/entities/story/adminApi.ts
 import axios from "axios";
 import { apiClient } from "../../shared/api/apiClient";
 import type {
@@ -76,6 +77,24 @@ export async function deleteChapter(
 
 export async function moveChapter(chapterId: string, direction: MoveDirection): Promise<void> {
     await request(apiClient.post(`${BASE}/chapters/${encodeURIComponent(chapterId)}/move`, { direction }));
+}
+
+/** Фото-обкладинка: сервер обрізає до 16:9 і стискає. Повертає адресу нового фото */
+export async function uploadChapterCover(chapterId: string, file: File): Promise<string> {
+    const form = new FormData();
+    form.append("image", file);
+    return (
+        await request(
+            apiClient.post<{ coverImage: string }>(`${BASE}/chapters/${encodeURIComponent(chapterId)}/cover`, form, {
+                timeout: 60000,
+            }),
+        )
+    ).coverImage;
+}
+
+/** Прибрати фото — розділ знову показує емодзі */
+export async function deleteChapterCover(chapterId: string): Promise<void> {
+    await request(apiClient.delete(`${BASE}/chapters/${encodeURIComponent(chapterId)}/cover`));
 }
 
 // ==================== УРОКИ ====================

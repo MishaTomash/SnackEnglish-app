@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/backend/src/models/Chapter.ts
 import { Schema, model, Document } from "mongoose";
 import type { UserEnglishLevel } from "./User.js";
 
@@ -8,6 +9,8 @@ export interface IChapter extends Document {
     title: string;
     subtitle: string;
     cover: string; // Емодзі-обкладинка: "☕"
+    /** Фото-обкладинка (/uploads/covers/…webp); порожньо — показується емодзі */
+    coverImage: string;
     accent: string; // Hex-колір акценту: "#FF8A3D"
     level: ChapterLevel;
     order: number; // Порядок розділу в межах рівня (визначає ланцюжок розблокування)
@@ -30,6 +33,7 @@ const chapterSchema = new Schema<IChapter>(
         title: { type: String, required: true, trim: true },
         subtitle: { type: String, trim: true, default: "" },
         cover: { type: String, default: "📖" },
+        coverImage: { type: String, default: "" },
         accent: {
             type: String,
             default: "#E8A33D",

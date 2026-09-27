@@ -17,6 +17,8 @@ export interface Chapter {
     title: string;
     subtitle: string;
     cover: string; // емодзі
+    /** Фото-обкладинка; порожньо — показується емодзі */
+    coverImage?: string;
     accent: string; // hex
     level: EnglishLevel;
     order: number;

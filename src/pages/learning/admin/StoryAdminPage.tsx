@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/pages/learning/admin/StoryAdminPage.tsx
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FC } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import { AdminSheet } from "../../../features/story-admin/ui/AdminSheet";
 import { ChapterForm } from "../../../features/story-admin/ui/ChapterForm";
 import { Button } from "../../../shared/ui/Button";
 import { CookieMascot } from "../../../shared/ui/CookieMascot";
+import { ChapterCover } from "../../../shared/ui/ChapterCover";
 
 const LEVELS: readonly EnglishLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
@@ -50,13 +52,13 @@ const ChapterRow: FC<ChapterRowProps> = ({ chapter, isFirst, isLast, isBusy, onM
                 ▼
             </button>
         </div>
-        <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-            style={{ backgroundColor: `color-mix(in srgb, ${chapter.accent} 22%, transparent)` }}
-            aria-hidden="true"
-        >
-            {chapter.cover}
-        </div>
+        <ChapterCover
+            cover={chapter.cover}
+            coverImage={chapter.coverImage}
+            accent={chapter.accent}
+            size={48}
+            className="rounded-xl"
+        />
         <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
             <p className="flex items-center gap-2">
                 <span className="truncate font-extrabold">{chapter.title}</span>

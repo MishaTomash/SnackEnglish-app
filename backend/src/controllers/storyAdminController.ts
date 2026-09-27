@@ -31,6 +31,7 @@ interface ChapterLike {
     title: string;
     subtitle?: string;
     cover: string;
+    coverImage?: string;
     accent: string;
     level: string;
     order: number;
@@ -75,6 +76,7 @@ const toChapterDto = (chapter: ChapterLike, lessons: number) => ({
     title: chapter.title,
     subtitle: chapter.subtitle ?? "",
     cover: chapter.cover,
+    coverImage: chapter.coverImage ?? "",
     accent: chapter.accent,
     level: chapter.level,
     order: chapter.order,

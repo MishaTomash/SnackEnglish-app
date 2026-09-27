@@ -7,6 +7,7 @@ import { Button } from "../../shared/ui/Button";
 import { CookieMascot } from "../../shared/ui/CookieMascot";
 import { useStoryStore } from "../../store/storyStore";
 import { useDailyProgressStore } from "../../store/dailyProgressStore";
+import { ChapterCover } from "../../shared/ui/ChapterCover";
 import type { DailyProgress } from "../../store/dailyProgressStore";
 
 // ---------- Геометрія стежки ----------
@@ -220,9 +221,13 @@ export const ChapterMapPage = () => {
                 </button>
                 {chapter ? (
                     <>
-                        <span className="text-3xl leading-none" aria-hidden="true">
-                            {chapter.cover}
-                        </span>
+                        <ChapterCover
+                            cover={chapter.cover}
+                            coverImage={chapter.coverImage}
+                            accent={chapter.accent}
+                            size={40}
+                            className="rounded-xl"
+                        />
                         <div className="min-w-0 flex-1">
                             <h1 className="truncate text-lg font-extrabold">{chapter.title}</h1>
                             <p className="text-xs text-[var(--text-muted)]">

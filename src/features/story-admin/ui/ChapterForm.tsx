@@ -1,9 +1,16 @@
-import { useState } from "react";
-import type { FC, FormEvent, ReactNode } from "react";
-import { AdminValidationError, adminErrorMessage } from "../../../entities/story/adminApi";
+// 📁 Файл: SnackEnglish-app/src/features/story-admin/ui/ChapterForm.tsx
+import { useRef, useState } from "react";
+import type { ChangeEvent, FC, FormEvent, ReactNode } from "react";
+import {
+    AdminValidationError,
+    adminErrorMessage,
+    deleteChapterCover,
+    uploadChapterCover,
+} from "../../../entities/story/adminApi";
 import type { AdminChapter, ChapterInput } from "../../../entities/story/adminTypes";
 import type { EnglishLevel } from "../../../entities/word/types";
 import { Button } from "../../../shared/ui/Button";
+import { ChapterBanner } from "../../../shared/ui/ChapterCover";
 
 const LEVELS: readonly EnglishLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const COVER_PRESETS = ["☕", "🚌", "🕵️", "🏨", "✈️", "🛒", "🏥", "🎓", "🍕", "🌧️", "🏛️", "💼"];
@@ -16,6 +23,8 @@ export interface ChapterFormProps {
     submitLabel: string;
     onSubmit: (input: ChapterInput) => Promise<void>;
     onCancel: () => void;
+    /** Фото-обкладинку змінено (зберігається одразу, окремо від форми) */
+    onCoverChange?: (coverImage: string) => void;
 }
 
 interface FieldProps {
@@ -43,7 +52,48 @@ const Field: FC<FieldProps> = ({ label, htmlFor, error, hint, children }) => (
 const inputClass =
     "w-full rounded-xl border-2 border-[var(--border-color)] bg-[var(--bg-card)] px-3 py-2.5 text-[var(--text-main)] outline-none focus:border-[var(--accent-cta)]";
 
-export const ChapterForm: FC<ChapterFormProps> = ({ initial, submitLabel, onSubmit, onCancel }) => {
+export const ChapterForm: FC<ChapterFormProps> = ({ initial, submitLabel, onSubmit, onCancel, onCoverChange }) => {
+    const [coverImage, setCoverImage] = useState(initial?.coverImage ?? "");
+    const [coverBusy, setCoverBusy] = useState<"upload" | "delete" | null>(null);
+    const [coverError, setCoverError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleCoverFile = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = ""; // той самий файл можна обрати ще раз
+        if (!file || !initial) return;
+        if (file.size > 5 * 1024 * 1024) {
+            setCoverError("Фото завелике — до 5 МБ");
+            return;
+        }
+        setCoverBusy("upload");
+        setCoverError(null);
+        try {
+            const url = await uploadChapterCover(initial.id, file);
+            setCoverImage(url);
+            onCoverChange?.(url);
+        } catch (error) {
+            setCoverError(adminErrorMessage(error));
+        } finally {
+            setCoverBusy(null);
+        }
+    };
+
+    const removeCover = async () => {
+        if (!initial || !window.confirm("Прибрати фото? Розділ знову показуватиме емодзі.")) return;
+        setCoverBusy("delete");
+        setCoverError(null);
+        try {
+            await deleteChapterCover(initial.id);
+            setCoverImage("");
+            onCoverChange?.("");
+        } catch (error) {
+            setCoverError(adminErrorMessage(error));
+        } finally {
+            setCoverBusy(null);
+        }
+    };
+
     const [title, setTitle] = useState(initial?.title ?? "");
     const [subtitle, setSubtitle] = useState(initial?.subtitle ?? "");
     const [cover, setCover] = useState(initial?.cover ?? "☕");
@@ -125,22 +175,81 @@ export const ChapterForm: FC<ChapterFormProps> = ({ initial, submitLabel, onSubm
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
             {/* Живе прев'ю картки, як її побачить юзер */}
-            <div className="flex items-center gap-4 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
-                <div
-                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-4xl"
-                    style={{ backgroundColor: `color-mix(in srgb, ${HEX_RE.test(accent) ? accent : "#888888"} 22%, transparent)` }}
-                    aria-hidden="true"
-                >
-                    {cover || "📖"}
+            {coverImage ? (
+                <div className="overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)]">
+                    <ChapterBanner coverImage={coverImage} accent={HEX_RE.test(accent) ? accent : "#888888"} />
+                    <div className="px-4 pb-4 pt-3">
+                        <p className="truncate text-lg font-extrabold">{title || "Назва розділу"}</p>
+                        <p className="line-clamp-2 text-sm text-[var(--text-muted)]">{subtitle || "Короткий опис"}</p>
+                        <p className="mt-1 text-xs font-bold" style={{ color: HEX_RE.test(accent) ? accent : undefined }}>
+                            {level}
+                        </p>
+                    </div>
                 </div>
-                <div className="min-w-0">
-                    <p className="truncate text-lg font-extrabold">{title || "Назва розділу"}</p>
-                    <p className="line-clamp-2 text-sm text-[var(--text-muted)]">{subtitle || "Короткий опис"}</p>
-                    <p className="mt-1 text-xs font-bold" style={{ color: HEX_RE.test(accent) ? accent : undefined }}>
-                        {level}
-                    </p>
+            ) : (
+                <div className="flex items-center gap-4 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
+                    <div
+                        className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-4xl"
+                        style={{ backgroundColor: `color-mix(in srgb, ${HEX_RE.test(accent) ? accent : "#888888"} 22%, transparent)` }}
+                        aria-hidden="true"
+                    >
+                        {cover || "📖"}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="truncate text-lg font-extrabold">{title || "Назва розділу"}</p>
+                        <p className="line-clamp-2 text-sm text-[var(--text-muted)]">{subtitle || "Короткий опис"}</p>
+                        <p className="mt-1 text-xs font-bold" style={{ color: HEX_RE.test(accent) ? accent : undefined }}>
+                            {level}
+                        </p>
+                    </div>
                 </div>
-            </div>
+            )}
+
+            <Field
+                label="Фото-обкладинка (необов'язково)"
+                htmlFor="chapter-cover-image"
+                error={coverError ?? undefined}
+                hint={
+                    initial
+                        ? "Будь-яке фото — сервер сам обріже його до 16:9 і стисне. Краще горизонтальне, з головним у центрі. Зберігається одразу."
+                        : "Фото можна додати після створення розділу: «Редагувати розділ» → тут."
+                }
+            >
+                {initial ? (
+                    <div className="flex flex-wrap gap-2">
+                        <input
+                            ref={fileInputRef}
+                            id="chapter-cover-image"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => void handleCoverFile(e)}
+                        />
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            isLoading={coverBusy === "upload"}
+                            disabled={coverBusy !== null}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            📷 {coverImage ? "Замінити фото" : "Завантажити фото"}
+                        </Button>
+                        {coverImage && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                isLoading={coverBusy === "delete"}
+                                disabled={coverBusy !== null}
+                                onClick={() => void removeCover()}
+                            >
+                                Прибрати фото
+                            </Button>
+                        )}
+                    </div>
+                ) : null}
+            </Field>
 
             <Field label="Назва *" htmlFor="chapter-title" error={fieldErrors.title}>
                 <input
@@ -176,8 +285,8 @@ export const ChapterForm: FC<ChapterFormProps> = ({ initial, submitLabel, onSubm
                             aria-checked={level === item}
                             onClick={() => setLevel(item)}
                             className={`rounded-xl border-2 px-4 py-2 font-extrabold transition-colors ${level === item
-                                    ? "border-[var(--accent-cta)] bg-[var(--accent-cta)]/15"
-                                    : "border-[var(--border-color)] bg-[var(--bg-card)]"
+                                ? "border-[var(--accent-cta)] bg-[var(--accent-cta)]/15"
+                                : "border-[var(--border-color)] bg-[var(--bg-card)]"
                                 }`}
                         >
                             {item}
@@ -186,7 +295,11 @@ export const ChapterForm: FC<ChapterFormProps> = ({ initial, submitLabel, onSubm
                 </div>
             </Field>
 
-            <Field label="Обкладинка (емодзі)" htmlFor="chapter-cover" error={fieldErrors.cover}>
+            <Field
+                label={coverImage ? "Емодзі (коли фото немає)" : "Обкладинка (емодзі)"}
+                htmlFor="chapter-cover"
+                error={fieldErrors.cover}
+            >
                 <div className="flex flex-wrap items-center gap-2">
                     <input
                         id="chapter-cover"

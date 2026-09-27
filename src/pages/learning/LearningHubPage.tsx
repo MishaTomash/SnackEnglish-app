@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+// 📁 Файл: SnackEnglish-app/src/pages/learning/LearningHubPage.tsx
+import { useEffect, useState } from "react";
 import type { FC } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Chapter } from "../../entities/story/types";
@@ -8,6 +9,7 @@ import { Card } from "../../shared/ui/Card";
 import { CookieMascot } from "../../shared/ui/CookieMascot";
 import { useStoryStore } from "../../store/storyStore";
 import { useIsAdmin } from "../../features/story-admin/lib/useIsAdmin";
+import { ChapterBanner, ChapterCover } from "../../shared/ui/ChapterCover";
 
 const LEVELS: readonly EnglishLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
@@ -25,7 +27,33 @@ const parseLevel = (value: string | null): EnglishLevel | undefined => {
   return LEVELS.find((level) => level === upper);
 };
 
+/** Смужка прогресу розділу (спільна для обох варіантів картки) */
+const ChapterProgress: FC<{ chapter: Chapter; percent: number; statusText: string; isCompleted: boolean }> = ({
+  chapter,
+  percent,
+  statusText,
+  isCompleted,
+}) => (
+  <div className="mt-4">
+    <div className="mb-1.5 flex items-center justify-between text-xs font-bold">
+      <span className={isCompleted ? "text-[var(--accent-success)]" : "text-[var(--text-muted)]"}>{statusText}</span>
+      <span className="text-[var(--text-muted)]">
+        {chapter.doneNodes}/{chapter.totalNodes} · {percent}%
+      </span>
+    </div>
+    <div className="h-2.5 overflow-hidden rounded-full bg-[var(--bg-app)]">
+      <div
+        className="h-full rounded-full transition-[width] duration-700 ease-out"
+        style={{ width: `${percent}%`, backgroundColor: chapter.accent }}
+      />
+    </div>
+  </div>
+);
+
 const ChapterCard: FC<{ chapter: Chapter; onOpen: () => void }> = ({ chapter, onOpen }) => {
+  // Фото не завантажилось — картка тихо перемикається на варіант з емодзі
+  const [imageFailed, setImageFailed] = useState(false);
+  const hasImage = Boolean(chapter.coverImage) && !imageFailed;
   const percent =
     chapter.totalNodes > 0 ? Math.round((chapter.doneNodes / chapter.totalNodes) * 100) : 0;
   const isLocked = chapter.locked;
@@ -39,24 +67,46 @@ const ChapterCard: FC<{ chapter: Chapter; onOpen: () => void }> = ({ chapter, on
         ? "Продовжити →"
         : "Почати →";
 
+  const buttonProps = {
+    type: "button" as const,
+    onClick: onOpen,
+    disabled: isLocked,
+    "aria-label": `${chapter.title}: ${isLocked ? "закрито" : `пройдено ${percent}%`}`,
+    className:
+      "block w-full rounded-3xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-cta)] disabled:cursor-not-allowed",
+  };
+
+  // З фото — обкладинка-банер 16:9 зверху, текст і прогрес під нею
+  if (hasImage && chapter.coverImage) {
+    return (
+      <button {...buttonProps}>
+        <div
+          className={`overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm transition-transform ${isLocked ? "opacity-60" : "active:scale-[0.99]"
+            }`}
+        >
+          <ChapterBanner
+            coverImage={chapter.coverImage}
+            accent={chapter.accent}
+            locked={isLocked}
+            badge={isCompleted ? "✓ Пройдено" : undefined}
+            onError={() => setImageFailed(true)}
+          />
+          <div className="px-4 pb-4 pt-3">
+            <h2 className="truncate text-lg font-extrabold">{chapter.title}</h2>
+            {chapter.subtitle && <p className="line-clamp-2 text-sm text-[var(--text-muted)]">{chapter.subtitle}</p>}
+            <ChapterProgress chapter={chapter} percent={percent} statusText={statusText} isCompleted={isCompleted} />
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  // Без фото — як раніше: емодзі на тлі кольору розділу
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      disabled={isLocked}
-      aria-label={`${chapter.title}: ${isLocked ? "закрито" : `пройдено ${percent}%`}`}
-      className="block w-full rounded-3xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-cta)] disabled:cursor-not-allowed"
-    >
+    <button {...buttonProps}>
       <Card interactive={!isLocked} className={isLocked ? "opacity-55" : ""}>
         <div className="flex items-center gap-4">
-          <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-4xl"
-            // Фон обкладинки — акцентний колір розділу з прозорістю
-            style={{ backgroundColor: `color-mix(in srgb, ${chapter.accent} 22%, transparent)` }}
-            aria-hidden="true"
-          >
-            {isLocked ? "🔒" : chapter.cover}
-          </div>
+          <ChapterCover cover={chapter.cover} accent={chapter.accent} size={64} locked={isLocked} className="rounded-2xl" />
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-extrabold">{chapter.title}</h2>
             {chapter.subtitle && (
@@ -64,23 +114,7 @@ const ChapterCard: FC<{ chapter: Chapter; onOpen: () => void }> = ({ chapter, on
             )}
           </div>
         </div>
-
-        <div className="mt-4">
-          <div className="mb-1.5 flex items-center justify-between text-xs font-bold">
-            <span className={isCompleted ? "text-[var(--accent-success)]" : "text-[var(--text-muted)]"}>
-              {statusText}
-            </span>
-            <span className="text-[var(--text-muted)]">
-              {chapter.doneNodes}/{chapter.totalNodes} · {percent}%
-            </span>
-          </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-[var(--bg-app)]">
-            <div
-              className="h-full rounded-full transition-[width] duration-700 ease-out"
-              style={{ width: `${percent}%`, backgroundColor: chapter.accent }}
-            />
-          </div>
-        </div>
+        <ChapterProgress chapter={chapter} percent={percent} statusText={statusText} isCompleted={isCompleted} />
       </Card>
     </button>
   );
@@ -143,8 +177,8 @@ export const LearningHubPage = () => {
                 onClick={() => selectLevel(item)}
                 aria-pressed={isSelected}
                 className={`shrink-0 rounded-2xl border-2 px-4 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-cta)] ${isSelected
-                    ? "border-[var(--accent-cta)] bg-[var(--accent-cta)]/15"
-                    : "border-[var(--border-color)] bg-[var(--bg-card)]"
+                  ? "border-[var(--accent-cta)] bg-[var(--accent-cta)]/15"
+                  : "border-[var(--border-color)] bg-[var(--bg-card)]"
                   }`}
               >
                 <span className="block text-base font-extrabold">

@@ -12,6 +12,7 @@ import type {
 } from "../../../entities/story/adminTypes";
 import { AdminSheet } from "../../../features/story-admin/ui/AdminSheet";
 import { ChapterForm } from "../../../features/story-admin/ui/ChapterForm";
+import { ChapterCover } from "../../../shared/ui/ChapterCover";
 import { LessonVisualEditor } from "../../../features/story-admin/ui/visual/LessonVisualEditor";
 import { LessonPreview } from "../../../features/story-admin/ui/LessonPreview";
 import { Button } from "../../../shared/ui/Button";
@@ -267,13 +268,13 @@ export const StoryAdminChapterPage = () => {
             {/* Картка розділу */}
             <section className="mt-4 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
                 <div className="flex items-center gap-4">
-                    <div
-                        className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-4xl"
-                        style={{ backgroundColor: `color-mix(in srgb, ${chapter.accent} 22%, transparent)` }}
-                        aria-hidden="true"
-                    >
-                        {chapter.cover}
-                    </div>
+                    <ChapterCover
+                        cover={chapter.cover}
+                        coverImage={chapter.coverImage}
+                        accent={chapter.accent}
+                        size={64}
+                        className="rounded-2xl"
+                    />
                     <div className="min-w-0 flex-1">
                         <p className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full px-2 py-0.5 text-xs font-extrabold" style={{ color: chapter.accent, backgroundColor: `color-mix(in srgb, ${chapter.accent} 18%, transparent)` }}>
@@ -370,6 +371,9 @@ export const StoryAdminChapterPage = () => {
                         submitLabel="Зберегти"
                         onSubmit={saveMeta}
                         onCancel={() => setIsEditingMeta(false)}
+                        onCoverChange={(coverImage) =>
+                            setChapter((prev) => (prev ? { ...prev, coverImage } : prev))
+                        }
                     />
                 </AdminSheet>
             )}

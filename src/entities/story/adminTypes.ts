@@ -1,3 +1,4 @@
+// 📁 Файл: SnackEnglish-app/src/entities/story/adminTypes.ts
 import type { EnglishLevel } from "../word/types";
 import type { StepPayload, StepType } from "./types";
 
@@ -8,6 +9,8 @@ export interface AdminChapter {
     title: string;
     subtitle: string;
     cover: string;
+    /** Фото-обкладинка (/uploads/covers/…); порожньо — емодзі */
+    coverImage?: string;
     accent: string;
     level: EnglishLevel;
     order: number;
