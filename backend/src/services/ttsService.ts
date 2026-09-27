@@ -120,6 +120,8 @@ export interface SpeechItem {
     role: SpeechRole;
     /** Емоція репліки з уроку (happy, scared, sleeping…) — для інтонації */
     style?: string;
+    /** "uk" — українська репліка (пояснення в діалозі) */
+    lang?: "uk";
 }
 
 // ==================== ІНТОНАЦІЯ ====================
@@ -164,6 +166,12 @@ const INTERJECTION = /\b(m{2,}|h+m+|u+h+|u+m+|a+h+|o+h+|e+r+m*|shh+|w+o+w+)\b/i;
 export const instructionsFor = (item: SpeechItem, s: AppSettingsData): string => {
     if (s.ttsModel !== "gpt-4o-mini-tts") return "";
     const parts = [s.ttsInstructions, PERSONAS[item.role]];
+    // Українська репліка: вимова українська, англійські слова всередині — англійською
+    if (item.lang === "uk") {
+        parts.unshift(
+            "Speak in Ukrainian with natural native Ukrainian pronunciation. Pronounce any English words inside the sentence in clear English.",
+        );
+    }
     if (item.style) parts.push(EMOTION_STYLES[item.style] ?? "");
     if (ELLIPSIS.test(item.text)) {
         parts.push("The ellipses are short hesitation pauses: pause only briefly at each one; never read them aloud.");
@@ -206,6 +214,20 @@ const addRich = (items: Map<string, SpeechItem>, raw: unknown, wholeRole: Speech
     for (const match of raw.matchAll(/<en>([\s\S]*?)<\/en>/gi)) addItem(items, match[1], "narrator");
 };
 
+/**
+ * Українська репліка в діалозі (пояснення від Снекі чи персонажа): озвучується цілком
+ * українською голосом мовця. Англійські слова в <en>…</en> додатково — окремо диктором
+ * (їх натискають, щоб послухати).
+ */
+const addUkrainian = (items: Map<string, SpeechItem>, raw: unknown, role: SpeechRole, style?: string): void => {
+    if (typeof raw !== "string" || items.size >= MAX_PHRASES_PER_NODE) return;
+    const text = cleanSpeechText(raw);
+    if (!text || text.length > MAX_PHRASE_LENGTH || !CYRILLIC.test(text)) return;
+    const key = text.toLowerCase();
+    if (!items.has(key)) items.set(key, { key, text, role, lang: "uk", ...(style ? { style } : {}) });
+    for (const match of raw.matchAll(/<en>([\s\S]*?)<\/en>/gi)) addItem(items, match[1], "narrator");
+};
+
 const walkSteps = (list: unknown, items: Map<string, SpeechItem>, depth: number): void => {
     if (!Array.isArray(list) || depth > 4) return;
     for (const step of list) {
@@ -220,7 +242,12 @@ const walkSteps = (list: unknown, items: Map<string, SpeechItem>, depth: number)
                     for (const line of step.lines) {
                         if (!isRecord(line)) continue;
                         const role: SpeechRole = line.speaker === "user" ? "user" : line.speaker === "npc" ? "npc" : "snacky";
-                        addRich(items, line.en, role, normalizeEmotion(line.emotion));
+                        // Репліка українською — пояснення; озвучуємо українською тим самим голосом
+                        if (typeof line.en === "string" && CYRILLIC.test(line.en)) {
+                            addUkrainian(items, line.en, role, normalizeEmotion(line.emotion));
+                        } else {
+                            addRich(items, line.en, role, normalizeEmotion(line.emotion));
+                        }
                     }
                 }
                 break;

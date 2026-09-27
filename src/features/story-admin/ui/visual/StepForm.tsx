@@ -216,15 +216,20 @@ export const StepForm: FC<StepFormProps> = ({ step, onChange, renderBranch }) =>
                                 )}
                             </div>
                             <RichTextField
-                                label="Англійською"
+                                label="Репліка"
                                 required
                                 english
                                 value={line.en}
                                 onChange={(en) => setLine(i, { en })}
                                 placeholder="Hello! Nice to meet you."
-                                hint="Уся репліка озвучується голосом того, хто говорить."
+                                hint="Англійською — для практики. Українською — щоб щось пояснити: озвучиться українською тим самим голосом. Англійські слова в українській репліці виділяй кнопкою EN."
                             />
-                            <TextField label="Переклад" value={line.uk} onChange={(uk) => setLine(i, { uk })} placeholder="Привіт! Приємно познайомитись." />
+                            <TextField
+                                label="Переклад (необов'язково)"
+                                value={line.uk}
+                                onChange={(uk) => setLine(i, { uk })}
+                                placeholder={/[а-яіїєґ]/i.test(line.en) ? "Для української репліки не потрібен" : "Привіт! Приємно познайомитись."}
+                            />
                         </ItemBox>
                     ))}
                     <AddButton

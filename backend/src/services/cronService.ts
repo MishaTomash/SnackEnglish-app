@@ -10,6 +10,7 @@ import { HAS_NAME_FILTER, RANK_SORT, processGiveawayEnd } from "../controllers/l
 import { STREAK_FREEZE_COOLDOWN_DAYS, currentWeekDayKeys, dayKeyAgo, migrateStreakDays } from "./activityService.js";
 import { getAppSettings } from "./settingsService.js";
 import { notifyAdmin } from "./alertService.js";
+import { GIVEAWAY_CRON, GIVEAWAY_TIME_LABEL } from "./giveawaySchedule.js";
 import { autoGenerateMissing } from "./ttsService.js";
 
 /**
@@ -37,7 +38,7 @@ export const CRON_SCHEDULE = [
   { time: "щодня 13:00", title: "«Серія в небезпеці — врятуй сьогодні» (учора пропуск)", sendsMessages: true },
   { time: "щодня 19:00", title: "«Не втрачай вогник» — хто ще не займався сьогодні", sendsMessages: true },
   { time: "середа 14:00", title: "Рейтинг тижня: твоє місце і скільки до наступного", sendsMessages: true },
-  { time: "неділя 20:00", title: "Розіграш + особистий підсумок тижня", sendsMessages: true },
+  { time: `неділя ${GIVEAWAY_TIME_LABEL}`, title: "Розіграш + особистий підсумок тижня", sendsMessages: true },
   { time: "кожні 30 хв (9–21)", title: "Тихо: автоозвучка нових фраз уроків (якщо увімкнено)", sendsMessages: false },
 ];
 
@@ -310,17 +311,17 @@ const snapshotRanking = async (): Promise<RankingSnapshot> => {
 /** Текст для середи: місце і скільки кубків до наступної цілі */
 export const buildWeeklyTopText = (me: RankEntry | undefined, scores: number[]): string => {
   if (!me) {
-    return "🏆 Розіграш тижня вже в розпалі, а тебе ще немає в рейтингу!\n\nДо неділі 20:00 є час — кілька уроків, і ти в таблиці. Топ-3 отримують призи 🎁";
+    return `🏆 Розіграш тижня вже в розпалі, а тебе ще немає в рейтингу!\n\nДо неділі ${GIVEAWAY_TIME_LABEL} є час — кілька уроків, і ти в таблиці. Топ-3 отримують призи 🎁`;
   }
   if (me.place === 1) {
-    return `👑 Ти зараз ПЕРШИЙ у рейтингу тижня — ${me.score} 🏆!\n\nДо неділі 20:00 ще кілька днів. Тримай позицію — суперники не сплять 😉`;
+    return `👑 Ти зараз ПЕРШИЙ у рейтингу тижня — ${me.score} 🏆!\n\nДо неділі ${GIVEAWAY_TIME_LABEL} ще кілька днів. Тримай позицію — суперники не сплять 😉`;
   }
   // У топ-3 — ціль на сходинку вище; інакше — до 3 місця
   const target = me.place <= 3 ? me.place - 1 : 3;
   const gap = Math.max(1, scores[target - 1] - me.score + 1);
   return me.place <= 3
-    ? `🔥 Ти на ${me.place} місці з ${me.score} 🏆!\n\nДо ${target} місця — лише ${gap} 🏆. Ще кілька уроків — і ти вище! Розіграш у неділю о 20:00.`
-    : `Ти на ${me.place} місці в рейтингу тижня (${me.score} 🏆).\n\nДо топ-3 не вистачає ${gap} 🏆 — встигнеш до неділі 20:00? 🎁`;
+    ? `🔥 Ти на ${me.place} місці з ${me.score} 🏆!\n\nДо ${target} місця — лише ${gap} 🏆. Ще кілька уроків — і ти вище! Розіграш у неділю о ${GIVEAWAY_TIME_LABEL}.`
+    : `Ти на ${me.place} місці в рейтингу тижня (${me.score} 🏆).\n\nДо топ-3 не вистачає ${gap} 🏆 — встигнеш до неділі ${GIVEAWAY_TIME_LABEL}? 🎁`;
 };
 
 /** Середа 14:00 — рейтинг тижня */
@@ -335,7 +336,7 @@ const weeklyTopReminder = async (): Promise<void> => {
   );
 };
 
-/** Неділя 20:00 — розіграш і особистий підсумок тижня кожному */
+/** Неділя (час — giveawaySchedule) — розіграш і особистий підсумок тижня кожному */
 const weeklySummary = async (): Promise<void> => {
   // Знімок ДО розіграшу: після нього кубки тижня обнуляться
   const { byId, top } = await snapshotRanking();
@@ -392,6 +393,6 @@ export function initCronJobs(): void {
   cron.schedule("0 13 * * *", runJob("серія в небезпеці", streakGraceReminder), options);
   cron.schedule("0 19 * * *", runJob("не втрачай вогник", streakEveningReminder), options);
   cron.schedule("0 14 * * 3", runJob("рейтинг тижня (середа)", weeklyTopReminder), options);
-  cron.schedule("0 20 * * 0", runJob("розіграш і підсумок тижня", weeklySummary), options);
+  cron.schedule(GIVEAWAY_CRON, runJob("розіграш і підсумок тижня", weeklySummary), options);
   cron.schedule("*/30 9-21 * * *", runJob("автоозвучка нових фраз", autoGenerateMissing), options);
 }

@@ -5,10 +5,11 @@ import { Flag } from "lucide-react";
 import { adminApi, getErrorMessage } from "../api";
 import { useAdminQuery } from "../lib/useAdminQuery";
 import { AdminButton, EmptyState, ErrorState, LoadingState, Notice, Section, formatNumber } from "./primitives";
+import { GIVEAWAY_TIME_LABEL } from "../../../shared/lib/giveaway";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-/** Відлік до наступного розіграшу (час з сервера — неділя 20:00 за Києвом) */
+/** Відлік до наступного розіграшу (час з сервера — неділя, giveawaySchedule) */
 const useCountdown = (target: string | null): string => {
     const [now, setNow] = useState(() => Date.now());
     useEffect(() => {
@@ -58,7 +59,7 @@ export const GiveawayTab: FC = () => {
         <div className="space-y-4">
             <Section title="Поточний тиждень">
                 <p className="mb-3 text-sm text-[var(--text-muted)]">
-                    Автоматичне завершення через <b className="text-[var(--text-main)]">{countdown}</b> (неділя, 20:00)
+                    Автоматичне завершення через <b className="text-[var(--text-main)]">{countdown}</b> (неділя, {GIVEAWAY_TIME_LABEL})
                 </p>
                 {top.isLoading && !top.data ? (
                     <LoadingState />

@@ -8,6 +8,7 @@ import { clearDashboardCache } from "./dashboardController.js";
 import { clearContentCache } from "./contentController.js";
 import { getAdminTimezone, logAdminError, sendError } from "./adminHelpers.js";
 import { CRON_SCHEDULE } from "../../services/cronService.js";
+import { nextGiveawayDate } from "../../services/giveawaySchedule.js";
 
 interface ConfigCheck {
     key: string;
@@ -77,15 +78,8 @@ const checkConfig = (): ConfigCheck[] => {
     ];
 };
 
-/** Наступна неділя 20:00 у часовому поясі сервера — час завершення розіграшу */
-const nextGiveawayAt = (): string => {
-    const now = new Date();
-    const next = new Date(now);
-    next.setDate(now.getDate() + ((7 - now.getDay()) % 7));
-    next.setHours(20, 0, 0, 0);
-    if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 7);
-    return next.toISOString();
-};
+/** Найближче завершення розіграшу (час — giveawaySchedule) */
+const nextGiveawayAt = (): string => nextGiveawayDate().toISOString();
 
 // GET /api/admin/system
 export const getSystemStatus = (_req: Request, res: Response): void => {

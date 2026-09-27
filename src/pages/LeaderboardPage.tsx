@@ -21,11 +21,11 @@ import {
 } from "../store/leaderboardStore";
 import { resolveAvatarUrl } from "../shared/lib/avatarUrl";
 import { SupportCard } from "../widgets/SupportCard";
+import { GIVEAWAY_HOUR, GIVEAWAY_TIME_LABEL, GIVEAWAY_TIMEZONE, GIVEAWAY_WEEKDAY } from "../shared/lib/giveaway";
 
 type Tab = "rating" | "giveaway";
 
-/** Розіграш завершує сервер щонеділі о 20:00 за Києвом (cron з timezone Europe/Kyiv) */
-const GIVEAWAY_TIMEZONE = "Europe/Kyiv";
+/** Розіграш завершує сервер щонеділі за Києвом; час — shared/lib/giveaway (як у cron на сервері) */
 
 /**
  * "Настінний" час у заданому поясі як Date (для розрахунків різниці).
@@ -45,8 +45,8 @@ const nowInZone = (timeZone: string): Date => {
 const calculateTimeLeft = () => {
   const now = nowInZone(GIVEAWAY_TIMEZONE);
   const nextSunday = new Date(now);
-  nextSunday.setDate(now.getDate() + ((7 - now.getDay()) % 7));
-  nextSunday.setHours(20, 0, 0, 0);
+  nextSunday.setDate(now.getDate() + ((7 + GIVEAWAY_WEEKDAY - now.getDay()) % 7));
+  nextSunday.setHours(GIVEAWAY_HOUR, 0, 0, 0);
 
   if (now.getTime() >= nextSunday.getTime()) {
     nextSunday.setDate(nextSunday.getDate() + 7);
@@ -258,7 +258,7 @@ export const LeaderboardPage = () => {
               <div className="mt-3 pt-3 border-t border-[var(--border-color)] text-xs text-[var(--text-muted)] leading-relaxed space-y-2">
                 <p>
                   Рейтинг тепер <b>тижневий</b>: бали рахуються за поточний
-                  тиждень і щонеділі о 20:00 скидаються заново.
+                  тиждень і щонеділі о {GIVEAWAY_TIME_LABEL} скидаються заново.
                 </p>
                 <p>
                   За кожен пройдений урок на сторінці Навчання ти отримуєш рівно{" "}
@@ -440,7 +440,7 @@ export const LeaderboardPage = () => {
             <div className="flex items-start gap-2 bg-[var(--bg-app)]/50 p-3 rounded-xl mt-2">
               <Timer className="w-4 h-4 text-[var(--accent-success)] shrink-0 mt-0.5" />
               <p className="text-xs text-[var(--text-main)] leading-relaxed font-medium">
-                Участь автоматична! Щонеділі о 20:00 топ-3 гравці з найвищим
+                Участь автоматична! Щонеділі о {GIVEAWAY_TIME_LABEL} топ-3 гравці з найвищим
                 рейтингом стають переможцями та назавжди потрапляють в історію.
               </p>
             </div>

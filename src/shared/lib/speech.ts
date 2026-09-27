@@ -177,7 +177,8 @@ function speakWithSynthesis(text: string, options: SpeakOptions = {}): Promise<v
   if (!trimmed || !isSynthesisSupported()) return Promise.resolve();
 
   const synth = window.speechSynthesis;
-  const lang = options.lang ?? DEFAULT_LANG;
+  // Українська репліка (пояснення в діалозі) — українським голосом, а не англійським
+  const lang = options.lang ?? (/[а-яіїєґ]/i.test(text) ? "uk-UA" : DEFAULT_LANG);
 
   const utterance = new SpeechSynthesisUtterance(trimmed);
   utterance.lang = lang;

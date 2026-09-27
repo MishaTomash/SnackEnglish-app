@@ -10,6 +10,7 @@ import { dayKeyAgo, getStreakState } from "./activityService.js";
 import type { StreakStatus } from "./activityService.js";
 import { getAppSettings } from "./settingsService.js";
 import { ensureReferralCode, getBotUsername, getReferralStats } from "./referralService.js";
+import { GIVEAWAY_TIME_LABEL, nextGiveawayDate } from "./giveawaySchedule.js";
 
 /**
  * Усе, що бачить юзер у чаті з ботом: тексти, кнопки, картка прогресу.
@@ -51,13 +52,10 @@ const pluralLessons = (n: number): string => {
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-/** Скільки лишилось до розіграшу (неділя 20:00 за часом сервера — Київ) */
+/** Скільки лишилось до розіграшу (час — giveawaySchedule, за часом сервера — Київ) */
 const timeUntilGiveaway = (): string => {
     const now = new Date();
-    const next = new Date(now);
-    next.setDate(now.getDate() + ((7 - now.getDay()) % 7));
-    next.setHours(20, 0, 0, 0);
-    if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 7);
+    const next = nextGiveawayDate(now);
     const hours = Math.floor((next.getTime() - now.getTime()) / 3600000);
     const days = Math.floor(hours / 24);
     return days > 0 ? `${days} ${pluralDays(days)} ${hours % 24} год` : `${hours} год`;
@@ -250,7 +248,7 @@ export const buildHelpText = async (): Promise<string> => {
             ? `🎯 <b>Денна ціль</b> — ${settings.dailyGoalLessons} ${pluralLessons(settings.dailyGoalLessons)}: за неї +${settings.dailyGoalBonus} 🏆.`
             : "",
         "",
-        "🏆 <b>Кубки</b> за уроки йдуть у рейтинг тижня. Щонеділі о 20:00 топ-3 перемагають, і тиждень починається з нуля.",
+        `🏆 <b>Кубки</b> за уроки йдуть у рейтинг тижня. Щонеділі о ${GIVEAWAY_TIME_LABEL} топ-3 перемагають, і тиждень починається з нуля.`,
         settings.referralBonus > 0 ? `\n🎁 <b>Запроси друга</b> — коли він пройде перший урок, обидва отримаєте +${settings.referralBonus} 🏆.` : "",
         "",
         "<b>Команди</b>",
@@ -291,7 +289,7 @@ export const buildTopText = async (telegramId: number): Promise<string> => {
                 : "Тебе ще немає в рейтингу — пройди урок, і ти в таблиці!",
         );
     }
-    lines.push("", "Топ-3 щонеділі о 20:00 отримують призи 🎁");
+    lines.push("", `Топ-3 щонеділі о ${GIVEAWAY_TIME_LABEL} отримують призи 🎁`);
     return lines.join("\n");
 };
 
