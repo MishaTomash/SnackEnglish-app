@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FC } from "react";
 import type { DialogueLine } from "../../../entities/story/types";
-import { stripRichText } from "../../../shared/lib/richText";
 import { isSynthesisSupported, speak, stopSpeaking } from "../../../shared/lib/speech";
 import { CookieMascot, toCookieState } from "../../../shared/ui/CookieMascot";
 import { RichText } from "../../../shared/ui/RichText";
@@ -60,7 +59,7 @@ const Bubble: FC<BubbleProps> = ({ line, canSpeak, npcName }) => {
                     {canSpeak && (
                         <button
                             type="button"
-                            onClick={() => void speak(stripRichText(line.en))}
+                            onClick={() => void speak(line.en)}
                             aria-label="Прослухати репліку"
                             className="-mr-1 shrink-0 rounded-full p-1 text-base leading-none opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
                         >
@@ -102,7 +101,7 @@ export const DialogueStep: StepComponent<"dialogue"> = ({ step, onNext }) => {
     // Нова репліка: озвучити і прокрутити до неї
     useEffect(() => {
         if (!currentLine) return;
-        void speak(stripRichText(currentLine.en));
+        void speak(currentLine.en);
         lastBubbleRef.current?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
     }, [currentLine]);
 

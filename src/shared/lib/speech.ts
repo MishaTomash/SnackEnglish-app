@@ -240,6 +240,8 @@ const MAX_PRELOADED_CLIPS = 40;
 const CLIP_TIMEOUT_MS = 20000;
 
 const lessonAudio = new Map<string, string>();
+/** Та сама озвучка, проіндексована «вільним» ключем (див. looseKey) */
+const lessonAudioLoose = new Map<string, string>();
 const clipElements = new Map<string, HTMLAudioElement>();
 let currentClip: HTMLAudioElement | null = null;
 let settleCurrentClip: (() => void) | null = null;
@@ -256,14 +258,30 @@ export const speechKey = (raw: string): string =>
     .trim()
     .toLowerCase();
 
+/**
+ * «Вільний» ключ — страховка від розбіжностей у пробілах біля розмітки.
+ * Сервер замінює теги <en> пробілами ("додаємо <en>not</en>:" → "not :"), а текст,
+ * очищений в іншому місці без пробілів, дає "not:". Тут пробіли біля розділових
+ * знаків не важать, тож обидва варіанти знаходять той самий файл.
+ */
+const looseKey = (raw: string): string =>
+  speechKey(raw)
+    .replace(/\s+([,.:;!?…»)\]])/g, "$1")
+    .replace(/([«(\[])\s+/g, "$1");
+
+/** Текст для голосу телефона: без розмітки <en>…</en> */
+const plainText = (raw: string): string => raw.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+
 /** Реєструє озвучку уроку й заздалегідь підвантажує файли, щоб звук вмикався миттєво */
 export function setLessonAudio(map: Record<string, string>): void {
   lessonAudio.clear();
+  lessonAudioLoose.clear();
   clipElements.clear();
   Object.entries(map).forEach(([key, url], index) => {
     const resolved = resolveMediaUrl(url);
     if (!resolved) return;
     lessonAudio.set(key, resolved);
+    lessonAudioLoose.set(looseKey(key), resolved);
     if (index < MAX_PRELOADED_CLIPS && typeof Audio !== "undefined") {
       const audio = new Audio();
       audio.preload = "auto";
@@ -277,11 +295,16 @@ export function setLessonAudio(map: Record<string, string>): void {
 export function clearLessonAudio(): void {
   stopClip();
   lessonAudio.clear();
+  lessonAudioLoose.clear();
   clipElements.clear();
 }
 
 /** Чи є готове аудіо для фрази */
-export const hasLessonAudio = (text: string): boolean => lessonAudio.has(speechKey(text));
+/** Файл озвучки для фрази: точний ключ, а якщо ні — «вільний» */
+const findClip = (text: string): string | undefined =>
+  lessonAudio.get(speechKey(text)) ?? lessonAudioLoose.get(looseKey(text));
+
+export const hasLessonAudio = (text: string): boolean => findClip(text) !== undefined;
 
 function stopClip(): void {
   // ВИПРАВЛЕНО: спершу запам'ятовуємо файл, потім завершуємо його Promise.
@@ -375,11 +398,13 @@ function playClip(url: string, fallback: () => Promise<void>, rate?: number): Pr
  * Promise завжди резолвиться — UI може безпечно робити `await speak(...)`.
  */
 export function speak(text: string, options: SpeakOptions = {}): Promise<void> {
-  const trimmed = text.trim();
-  if (!trimmed) return Promise.resolve();
-  const clipUrl = lessonAudio.get(speechKey(trimmed));
-  if (clipUrl) return playClip(clipUrl, () => speakWithSynthesis(trimmed, options), options.rate);
-  return speakWithSynthesis(trimmed, options);
+  // Текст може містити розмітку <en>…</en>: ключ рахуємо з нього (як сервер),
+  // а голосу телефона віддаємо чистий текст
+  const plain = plainText(text);
+  if (!plain) return Promise.resolve();
+  const clipUrl = findClip(text);
+  if (clipUrl) return playClip(clipUrl, () => speakWithSynthesis(plain, options), options.rate);
+  return speakWithSynthesis(plain, options);
 }
 
 // ==================== РОЗПІЗНАВАННЯ ====================
