@@ -157,20 +157,27 @@ export const htmlToBlocks = (html: string): RichBlock[] => {
     return blocks;
 };
 
-// ==================== НИЖНЯ КЛАВІАТУРА «ГОЛОВНА» ====================
-
-export const HOME_BUTTON = "🏠 Головна";
-export const TOP_BUTTON = "🏆 Топ";
-export const HELP_BUTTON = "❓ Допомога";
+// ==================== НИЖНЯ КНОПКА «ГОЛОВНА» ====================
 
 /**
- * Постійна клавіатура внизу чату: з будь-якого місця одним тапом — на картку прогресу.
+ * Необов'язково: власна анімована іконка кнопки (custom emoji). Працює, лише якщо
+ * власник бота має Telegram Premium. ID емодзі: перешли емодзі боту @RawDataBot
+ * і скопіюй custom_emoji_id, потім додай у .env: HOME_BUTTON_EMOJI_ID=5368324170671202286
+ */
+const HOME_ICON_ID = process.env.HOME_BUTTON_EMOJI_ID?.trim() || "";
+
+/** Текст кнопки. З власною іконкою звичайне емодзі 🏠 зайве */
+export const HOME_BUTTON = HOME_ICON_ID ? "Головна" : "🏠 Головна";
+
+/**
+ * Одна синя кнопка внизу чату: з будь-якого місця одним тапом — на картку прогресу.
  * Кнопки rich-повідомлень живуть усередині них, тож нижня клавіатура вільна.
  */
 export const HOME_KEYBOARD = {
-    keyboard: [[{ text: HOME_BUTTON }, { text: TOP_BUTTON }, { text: HELP_BUTTON }]],
+    keyboard: [[{ text: HOME_BUTTON, style: "primary", ...(HOME_ICON_ID ? { icon_custom_emoji_id: HOME_ICON_ID } : {}) }]],
     resize_keyboard: true,
     is_persistent: true,
+    input_field_placeholder: "Тисни «Головна» — там твій прогрес 🍪",
 };
 
 // ==================== НАДСИЛАННЯ ====================

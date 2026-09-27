@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 import { Telegraf, Markup } from "telegraf";
 import type { Context } from "telegraf";
 import { withStyle } from "./services/buttonStyle.js";
-import { editRich, HELP_BUTTON, HOME_BUTTON, HOME_KEYBOARD, sendRich, sendRichMessage, TOP_BUTTON } from "./services/richMessage.js";
+import { editRich, HOME_KEYBOARD, sendRich, sendRichMessage } from "./services/richMessage.js";
 import { User } from "./models/User.js";
 import { Game } from "./models/Game.js";
 import { UserGamePurchase } from "./models/UserGamePurchase.js";
@@ -230,10 +230,9 @@ bot.command("invite", (ctx) => sendInvite(ctx).catch((error) => console.error("�
 bot.command("reminders", (ctx) => sendReminders(ctx).catch((error) => console.error("Помилка /reminders:", error)));
 bot.command("help", (ctx) => sendHelp(ctx).catch((error) => console.error("Помилка /help:", error)));
 
-// Нижня клавіатура: «🏠 Головна» — картка прогресу з будь-якого місця, без пошуку /start
-bot.hears(HOME_BUTTON, (ctx) => sendStatusCard(ctx, greetingByTime()).catch((error) => console.error("Помилка «Головна»:", error)));
-bot.hears(TOP_BUTTON, (ctx) => sendTop(ctx).catch((error) => console.error("Помилка «Топ»:", error)));
-bot.hears(HELP_BUTTON, (ctx) => sendHelp(ctx).catch((error) => console.error("Помилка «Допомога»:", error)));
+// Нижня кнопка «🏠 Головна» — картка прогресу з будь-якого місця, без пошуку /start.
+// Обидва варіанти тексту — щоб кнопка працювала і з власною іконкою, і без неї
+bot.hears(["🏠 Головна", "Головна"], (ctx) => sendStatusCard(ctx, greetingByTime()).catch((error) => console.error("Помилка «Головна»:", error)));
 
 // Кнопки під повідомленнями бота
 bot.action(/^ui:(top|invite|help|reminders|progress)$/, async (ctx) => {
