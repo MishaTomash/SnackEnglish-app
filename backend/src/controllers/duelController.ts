@@ -5,6 +5,7 @@ import { User } from "../models/User.js";
 import { Friendship } from "../models/Friendship.js";
 import { bot } from "../bot.js";
 import { createUserQuota } from "../middlewares/userRateLimit.js";
+import { withStyle } from "../services/buttonStyle.js";
 
 /** Той самий формат коду кімнати, що перевіряє сокет дуелей (duelSocketService) */
 const ROOM_CODE_PATTERN = /^[A-Za-z0-9_-]{4,40}$/;
@@ -94,7 +95,7 @@ export const inviteToDuel = async (req: Request, res: Response) => {
         {
           parse_mode: "HTML",
           reply_markup: {
-            inline_keyboard: [[{ text: "Приєднатися 🚀", web_app: { url: webAppUrl } }]],
+            inline_keyboard: [[withStyle({ text: "Приєднатися 🚀", web_app: { url: webAppUrl } }, "primary")]],
           },
         },
       );

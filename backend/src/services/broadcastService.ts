@@ -6,6 +6,7 @@ import type { QueryFilter } from "mongoose";
 import { User } from "../models/User.js";
 import type { IUser, UserEnglishLevel } from "../models/User.js";
 import { BroadcastLog } from "../models/BroadcastLog.js";
+import { withStyle } from "./buttonStyle.js";
 
 // Затримка між відправками (мс), щоб не перевищити ліміти Telegram (~30 повідомлень/с)
 const BROADCAST_DELAY_MS = 60;
@@ -99,9 +100,9 @@ const buildReplyMarkup = (button?: BroadcastButton): ReplyMarkup => {
   if (!button) return { remove_keyboard: true }; // заразом прибираємо стару reply-клавіатуру
   const appUrl = process.env.VITE_APP_URL?.trim() || "";
   if (button.openApp && appUrl) {
-    return { inline_keyboard: [[{ text: button.text, web_app: { url: appUrl } }]] };
+    return { inline_keyboard: [[withStyle({ text: button.text, web_app: { url: appUrl } }, "primary")]] };
   }
-  return { inline_keyboard: [[{ text: button.text, url: button.url || appUrl }]] };
+  return { inline_keyboard: [[withStyle({ text: button.text, url: button.url || appUrl }, "primary")]] };
 };
 
 /** Перевіряє вміст до старту; повертає текст помилки або null */

@@ -6,6 +6,7 @@ import { Friendship } from "../models/Friendship.js";
 import { bot } from "../bot.js";
 import { Markup } from "telegraf";
 import { createUserQuota } from "../middlewares/userRateLimit.js";
+import { withStyle } from "../services/buttonStyle.js";
 import { getUserPosition } from "./leaderboardController.js";
 
 // Заявки в друзі надсилають повідомлення від бота — без ліміту ними можна спамити
@@ -230,8 +231,8 @@ export const sendFriendRequest = async (req: Request, res: Response): Promise<vo
           reply_markup: {
             inline_keyboard: [
               [
-                Markup.button.callback("✅ Прийняти", `f_acc_${friendship._id}`),
-                Markup.button.callback("❌ Відхилити", `f_rej_${friendship._id}`),
+                withStyle(Markup.button.callback("✅ Прийняти", `f_acc_${friendship._id}`), "success"),
+                withStyle(Markup.button.callback("❌ Відхилити", `f_rej_${friendship._id}`), "danger"),
               ],
             ],
           },

@@ -1,6 +1,7 @@
 // 📁 Файл: SnackEnglish-app/backend/src/services/cronService.ts
 import cron from "node-cron";
 import { TelegramError } from "telegraf";
+import { withStyle } from "./buttonStyle.js";
 import type { QueryFilter, Types } from "mongoose";
 import { bot } from "../bot.js";
 import { User } from "../models/index.js";
@@ -107,7 +108,7 @@ const sendReminders = async (
   const result: ReminderResult = { sent: 0, failed: 0, stoppedByQuietHours: false };
   const appUrl = process.env.VITE_APP_URL?.trim() ?? "";
   const replyMarkup = appUrl.startsWith("https://")
-    ? { inline_keyboard: [[{ text: options.buttonText, web_app: { url: appUrl } }]] }
+    ? { inline_keyboard: [[withStyle({ text: options.buttonText, web_app: { url: appUrl } }, "primary")]] }
     : undefined;
 
   // Не пишемо: заблокованим адміном, тим, хто заблокував бота, і тим, хто вимкнув нагадування

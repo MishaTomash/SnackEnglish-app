@@ -8,6 +8,7 @@ import { bot } from "../bot.js";
 import { User } from "../models/User.js";
 import { WORDS_BY_LEVEL } from "../duels/mockWords.js"; // Беремо слова зі статичного моку
 import { getAppSettings } from "../services/settingsService.js";
+import { withStyle } from "../services/buttonStyle.js";
 
 /** Оплату вимкнено в адмінці — купувати нічого не можна, усі ігри безкоштовні */
 const paymentsDisabled = async (res: Response): Promise<boolean> => {
@@ -203,8 +204,8 @@ export const uploadPaymentReceipt = async (
       reply_markup: {
         inline_keyboard: [
           [
-            { text: "✅ Підтвердити", callback_data: `approve_${request._id}` },
-            { text: "❌ Відхилити", callback_data: `reject_${request._id}` },
+            withStyle({ text: "✅ Підтвердити", callback_data: `approve_${request._id}` }, "success"),
+            withStyle({ text: "❌ Відхилити", callback_data: `reject_${request._id}` }, "danger"),
           ],
         ],
       },

@@ -7,6 +7,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 import { Telegraf, Markup } from "telegraf";
 import type { Context } from "telegraf";
+import { withStyle } from "./services/buttonStyle.js";
 import { User } from "./models/User.js";
 import { Game } from "./models/Game.js";
 import { UserGamePurchase } from "./models/UserGamePurchase.js";
@@ -132,7 +133,7 @@ bot.start(async (ctx) => {
         {
           parse_mode: "HTML",
           ...Markup.inlineKeyboard([
-            [Markup.button.webApp("Приєднатися 🚀", webAppUrl)],
+            [withStyle(Markup.button.webApp("Приєднатися 🚀", webAppUrl), "primary")],
           ]),
         },
       );
@@ -177,7 +178,7 @@ const sendTop = async (ctx: Context): Promise<void> => {
   await ctx.reply(text, {
     parse_mode: "HTML",
     ...(hasValidAppUrl()
-      ? Markup.inlineKeyboard([[Markup.button.webApp("🏆 Відкрити рейтинг", `${getAppUrl().replace(/\/$/, "")}/leaderboard`)]])
+      ? Markup.inlineKeyboard([[withStyle(Markup.button.webApp("🏆 Відкрити рейтинг", `${getAppUrl().replace(/\/$/, "")}/leaderboard`), "primary")]])
       : {}),
   });
 };
@@ -202,7 +203,7 @@ const sendReminders = async (ctx: Context): Promise<void> => {
 const sendHelp = async (ctx: Context): Promise<void> => {
   await ctx.reply(await buildHelpText(), {
     parse_mode: "HTML",
-    ...(hasValidAppUrl() ? Markup.inlineKeyboard([[Markup.button.webApp("🚀 До уроків", getAppUrl())]]) : {}),
+    ...(hasValidAppUrl() ? Markup.inlineKeyboard([[withStyle(Markup.button.webApp("🚀 До уроків", getAppUrl()), "primary")]]) : {}),
   });
 };
 
@@ -389,14 +390,20 @@ bot.on("photo", async (ctx, next) => {
         reply_markup: {
           inline_keyboard: [
             [
-              {
-                text: "✅ Підтвердити",
-                callback_data: `approve_${targetRequest._id}`,
-              },
-              {
-                text: "❌ Відхилити",
-                callback_data: `reject_${targetRequest._id}`,
-              },
+              withStyle(
+                {
+                  text: "✅ Підтвердити",
+                  callback_data: `approve_${targetRequest._id}`,
+                },
+                "success",
+              ),
+              withStyle(
+                {
+                  text: "❌ Відхилити",
+                  callback_data: `reject_${targetRequest._id}`,
+                },
+                "danger",
+              ),
             ],
           ],
         },
@@ -544,14 +551,14 @@ bot.on("message", async (ctx, next) => {
     if ("voice" in message || "video_note" in message) {
       await ctx.reply(
         "Голосові я поки не слухаю 🙈\n\nАле в уроках є вправи «Скажи вголос» — там Снекі перевірить твою вимову! 🎤",
-        hasValidAppUrl() ? Markup.inlineKeyboard([[Markup.button.webApp("🎤 До уроків", getAppUrl())]]) : {},
+        hasValidAppUrl() ? Markup.inlineKeyboard([[withStyle(Markup.button.webApp("🎤 До уроків", getAppUrl()), "primary")]]) : {},
       );
       return;
     }
     if ("sticker" in message || "animation" in message) {
       await ctx.reply(
         "Класний стікер! 😄🍪 А тепер — маленький урок?",
-        hasValidAppUrl() ? Markup.inlineKeyboard([[Markup.button.webApp("🚀 Відкрити SnackEnglish", getAppUrl())]]) : {},
+        hasValidAppUrl() ? Markup.inlineKeyboard([[withStyle(Markup.button.webApp("🚀 Відкрити SnackEnglish", getAppUrl()), "primary")]]) : {},
       );
       return;
     }

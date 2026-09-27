@@ -12,6 +12,7 @@ import type { StreakStatus } from "./activityService.js";
 import { getAppSettings } from "./settingsService.js";
 import { ensureReferralCode, getBotUsername, getReferralStats } from "./referralService.js";
 import { GIVEAWAY_TIME_LABEL, nextGiveawayDate } from "./giveawaySchedule.js";
+import { withStyle } from "./buttonStyle.js";
 
 /**
  * Усе, що бачить юзер у чаті з ботом: тексти, кнопки, картка прогресу.
@@ -271,11 +272,14 @@ export const statusKeyboard = (s: UserSnapshot | null) => {
     if (hasValidAppUrl()) {
         rows.push([
             s?.next
-                ? appButton(`▶️ Продовжити: ${s.next.label}`.slice(0, 60), s.next.path)
-                : appButton(s?.onboardingCompleted === false ? "🚀 Почати навчання" : "🚀 Відкрити SnackEnglish"),
+                ? withStyle(appButton(`▶️ Продовжити: ${s.next.label}`.slice(0, 60), s.next.path), "primary")
+                : withStyle(
+                    appButton(s?.onboardingCompleted === false ? "🚀 Почати навчання" : "🚀 Відкрити SnackEnglish"),
+                    "primary",
+                ),
         ]);
     }
-    rows.push([Markup.button.callback("🏆 Топ тижня", "ui:top"), Markup.button.callback("🎁 Запросити друга", "ui:invite")]);
+    rows.push([Markup.button.callback("🏆 Топ тижня", "ui:top"), withStyle(Markup.button.callback("🎁 Запросити друга", "ui:invite"), "success")]);
     rows.push([Markup.button.callback("🔔 Нагадування", "ui:reminders"), Markup.button.callback("❓ Як це працює", "ui:help")]);
     return Markup.inlineKeyboard(rows);
 };
@@ -299,7 +303,7 @@ export const buildWelcomeText = (name: string, friendBonus: number | null): stri
 
 export const welcomeKeyboard = () =>
     Markup.inlineKeyboard([
-        ...(hasValidAppUrl() ? [[appButton("🚀 Почати перший урок")]] : []),
+        ...(hasValidAppUrl() ? [[withStyle(appButton("🚀 Почати перший урок"), "primary")]] : []),
         [Markup.button.callback("❓ Як це працює", "ui:help")],
     ]);
 
@@ -392,7 +396,7 @@ export const buildInvite = async (telegramId: number) => {
         stats.invited > 0 ? `\nЗапрошено: <b>${stats.invited}</b> · бонус отримано: <b>${stats.rewarded}</b>` : "",
     ].join("\n");
 
-    return { text, keyboard: Markup.inlineKeyboard([[Markup.button.url("📤 Надіслати друзям", shareUrl)]]) };
+    return { text, keyboard: Markup.inlineKeyboard([[withStyle(Markup.button.url("📤 Надіслати друзям", shareUrl), "success")]]) };
 };
 
 /** Нагадування /reminders */
@@ -403,7 +407,7 @@ export const buildRemindersText = (enabled: boolean): string =>
 
 export const remindersKeyboard = (enabled: boolean) =>
     Markup.inlineKeyboard([
-        [enabled ? Markup.button.callback("🔕 Вимкнути нагадування", "ui:remind_off") : Markup.button.callback("🔔 Увімкнути нагадування", "ui:remind_on")],
+        [enabled ? Markup.button.callback("🔕 Вимкнути нагадування", "ui:remind_off") : withStyle(Markup.button.callback("🔔 Увімкнути нагадування", "ui:remind_on"), "success")],
     ]);
 
 // ==================== ПРОФІЛЬ БОТА ====================
