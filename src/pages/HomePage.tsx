@@ -167,7 +167,7 @@ export const HomePage = () => {
       </Link>
 
       {/* Сітка статистики — внизу */}
-      <div className="grid grid-cols-3 gap-3 pt-2">
+      <div className="grid grid-cols-3 gap-3 pt-2 h-fit content-start">
         <Card className="flex flex-col items-center justify-center text-center gap-2 p-3.5 h-full">
           <div className="w-8 h-8 rounded-xl bg-[var(--accent-cta)]/15 text-[var(--accent-cta)] flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
