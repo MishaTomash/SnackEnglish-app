@@ -236,13 +236,12 @@ export function stopSpeaking(): void {
  * пристроях. Немає файлу (гра, нова фраза) — голос телефона, як раніше.
  */
 
-const MAX_PRELOADED_CLIPS = 40;
+const MAX_PRELOADED_CLIPS = 150;
 const CLIP_TIMEOUT_MS = 20000;
 
 const lessonAudio = new Map<string, string>();
 /** Та сама озвучка, проіндексована «вільним» ключем (див. looseKey) */
 const lessonAudioLoose = new Map<string, string>();
-const clipElements = new Map<string, HTMLAudioElement>();
 
 /*
  * ОДИН спільний плеєр для всіх фраз уроку.
@@ -255,7 +254,7 @@ const clipElements = new Map<string, HTMLAudioElement>();
  *
  * Тепер усі фрази грають через один елемент, який розблоковується першим дотиком
  * до екрана (тихий звук), — і далі може грати будь-яку фразу без тапу.
- * clipElements лишаються лише для попереднього завантаження файлів у кеш.
+ * Файли заздалегідь завантажуються в пам'ять (див. preloadClips).
  */
 let sharedPlayer: HTMLAudioElement | null = null;
 let playerUnlocked = false;
@@ -328,31 +327,72 @@ const looseKey = (raw: string): string =>
 /** Текст для голосу телефона: без розмітки <en>…</en> */
 const plainText = (raw: string): string => raw.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
+/*
+ * Попереднє завантаження файлів уроку В ПАМ'ЯТЬ (blob), по черзі й у порядку уроку.
+ *
+ * Раніше одразу створювалося до 40 елементів <audio>: вони качали файли одночасно,
+ * і перша репліка чекала в загальній черзі кілька секунд (а на iOS такі елементи
+ * часто взагалі нічого не завантажують). Тепер: кілька потоків, перші репліки — першими,
+ * готовий файл грає з пам'яті миттєво. Поки файл не завантажився — грає з мережі.
+ */
+const PRELOAD_CONCURRENCY = 3;
+const clipBlobs = new Map<string, string>(); // адреса файлу → blob: URL
+let preloadAbort: AbortController | null = null;
+
+function stopPreloading(): void {
+  preloadAbort?.abort();
+  preloadAbort = null;
+  clipBlobs.forEach((blobUrl) => URL.revokeObjectURL(blobUrl));
+  clipBlobs.clear();
+}
+
+function preloadClips(urls: string[]): void {
+  if (typeof fetch === "undefined" || typeof URL.createObjectURL !== "function") return;
+  const controller = new AbortController();
+  preloadAbort = controller;
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < urls.length && !controller.signal.aborted) {
+      const url = urls[next++];
+      if (clipBlobs.has(url)) continue;
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) continue;
+        const blob = await response.blob();
+        if (controller.signal.aborted) return;
+        clipBlobs.set(url, URL.createObjectURL(blob));
+      } catch {
+        if (controller.signal.aborted) return; // вийшли з уроку — нормально
+        // інша помилка (мережа) — цей файл просто гратиме з мережі
+      }
+    }
+  };
+  for (let i = 0; i < PRELOAD_CONCURRENCY; i += 1) void worker();
+}
+
 /** Реєструє озвучку уроку й заздалегідь підвантажує файли, щоб звук вмикався миттєво */
 export function setLessonAudio(map: Record<string, string>): void {
+  stopPreloading();
   lessonAudio.clear();
   lessonAudioLoose.clear();
-  clipElements.clear();
-  Object.entries(map).forEach(([key, url], index) => {
+  const urls: string[] = [];
+  // Порядок ключів — порядок фраз в уроці: перші репліки завантажуються першими
+  Object.entries(map).forEach(([key, url]) => {
     const resolved = resolveMediaUrl(url);
     if (!resolved) return;
     lessonAudio.set(key, resolved);
     lessonAudioLoose.set(looseKey(key), resolved);
-    if (index < MAX_PRELOADED_CLIPS && typeof Audio !== "undefined") {
-      const audio = new Audio();
-      audio.preload = "auto";
-      audio.src = resolved;
-      clipElements.set(resolved, audio);
-    }
+    if (!urls.includes(resolved) && urls.length < MAX_PRELOADED_CLIPS) urls.push(resolved);
   });
+  preloadClips(urls);
 }
 
 /** Прибирає озвучку уроку (вихід з уроку) */
 export function clearLessonAudio(): void {
   stopClip();
+  stopPreloading();
   lessonAudio.clear();
   lessonAudioLoose.clear();
-  clipElements.clear();
 }
 
 /** Чи є готове аудіо для фрази */
@@ -401,8 +441,9 @@ function playClip(url: string, fallback: () => Promise<void>, rate?: number): Pr
   settleCurrentSpeech?.();
   if (isSynthesisSupported()) window.speechSynthesis.cancel();
 
-  const audio = getPlayer() ?? new Audio(url);
-  if (audio.src !== url) audio.src = url;
+  const source = clipBlobs.get(url) ?? url; // з пам'яті — миттєво, інакше з мережі
+  const audio = getPlayer() ?? new Audio(source);
+  if (audio.src !== source) audio.src = source;
   audio.currentTime = 0;
   // Уповільнення без "басу": тембр зберігається (preservesPitch — типово true, ставимо явно)
   audio.preservesPitch = true;
