@@ -7,6 +7,7 @@ import { User } from "../models/User.js";
 import type { IUser, UserEnglishLevel } from "../models/User.js";
 import { BroadcastLog } from "../models/BroadcastLog.js";
 import { withStyle } from "./buttonStyle.js";
+import { HOME_KEYBOARD } from "./richMessage.js";
 
 // Затримка між відправками (мс), щоб не перевищити ліміти Telegram (~30 повідомлень/с)
 const BROADCAST_DELAY_MS = 60;
@@ -94,10 +95,11 @@ export interface BroadcastContent {
   button?: BroadcastButton;
 }
 
-type ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardRemove;
+type ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardRemove | typeof HOME_KEYBOARD;
 
 const buildReplyMarkup = (button?: BroadcastButton): ReplyMarkup => {
-  if (!button) return { remove_keyboard: true }; // заразом прибираємо стару reply-клавіатуру
+  // Без кнопки — ставимо нижню клавіатуру «Головна» (заразом замінює стару клавіатуру старого бота)
+  if (!button) return HOME_KEYBOARD;
   const appUrl = process.env.VITE_APP_URL?.trim() || "";
   if (button.openApp && appUrl) {
     return { inline_keyboard: [[withStyle({ text: button.text, web_app: { url: appUrl } }, "primary")]] };
@@ -326,7 +328,7 @@ export const broadcastMessage = (
   runBroadcast(
     (telegramId) =>
       telegram.copyMessage(telegramId, fromChatId, messageId, {
-        reply_markup: { remove_keyboard: true },
+        reply_markup: HOME_KEYBOARD,
       }),
     { kind: "copy", audience: { type: "all" }, textPreview: "(копія повідомлення з чату)", buttonText: null },
   );

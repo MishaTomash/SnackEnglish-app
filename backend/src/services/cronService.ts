@@ -2,6 +2,9 @@
 import cron from "node-cron";
 import { TelegramError } from "telegraf";
 import { withStyle } from "./buttonStyle.js";
+import { sendRich } from "./richMessage.js";
+const escapeHtml = (value: string): string =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 import type { QueryFilter, Types } from "mongoose";
 import { bot } from "../bot.js";
 import { User } from "../models/index.js";
@@ -107,9 +110,9 @@ const sendReminders = async (
 ): Promise<ReminderResult> => {
   const result: ReminderResult = { sent: 0, failed: 0, stoppedByQuietHours: false };
   const appUrl = process.env.VITE_APP_URL?.trim() ?? "";
-  const replyMarkup = appUrl.startsWith("https://")
-    ? { inline_keyboard: [[withStyle({ text: options.buttonText, web_app: { url: appUrl } }, "primary")]] }
-    : undefined;
+  const rows = appUrl.startsWith("https://")
+    ? [[withStyle({ text: options.buttonText, web_app: { url: appUrl } }, "primary")]]
+    : [];
 
   // Не пишемо: заблокованим адміном, тим, хто заблокував бота, і тим, хто вимкнув нагадування
   const conditions: QueryFilter<IUser>[] = [
@@ -138,7 +141,7 @@ const sendReminders = async (
 
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        await bot.telegram.sendMessage(user.telegramId, text, replyMarkup ? { reply_markup: replyMarkup } : {});
+        await sendRich(bot.telegram, user.telegramId, { html: escapeHtml(text), rows, home: true });
         await User.updateOne({ _id: user._id }, { $set: { lastReminderAt: new Date() } });
         result.sent += 1;
         break;

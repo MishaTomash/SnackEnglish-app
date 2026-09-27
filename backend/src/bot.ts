@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 import { Telegraf, Markup } from "telegraf";
 import type { Context } from "telegraf";
 import { withStyle } from "./services/buttonStyle.js";
-import { sendRichMessage } from "./services/richMessage.js";
+import { editRich, HELP_BUTTON, HOME_BUTTON, HOME_KEYBOARD, sendRich, sendRichMessage, TOP_BUTTON } from "./services/richMessage.js";
 import { User } from "./models/User.js";
 import { Game } from "./models/Game.js";
 import { UserGamePurchase } from "./models/UserGamePurchase.js";
@@ -69,7 +69,7 @@ const sendStatusCard = async (ctx: Context, greeting: string, footer = ""): Prom
     return;
   }
   try {
-    await sendRichMessage(ctx.telegram, ctx.chat.id, buildStatusRich(snapshot, greeting, footer));
+    await sendRichMessage(ctx.telegram, ctx.chat.id, buildStatusRich(snapshot, greeting, footer), HOME_KEYBOARD);
     return;
   } catch (error) {
     console.error("[bot] Rich-картку не надіслано, шлю звичайну:", error instanceof Error ? error.message : error);
@@ -80,15 +80,13 @@ const sendStatusCard = async (ctx: Context, greeting: string, footer = ""): Prom
 
 /** Привітання новачка — з картинкою, якщо її задано в адмінці */
 const sendWelcome = async (ctx: Context, text: string, imageUrl: string): Promise<void> => {
-  if (imageUrl) {
-    try {
-      await ctx.replyWithPhoto(imageUrl, { caption: text, parse_mode: "HTML", ...welcomeKeyboard() });
-      return;
-    } catch (error) {
-      console.error("[bot] Картинку привітання не надіслано, шлю текст:", error instanceof Error ? error.message : error);
-    }
-  }
-  await ctx.reply(text, { parse_mode: "HTML", ...welcomeKeyboard() });
+  if (!ctx.chat) return;
+  await sendRich(ctx.telegram, ctx.chat.id, {
+    html: text,
+    photo: imageUrl || undefined,
+    rows: welcomeKeyboard().reply_markup.inline_keyboard,
+    home: true,
+  });
 };
 
 bot.start(async (ctx) => {
@@ -142,15 +140,11 @@ bot.start(async (ctx) => {
       const roomId = payload.replace("duel_", "");
       const webAppUrl = `${appUrl}?startapp=duel_${roomId}`;
 
-      await ctx.reply(
-        `⚔️ <b>${escapeHtml(telegramUser.first_name)}</b>, тебе викликали на дуель!\n\nТицяй кнопку нижче, щоб приєднатися та показати свої знання:`,
-        {
-          parse_mode: "HTML",
-          ...Markup.inlineKeyboard([
-            [withStyle(Markup.button.webApp("Приєднатися 🚀", webAppUrl), "primary")],
-          ]),
-        },
-      );
+      await sendRich(ctx.telegram, ctx.chat.id, {
+        html: `⚔️ <b>${escapeHtml(telegramUser.first_name)}</b>, тебе викликали на дуель!\n\nТицяй кнопку нижче, щоб приєднатися та показати свої знання:`,
+        rows: [[withStyle(Markup.button.webApp("Приєднатися 🚀", webAppUrl), "primary")]],
+        home: true,
+      });
       return;
     }
 
@@ -188,12 +182,14 @@ bot.command(["progress", "profile"], async (ctx) => {
 
 const sendTop = async (ctx: Context): Promise<void> => {
   if (!ctx.from) return;
+  if (!ctx.chat) return;
   const text = await buildTopText(ctx.from.id);
-  await ctx.reply(text, {
-    parse_mode: "HTML",
-    ...(hasValidAppUrl()
-      ? Markup.inlineKeyboard([[withStyle(Markup.button.webApp("🏆 Відкрити рейтинг", `${getAppUrl().replace(/\/$/, "")}/leaderboard`), "primary")]])
-      : {}),
+  await sendRich(ctx.telegram, ctx.chat.id, {
+    html: text,
+    rows: hasValidAppUrl()
+      ? [[withStyle(Markup.button.webApp("🏆 Відкрити рейтинг", `${getAppUrl().replace(/\/$/, "")}/leaderboard`), "primary")]]
+      : [],
+    home: true,
   });
 };
 
@@ -204,20 +200,28 @@ const sendInvite = async (ctx: Context): Promise<void> => {
     await ctx.reply("Натисни /start, щоб почати 🍪");
     return;
   }
-  await ctx.reply(invite.text, { parse_mode: "HTML", ...invite.keyboard });
+  if (!ctx.chat) return;
+  await sendRich(ctx.telegram, ctx.chat.id, { html: invite.text, rows: invite.keyboard.reply_markup.inline_keyboard, home: true });
 };
 
 const sendReminders = async (ctx: Context): Promise<void> => {
   if (!ctx.from) return;
   const user = await User.findOne({ telegramId: ctx.from.id }).select("remindersEnabled").lean<{ remindersEnabled?: boolean }>();
   const enabled = user?.remindersEnabled !== false;
-  await ctx.reply(buildRemindersText(enabled), { parse_mode: "HTML", ...remindersKeyboard(enabled) });
+  if (!ctx.chat) return;
+  await sendRich(ctx.telegram, ctx.chat.id, {
+    html: buildRemindersText(enabled),
+    rows: remindersKeyboard(enabled).reply_markup.inline_keyboard,
+    home: true,
+  });
 };
 
 const sendHelp = async (ctx: Context): Promise<void> => {
-  await ctx.reply(await buildHelpText(), {
-    parse_mode: "HTML",
-    ...(hasValidAppUrl() ? Markup.inlineKeyboard([[withStyle(Markup.button.webApp("🚀 До уроків", getAppUrl()), "primary")]]) : {}),
+  if (!ctx.chat) return;
+  await sendRich(ctx.telegram, ctx.chat.id, {
+    html: await buildHelpText(),
+    rows: hasValidAppUrl() ? [[withStyle(Markup.button.webApp("🚀 До уроків", getAppUrl()), "primary")]] : [],
+    home: true,
   });
 };
 
@@ -225,6 +229,11 @@ bot.command("top", (ctx) => sendTop(ctx).catch((error) => console.error("Пом�
 bot.command("invite", (ctx) => sendInvite(ctx).catch((error) => console.error("Помилка /invite:", error)));
 bot.command("reminders", (ctx) => sendReminders(ctx).catch((error) => console.error("Помилка /reminders:", error)));
 bot.command("help", (ctx) => sendHelp(ctx).catch((error) => console.error("Помилка /help:", error)));
+
+// Нижня клавіатура: «🏠 Головна» — картка прогресу з будь-якого місця, без пошуку /start
+bot.hears(HOME_BUTTON, (ctx) => sendStatusCard(ctx, greetingByTime()).catch((error) => console.error("Помилка «Головна»:", error)));
+bot.hears(TOP_BUTTON, (ctx) => sendTop(ctx).catch((error) => console.error("Помилка «Топ»:", error)));
+bot.hears(HELP_BUTTON, (ctx) => sendHelp(ctx).catch((error) => console.error("Помилка «Допомога»:", error)));
 
 // Кнопки під повідомленнями бота
 bot.action(/^ui:(top|invite|help|reminders|progress)$/, async (ctx) => {
@@ -247,7 +256,13 @@ bot.action(/^ui:remind_(on|off)$/, async (ctx) => {
     const enabled = ctx.match[1] === "on";
     await User.updateOne({ telegramId: ctx.from?.id }, { $set: { remindersEnabled: enabled } });
     await ctx.answerCbQuery(enabled ? "Нагадування увімкнено 🔔" : "Нагадування вимкнено 🔕");
-    await ctx.editMessageText(buildRemindersText(enabled), { parse_mode: "HTML", ...remindersKeyboard(enabled) });
+    const messageId = ctx.callbackQuery?.message?.message_id;
+    if (ctx.chat && messageId) {
+      await editRich(ctx.telegram, ctx.chat.id, messageId, {
+        html: buildRemindersText(enabled),
+        rows: remindersKeyboard(enabled).reply_markup.inline_keyboard,
+      });
+    }
   } catch (error) {
     console.error("Помилка перемикання нагадувань:", error);
   }
@@ -486,6 +501,12 @@ bot.action(/^(approve|reject)_(.+)$/, async (ctx) => {
   }
 });
 
+/** Замінює заявку в друзі на результат (кнопки прибираються) */
+const editFriendRequest = async (ctx: Context, html: string): Promise<void> => {
+  const messageId = ctx.callbackQuery?.message?.message_id;
+  if (ctx.chat && messageId) await editRich(ctx.telegram, ctx.chat.id, messageId, { html });
+};
+
 bot.action(/^f_(acc|rej)_(.+)$/, async (ctx) => {
   try {
     const action = ctx.match[1];
@@ -532,21 +553,14 @@ bot.action(/^f_(acc|rej)_(.+)$/, async (ctx) => {
     if (action === "acc") {
       friendship.status = "accepted";
       await friendship.save();
-      await ctx.editMessageText(`✅ Ви додали <b>${reqSafeName}</b> у друзі!`, {
-        parse_mode: "HTML",
-      });
+      await editFriendRequest(ctx, `✅ Ви додали <b>${reqSafeName}</b> у друзі!`);
 
-      await ctx.telegram.sendMessage(
-        requester.telegramId,
-        `🎉 <b>${mySafeName}</b> прийняв(ла) вашу заявку в друзі!`,
-        { parse_mode: "HTML" },
-      );
+      await sendRich(ctx.telegram, requester.telegramId, {
+        html: `🎉 <b>${mySafeName}</b> прийняв(ла) вашу заявку в друзі!`,
+      });
     } else {
       await friendship.deleteOne();
-      await ctx.editMessageText(
-        `❌ Ви відхилили заявку від <b>${reqSafeName}</b>.`,
-        { parse_mode: "HTML" },
-      );
+      await editFriendRequest(ctx, `❌ Ви відхилили заявку від <b>${reqSafeName}</b>.`);
     }
 
     await ctx.answerCbQuery();
@@ -563,17 +577,19 @@ bot.on("message", async (ctx, next) => {
 
   try {
     if ("voice" in message || "video_note" in message) {
-      await ctx.reply(
-        "Голосові я поки не слухаю 🙈\n\nАле в уроках є вправи «Скажи вголос» — там Снекі перевірить твою вимову! 🎤",
-        hasValidAppUrl() ? Markup.inlineKeyboard([[withStyle(Markup.button.webApp("🎤 До уроків", getAppUrl()), "primary")]]) : {},
-      );
+      await sendRich(ctx.telegram, ctx.chat.id, {
+        html: "Голосові я поки не слухаю 🙈\n\nАле в уроках є вправи «Скажи вголос» — там Снекі перевірить твою вимову! 🎤",
+        rows: hasValidAppUrl() ? [[withStyle(Markup.button.webApp("🎤 До уроків", getAppUrl()), "primary")]] : [],
+        home: true,
+      });
       return;
     }
     if ("sticker" in message || "animation" in message) {
-      await ctx.reply(
-        "Класний стікер! 😄🍪 А тепер — маленький урок?",
-        hasValidAppUrl() ? Markup.inlineKeyboard([[withStyle(Markup.button.webApp("🚀 Відкрити SnackEnglish", getAppUrl()), "primary")]]) : {},
-      );
+      await sendRich(ctx.telegram, ctx.chat.id, {
+        html: "Класний стікер! 😄🍪 А тепер — маленький урок?",
+        rows: hasValidAppUrl() ? [[withStyle(Markup.button.webApp("🚀 Відкрити SnackEnglish", getAppUrl()), "primary")]] : [],
+        home: true,
+      });
       return;
     }
     if ("text" in message) {

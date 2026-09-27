@@ -7,6 +7,7 @@ import { bot } from "../bot.js";
 import { Markup } from "telegraf";
 import { createUserQuota } from "../middlewares/userRateLimit.js";
 import { withStyle } from "../services/buttonStyle.js";
+import { sendRich } from "../services/richMessage.js";
 import { getUserPosition } from "./leaderboardController.js";
 
 // Заявки в друзі надсилають повідомлення від бота — без ліміту ними можна спамити
@@ -223,21 +224,16 @@ export const sendFriendRequest = async (req: Request, res: Response): Promise<vo
         : tgFirstName || tgUsername || `ID: ${currentUser.telegramId}`;
 
     try {
-      await bot.telegram.sendMessage(
-        targetUser.telegramId,
-        `🍪 <b>${escapeHtml(senderName)}</b> хоче додати тебе в друзі!`,
-        {
-          parse_mode: "HTML",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                withStyle(Markup.button.callback("✅ Прийняти", `f_acc_${friendship._id}`), "success"),
-                withStyle(Markup.button.callback("❌ Відхилити", `f_rej_${friendship._id}`), "danger"),
-              ],
-            ],
-          },
-        },
-      );
+      await sendRich(bot.telegram, targetUser.telegramId, {
+        html: `🍪 <b>${escapeHtml(senderName)}</b> хоче додати тебе в друзі!`,
+        rows: [
+          [
+            withStyle(Markup.button.callback("✅ Прийняти", `f_acc_${friendship._id}`), "success"),
+            withStyle(Markup.button.callback("❌ Відхилити", `f_rej_${friendship._id}`), "danger"),
+          ],
+        ],
+        home: true,
+      });
     } catch {
       // Юзер міг заблокувати бота — заявка однаково видна в застосунку
     }
