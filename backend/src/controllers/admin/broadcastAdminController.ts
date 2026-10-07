@@ -14,6 +14,7 @@ import {
     validateContent,
 } from "../../services/broadcastService.js";
 import type { BroadcastContent } from "../../services/broadcastService.js";
+import { getAppSettings } from "../../services/settingsService.js";
 import { logAdminError, sendError } from "./adminHelpers.js";
 
 // Фото для розсилки — лише в пам'яті, у Telegram завантажується один раз
@@ -44,14 +45,31 @@ const readForm = (req: Request) => {
     const buttonText = typeof body.buttonText === "string" ? body.buttonText.trim() : "";
     const buttonUrl = typeof body.buttonUrl === "string" ? body.buttonUrl.trim() : "";
     const openApp = body.buttonOpenApp === "true" || body.buttonOpenApp === true;
+    const support = body.buttonSupport === "true" || body.buttonSupport === true;
 
     const content: BroadcastContent = {
         text,
         photo: req.file ? { buffer: req.file.buffer, filename: req.file.originalname || "photo.jpg" } : undefined,
-        button: buttonText ? { text: buttonText, url: buttonUrl || undefined, openApp } : undefined,
+        button: buttonText
+            ? support
+                ? { text: buttonText, support: true }
+                : { text: buttonText, url: buttonUrl || undefined, openApp }
+            : undefined,
     };
     const audience = parseAudience(body.audienceType, body.level);
     return { content, audience };
+};
+
+/**
+ * Кнопка «Підтримати» веде на ту саму банку, що й кнопка в застосунку (Налаштування → Підтримка).
+ * Повертає текст помилки, якщо посилання на банку не задано.
+ */
+const resolveSupportButton = async (content: BroadcastContent): Promise<string | null> => {
+    if (!content.button?.support) return null;
+    const settings = await getAppSettings();
+    if (!settings.supportUrl) return "Спершу вкажи посилання на банку: Налаштування → Підтримка";
+    content.button.url = settings.supportUrl;
+    return null;
 };
 
 // POST /api/admin/broadcast/estimate  { audienceType, level }
@@ -73,7 +91,7 @@ export const testBroadcast = async (req: Request, res: Response): Promise<void> 
         if (!adminId) return sendError(res, 503, "VITE_ADMIN_ID не задано");
 
         const { content } = readForm(req);
-        const invalid = validateContent(content);
+        const invalid = (await resolveSupportButton(content)) ?? validateContent(content);
         if (invalid) return sendError(res, 400, invalid);
 
         try {
@@ -96,7 +114,7 @@ export const startBroadcastHandler = async (req: Request, res: Response): Promis
 
         const { content, audience } = readForm(req);
         if (!audience) return sendError(res, 400, "Невідома аудиторія");
-        const invalid = validateContent(content);
+        const invalid = (await resolveSupportButton(content)) ?? validateContent(content);
         if (invalid) return sendError(res, 400, invalid);
 
         const count = await countAudience(audience);

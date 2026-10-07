@@ -1,7 +1,7 @@
 // 📁 Файл: SnackEnglish-app/src/features/admin-panel/ui/BroadcastTab.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FC } from "react";
-import { ImagePlus, Send, Square, TestTube2, Trash2 } from "lucide-react";
+import { Heart, ImagePlus, Send, Square, TestTube2, Trash2 } from "lucide-react";
 import { adminApi, getErrorMessage } from "../api";
 import type { AudienceType, BroadcastForm, BroadcastProgress } from "../api";
 import { useAdminQuery } from "../lib/useAdminQuery";
@@ -68,11 +68,17 @@ const EMPTY_FORM: BroadcastForm = {
     buttonText: "",
     buttonUrl: "",
     buttonOpenApp: true,
+    buttonSupport: false,
     audienceType: "all",
     level: "A1",
 };
 
-type ButtonMode = "none" | "app" | "link";
+type ButtonMode = "none" | "app" | "link" | "support";
+
+const SUPPORT_BUTTON_TEXT = "💛 Підтримати";
+
+const escapeHtml = (value: string): string =>
+    value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export const BroadcastTab: FC = () => {
     const [form, setForm] = useState<BroadcastForm>(EMPTY_FORM);
@@ -84,6 +90,10 @@ export const BroadcastTab: FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const history = useAdminQuery(() => adminApi.broadcastHistory(), []);
+    // Заголовок, текст і посилання блоку «Підтримати» — ті самі, що в застосунку
+    const settings = useAdminQuery(() => adminApi.settings(), []);
+    const supportSettings = settings.data?.settings ?? null;
+    const supportUrlMissing = Boolean(supportSettings && !supportSettings.supportUrl);
 
     const photoPreview = useMemo(() => (form.photo ? URL.createObjectURL(form.photo) : null), [form.photo]);
     useEffect(() => () => {
@@ -131,10 +141,29 @@ export const BroadcastTab: FC = () => {
 
     const update = (patch: Partial<BroadcastForm>) => setForm((prev) => ({ ...prev, ...patch }));
 
+    const changeButtonMode = (mode: ButtonMode) => {
+        setButtonMode(mode);
+        // Для «Підтримати» одразу ставимо звичний текст кнопки, якщо поле порожнє
+        if (mode === "support" && !form.buttonText.trim()) update({ buttonText: SUPPORT_BUTTON_TEXT });
+    };
+
+    /** Підставляє в розсилку заголовок і текст блоку «Підтримати» з налаштувань */
+    const fillSupportTemplate = () => {
+        if (!supportSettings) return;
+        const title = escapeHtml(supportSettings.supportTitle.trim());
+        const body = escapeHtml(supportSettings.supportText.trim());
+        update({
+            text: [title ? `<b>${title}</b>` : "", body].filter(Boolean).join("\n\n"),
+            buttonText: form.buttonText.trim() || SUPPORT_BUTTON_TEXT,
+        });
+        setButtonMode("support");
+    };
+
     const effectiveForm: BroadcastForm = {
         ...form,
         buttonText: buttonMode === "none" ? "" : form.buttonText,
         buttonOpenApp: buttonMode === "app",
+        buttonSupport: buttonMode === "support",
         buttonUrl: buttonMode === "link" ? form.buttonUrl : "",
     };
 
@@ -143,7 +172,9 @@ export const BroadcastTab: FC = () => {
     const hasContent = Boolean(form.text.trim() || form.photo);
     const buttonInvalid =
         buttonMode !== "none" &&
-        (!form.buttonText.trim() || (buttonMode === "link" && !/^https:\/\/\S+$/i.test(form.buttonUrl.trim())));
+        (!form.buttonText.trim() ||
+            (buttonMode === "link" && !/^https:\/\/\S+$/i.test(form.buttonUrl.trim())) ||
+            (buttonMode === "support" && supportUrlMissing));
     const canSend = hasContent && !tooLong && !buttonInvalid;
     const isRunning = Boolean(progress?.running);
 
@@ -169,6 +200,7 @@ export const BroadcastTab: FC = () => {
             const total = await adminApi.broadcastStart(effectiveForm);
             setNotice({ kind: "success", text: `Розсилку запущено: ${formatNumber(total)} юзерів` });
             setForm(EMPTY_FORM);
+            setButtonMode("app");
             setProgress(await adminApi.broadcastStatus());
         } catch (error) {
             setNotice({ kind: "error", text: getErrorMessage(error) });
@@ -222,6 +254,9 @@ export const BroadcastTab: FC = () => {
 
             <Section title="Нова розсилка">
                 <div className="space-y-3">
+                    <AdminButton variant="secondary" className="w-full" disabled={!supportSettings} onClick={fillSupportTemplate}>
+                        <Heart className="h-4 w-4" aria-hidden="true" /> Шаблон «Підтримати Снекі»
+                    </AdminButton>
                     <div>
                         <textarea
                             value={form.text}
@@ -267,9 +302,10 @@ export const BroadcastTab: FC = () => {
                         <p className="mb-1.5 text-xs font-semibold text-[var(--text-muted)]">Кнопка під повідомленням</p>
                         <Segmented<ButtonMode>
                             value={buttonMode}
-                            onChange={setButtonMode}
+                            onChange={changeButtonMode}
                             options={[
                                 { value: "app", label: "Відкрити застосунок" },
+                                { value: "support", label: "Підтримати" },
                                 { value: "link", label: "Посилання" },
                                 { value: "none", label: "Без кнопки" },
                             ]}
@@ -284,6 +320,13 @@ export const BroadcastTab: FC = () => {
                                     className={fieldClass}
                                     aria-label="Текст кнопки"
                                 />
+                                {buttonMode === "support" && (
+                                    <p className={`self-center text-[11px] ${supportUrlMissing ? "text-[var(--accent-error)]" : "text-[var(--text-muted)]"}`}>
+                                        {supportUrlMissing
+                                            ? "Посилання на банку не задано — заповни його в Налаштуваннях → Підтримка"
+                                            : "Веде на банку з Налаштувань → Підтримка, як кнопка в застосунку"}
+                                    </p>
+                                )}
                                 {buttonMode === "link" && (
                                     <input
                                         value={form.buttonUrl}

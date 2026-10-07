@@ -86,6 +86,8 @@ export interface BroadcastButton {
   url?: string;
   /** Кнопка, що відкриває застосунок (VITE_APP_URL) */
   openApp?: boolean;
+  /** Кнопка «Підтримати»: посилання на банку з налаштувань (url підставляє контролер) */
+  support?: boolean;
 }
 
 export interface BroadcastContent {
@@ -103,6 +105,9 @@ const buildReplyMarkup = (button?: BroadcastButton): ReplyMarkup => {
   const appUrl = process.env.VITE_APP_URL?.trim() || "";
   if (button.openApp && appUrl) {
     return { inline_keyboard: [[withStyle({ text: button.text, web_app: { url: appUrl } }, "primary")]] };
+  }
+  if (button.support && button.url) {
+    return { inline_keyboard: [[withStyle({ text: button.text, url: button.url }, "success")]] };
   }
   return { inline_keyboard: [[withStyle({ text: button.text, url: button.url || appUrl }, "primary")]] };
 };

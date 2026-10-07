@@ -333,7 +333,7 @@ export const buildWelcomeText = (name: string, friendBonus: number | null): stri
         "📖 Уроки-історії по 5 хвилин",
         "🎧 Живі голоси й вправи на вимову",
         "🎮 Ігри та ⚔️ дуелі з друзями",
-        "🏆 Рейтинг тижня й розіграш призів",
+        "🏆 Щотижневе змагання в рейтингу",
         ...(friendBonus ? ["", `🎁 Тебе запросив друг! Пройди перший урок — і ви обидва отримаєте <b>+${friendBonus} 🏆</b>.`] : []),
         "",
         "Натискай кнопку — перший урок займе 2 хвилини 👇",
@@ -383,7 +383,7 @@ export const buildTopText = async (telegramId: number): Promise<string> => {
         .limit(10)
         .lean<{ telegramId: number; username?: string | null; telegramFirstName?: string | null; weeklyScore: number }[]>();
 
-    const lines = [`🏆 <b>Рейтинг тижня</b>`, `<i>До розіграшу: ${timeUntilGiveaway()}</i>`, ""];
+    const lines = [`🏆 <b>Рейтинг тижня</b>`, `<i>До кінця тижня: ${timeUntilGiveaway()}</i>`, ""];
     if (top.length === 0) {
         lines.push("Цього тижня ще ніхто не набрав кубків — стань першим! 🚀");
     } else {
@@ -403,7 +403,7 @@ export const buildTopText = async (telegramId: number): Promise<string> => {
                 : "Тебе ще немає в рейтингу — пройди урок, і ти в таблиці!",
         );
     }
-    lines.push("", `Топ-3 щонеділі о ${GIVEAWAY_TIME_LABEL} отримують призи 🎁`);
+    lines.push("", `Щонеділі о ${GIVEAWAY_TIME_LABEL} топ-3 стають переможцями тижня й потрапляють в історію 🏅`);
     return lines.join("\n");
 };
 
@@ -458,7 +458,7 @@ const DESCRIPTION = [
     "📖 Уроки-історії по 5 хвилин — англійська як пригода",
     "🎧 Живі голоси й вправи на вимову",
     "🎮 Ігри та ⚔️ дуелі з друзями",
-    "🔥 Серія днів і 🏆 рейтинг тижня з призами",
+    "🔥 Серія днів і 🏆 щотижневе змагання",
     "",
     "Натискай «Почати» — перший урок займе 2 хвилини!",
 ].join("\n");

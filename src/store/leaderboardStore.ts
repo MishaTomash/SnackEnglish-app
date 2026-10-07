@@ -78,7 +78,7 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
       await get().fetchGiveawayHistory();
     } catch (error: unknown) {
       console.error(error);
-      throw new Error("Помилка при завершенні розіграшу");
+      throw new Error("Помилка при завершенні змагання");
     }
   },
 }));
