@@ -150,9 +150,17 @@ async function bootstrap(): Promise<void> {
       initCronJobs();
     }
 
-    void bot.launch(() => {
-      console.log("Telegram bot is running.");
-    });
+    // Якщо polling зупинився (необроблена помилка, 409 Conflict, мережа) — процес живий,
+    // але бот "мертвий". Виходимо, щоб pm2 перезапустив сервер разом із ботом.
+    bot
+      .launch(() => {
+        console.log("Telegram bot is running.");
+      })
+      .catch((error: unknown) => {
+        console.error("[bot] Long polling зупинився:", error);
+        notifyAdmin("🔥 Бот перестав приймати оновлення — перезапуск", error);
+        setTimeout(() => process.exit(1), 1500);
+      });
 
     const server = http.createServer(app);
     initDuelSocketService(server);

@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 // Гарантоване завантаження .env файлу з поточної робочої директорії
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-import { Telegraf, Markup } from "telegraf";
+import { Telegraf, Markup, TelegramError } from "telegraf";
 import type { Context } from "telegraf";
 import { withStyle } from "./services/buttonStyle.js";
 import { editRich, HOME_KEYBOARD, sendRich, sendRichMessage } from "./services/richMessage.js";
@@ -17,6 +17,7 @@ import { Friendship } from "./models/Friendship.js";
 import { broadcastMessage, isBroadcastRunning } from "./services/broadcastService.js";
 import { getAppSettings } from "./services/settingsService.js";
 import { applyReferral } from "./services/referralService.js";
+import { notifyAdmin } from "./services/alertService.js";
 import {
   buildHelpText,
   buildInvite,
@@ -42,6 +43,24 @@ if (!botToken) {
 }
 
 export const bot = new Telegraf(botToken);
+
+/**
+ * Глобальний обробник помилок. Без нього Telegraf перекидає помилку з будь-якого обробника
+ * назовні, цикл long polling зупиняється, а процес лишається "online" у pm2 —
+ * бот перестає відповідати на всі повідомлення й кнопки, хоча сервер працює.
+ */
+bot.catch(async (error, ctx) => {
+  if (error instanceof TelegramError && error.code === 403) {
+    // Юзер заблокував бота — це не збій; позначаємо, щоб cron не слав йому нагадувань
+    const telegramId = ctx.from?.id;
+    if (telegramId) {
+      await User.updateOne({ telegramId }, { $set: { botBlockedAt: new Date() } }).catch(() => undefined);
+    }
+    return;
+  }
+  console.error("[bot] Помилка обробки оновлення:", ctx.updateType, error);
+  notifyAdmin(`Помилка в обробнику бота (${ctx.updateType})`, error);
+});
 
 // "Обличчя" бота: опис до /start, команди в меню, кнопка "🍪 Вчити" біля поля вводу
 void setupBotProfile(bot.telegram);
@@ -163,9 +182,10 @@ bot.start(async (ctx) => {
     await sendStatusCard(ctx, greetingByTime());
   } catch (error: unknown) {
     console.error("Помилка в обробнику /start бота:", error);
-    await ctx.reply(
-      "Сталася помилка при запуску. Будь ласка, спробуйте пізніше.",
-    );
+    // Якщо юзер заблокував бота, відповідь теж впаде з 403 — не перекидаємо її далі
+    await ctx
+      .reply("Сталася помилка при запуску. Будь ласка, спробуйте пізніше.")
+      .catch(() => undefined);
   }
 });
 

@@ -111,7 +111,9 @@ const AppContent = () => {
     }
   }, [isInitializing, onboardingCompleted, pendingRoom, navigate]);
 
-  if (isInitializing || (pendingRoom && !onboardingCompleted)) {
+  // Новачок із запрошенням на дуель спершу проходить онбординг; pendingRoom зберігається,
+  // і після онбордингу ефект вище відкриє кімнату. Раніше тут був вічний лоадер.
+  if (isInitializing) {
     return <PageLoader />;
   }
 
