@@ -145,7 +145,7 @@ async function bootstrap(): Promise<void> {
     // DISABLE_CRON=true — для локальної розробки: якщо ноутбук і сервер працюють з однією базою,
     // розклад на обох слав би нагадування двічі й двічі проводив розіграш
     if (process.env.DISABLE_CRON === "true") {
-      console.log("[CRON] Вимкнено (DISABLE_CRON=true) — нагадування й розіграш не запускаються");
+      console.log("[CRON] Вимкнено (DISABLE_CRON=true) — нагадування й підсумки змагання не запускаються");
     } else {
       initCronJobs();
     }

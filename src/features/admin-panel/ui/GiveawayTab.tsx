@@ -37,15 +37,15 @@ export const GiveawayTab: FC = () => {
     const endNow = async () => {
         const podium = leaders.slice(0, 3).map((u, i) => `${MEDALS[i]} ${u.nickname} — ${u.score}`).join("\n");
         const question = leaders.length
-            ? `Завершити розіграш зараз?\n\nПереможці:\n${podium}\n\nКубки тижня всіх юзерів обнуляться.`
-            : "Цього тижня ніхто не набрав балів — розіграш не буде записано. Продовжити?";
+            ? `Завершити змагання тижня зараз?\n\nПереможці:\n${podium}\n\nКубки тижня всіх юзерів обнуляться.`
+            : "Цього тижня ніхто не набрав балів — тиждень не буде записано в історію. Продовжити?";
         if (!window.confirm(question)) return;
 
         setBusy(true);
         setNotice(null);
         try {
             await adminApi.endGiveaway();
-            setNotice({ kind: "success", text: "Розіграш завершено, кубки тижня обнулено" });
+            setNotice({ kind: "success", text: "Змагання тижня завершено, кубки тижня обнулено" });
             top.reload();
             history.reload();
         } catch (error) {
@@ -84,7 +84,7 @@ export const GiveawayTab: FC = () => {
                 )}
                 {notice && <div className="mt-3"><Notice kind={notice.kind}>{notice.text}</Notice></div>}
                 <AdminButton variant="danger" className="mt-3 w-full" loading={busy} onClick={() => void endNow()}>
-                    <Flag className="h-4 w-4" aria-hidden="true" /> Завершити розіграш зараз
+                    <Flag className="h-4 w-4" aria-hidden="true" /> Завершити змагання зараз
                 </AdminButton>
             </Section>
 
@@ -94,7 +94,7 @@ export const GiveawayTab: FC = () => {
                 ) : history.error ? (
                     <ErrorState message={history.error} onRetry={history.reload} />
                 ) : !history.data || history.data.length === 0 ? (
-                    <EmptyState>Розіграшів ще не було</EmptyState>
+                    <EmptyState>Переможців ще не було</EmptyState>
                 ) : (
                     <ul className="space-y-2">
                         {history.data.map((week) => (

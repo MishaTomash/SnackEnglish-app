@@ -53,7 +53,10 @@ export const TTS_MINI_ONLY_VOICES: readonly string[] = ["ballad", "verse"];
 export const DEFAULT_TTS_INSTRUCTIONS =
     "Speak naturally and warmly with a neutral American accent, at a normal native conversational speed. Do not slow down or over-enunciate. Lively, natural intonation."
 
-export const DEFAULT_SETTINGS: AppSettingsData = {
+export /** Текст часів розіграшу призів: якщо він ще лежить у базі, замінюємо на новий */
+const LEGACY_GIVEAWAY_TEXT = "Призи для щотижневого розіграшу — з ваших донатів. Дякуємо всім, хто підтримує 💛";
+
+const DEFAULT_SETTINGS: AppSettingsData = {
     paymentsEnabled: false,
     dailyLessonLimit: 5,
     dailyGoalLessons: 3,
@@ -63,7 +66,7 @@ export const DEFAULT_SETTINGS: AppSettingsData = {
     supportTitle: "Підтримай Снекі 🍪",
     supportText:
         "SnackEnglish безкоштовний, і ми хочемо, щоб так і лишалось. Якщо тобі подобається — підтримай проєкт донатом на банку. Будь-яка сума допомагає 💛",
-    supportGiveawayText: "Призи для щотижневого розіграшу — з ваших донатів. Дякуємо всім, хто підтримує 💛",
+    supportGiveawayText: "Снекі росте завдяки вашій підтримці: кожен донат допомагає робити нові уроки й ігри. Дякуємо всім, хто підтримує 💛",
     referralBonus: 20,
     botWelcomeImage: "",
     ttsEnabled: false,
@@ -102,7 +105,11 @@ export const getAppSettings = async (): Promise<AppSettingsData> => {
         supportUrl: row?.supportUrl || DEFAULT_SETTINGS.supportUrl,
         supportTitle: row?.supportTitle || DEFAULT_SETTINGS.supportTitle,
         supportText: row?.supportText || DEFAULT_SETTINGS.supportText,
-        supportGiveawayText: row?.supportGiveawayText || DEFAULT_SETTINGS.supportGiveawayText,
+        // Старий текст про призи з донатів більше не актуальний — показуємо новий
+        supportGiveawayText:
+            row?.supportGiveawayText && row.supportGiveawayText !== LEGACY_GIVEAWAY_TEXT
+                ? row.supportGiveawayText
+                : DEFAULT_SETTINGS.supportGiveawayText,
         referralBonus: row?.referralBonus ?? DEFAULT_SETTINGS.referralBonus,
         botWelcomeImage: row?.botWelcomeImage ?? DEFAULT_SETTINGS.botWelcomeImage,
         ttsEnabled: row?.ttsEnabled ?? DEFAULT_SETTINGS.ttsEnabled,
@@ -239,7 +246,7 @@ export const updateAppSettings = async (input: unknown): Promise<SettingsUpdateR
     }
     if (body.supportGiveawayText !== undefined) {
         const value = readText(body.supportGiveawayText, 300);
-        if (value === null) return { ok: false, error: "Текст для розіграшу — до 300 символів" };
+        if (value === null) return { ok: false, error: "Текст для вкладки «Змагання» — до 300 символів" };
         patch.supportGiveawayText = value;
     }
     if (body.supportEnabled !== undefined) {

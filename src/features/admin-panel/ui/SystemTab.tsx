@@ -102,7 +102,7 @@ export const SystemTab: FC = () => {
                     <dd className="text-right text-[var(--text-main)]">{formatDateTime(data.serverTime)}</dd>
                     <dt className="text-[var(--text-muted)]">Часовий пояс</dt>
                     <dd className="text-right text-[var(--text-main)]">{data.timezone}</dd>
-                    <dt className="text-[var(--text-muted)]">Наступний розіграш</dt>
+                    <dt className="text-[var(--text-muted)]">Кінець тижня змагання</dt>
                     <dd className="text-right text-[var(--text-main)]">{formatDateTime(data.nextGiveawayAt)}</dd>
                     <dt className="text-[var(--text-muted)]">Node.js</dt>
                     <dd className="text-right text-[var(--text-main)]">{data.nodeVersion}</dd>

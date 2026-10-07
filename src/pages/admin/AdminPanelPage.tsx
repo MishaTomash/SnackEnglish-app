@@ -1,7 +1,7 @@
 // 📁 Файл: SnackEnglish-app/src/pages/admin/AdminPanelPage.tsx
 import type { FC } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, AudioLines, BarChart3, BookOpen, CreditCard, Gift, Megaphone, Server, SlidersHorizontal, Users } from "lucide-react";
+import { ArrowLeft, AudioLines, BarChart3, BookOpen, CreditCard, Flag, Megaphone, Server, SlidersHorizontal, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardTab } from "../../features/admin-panel/ui/DashboardTab";
 import { UsersTab } from "../../features/admin-panel/ui/UsersTab";
@@ -20,7 +20,7 @@ const TABS: { id: TabId; label: string; icon: LucideIcon }[] = [
   { id: "users", label: "Юзери", icon: Users },
   { id: "broadcast", label: "Розсилка", icon: Megaphone },
   { id: "payments", label: "Оплати", icon: CreditCard },
-  { id: "giveaway", label: "Розіграш", icon: Gift },
+  { id: "giveaway", label: "Змагання", icon: Flag },
   { id: "content", label: "Контент", icon: BookOpen },
   { id: "tts", label: "Озвучка", icon: AudioLines },
   { id: "settings", label: "Налаштування", icon: SlidersHorizontal },

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Trophy,
-  Gift,
+  Flag,
   ShieldAlert,
   Info,
   ChevronDown,
@@ -197,13 +197,13 @@ export const LeaderboardPage = () => {
 
   const handleForceEndGiveaway = async () => {
     if (
-      window.confirm("Закінчити розіграш і визначити переможців прямо зараз?")
+      window.confirm("Закінчити змагання тижня і визначити переможців прямо зараз?")
     ) {
       try {
         await forceEndGiveaway();
-        alert("Розіграш успішно завершено! Бали рейтингу скинуто.");
+        alert("Змагання тижня завершено! Бали рейтингу скинуто.");
       } catch {
-        alert("Не вдалося завершити розіграш. Спробуй ще раз.");
+        alert("Не вдалося завершити змагання. Спробуй ще раз.");
       }
     }
   };
@@ -233,7 +233,7 @@ export const LeaderboardPage = () => {
               : "text-[var(--text-muted)]"
             }`}
         >
-          <Gift className="w-4 h-4" /> Розіграш
+          <Flag className="w-4 h-4" /> Змагання
         </button>
       </div>
 
@@ -263,7 +263,8 @@ export const LeaderboardPage = () => {
                 <p>
                   За кожен пройдений урок на сторінці Навчання ти отримуєш рівно{" "}
                   <b>10 кубків</b> до тижневого рахунку. Хто набрав найбільше
-                  кубків за тиждень — той і виграє розіграш.
+                  кубків за тиждень, той і перемагає. Топ-3 тижня назавжди
+                  потрапляють в історію переможців.
                 </p>
                 <p>
                   Кубки за весь час нікуди не зникають — вони й далі показуються
@@ -392,7 +393,7 @@ export const LeaderboardPage = () => {
                 onClick={handleForceEndGiveaway}
                 className="w-full bg-red-500 hover:bg-red-600 text-white font-bold border-none shadow-md"
               >
-                Закінчити розіграш зараз
+                Закінчити змагання зараз
               </Button>
             </Card>
           )}
@@ -400,7 +401,7 @@ export const LeaderboardPage = () => {
           <Card className="p-5 bg-gradient-to-br from-[var(--accent-success)]/20 to-[var(--bg-app)] border-[var(--accent-success)]/30 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[var(--accent-success)] font-black text-lg">
-                <Gift className="w-6 h-6" /> Наступний розіграш
+                <Flag className="w-6 h-6" /> До кінця тижня
               </div>
             </div>
 
@@ -440,13 +441,13 @@ export const LeaderboardPage = () => {
             <div className="flex items-start gap-2 bg-[var(--bg-app)]/50 p-3 rounded-xl mt-2">
               <Timer className="w-4 h-4 text-[var(--accent-success)] shrink-0 mt-0.5" />
               <p className="text-xs text-[var(--text-main)] leading-relaxed font-medium">
-                Участь автоматична! Щонеділі о {GIVEAWAY_TIME_LABEL} топ-3 гравці з найвищим
-                рейтингом стають переможцями та назавжди потрапляють в історію.
+                Це щотижневе змагання, участь автоматична. Щонеділі о {GIVEAWAY_TIME_LABEL} топ-3 гравці
+                з найвищим рейтингом стають переможцями тижня та назавжди потрапляють в історію.
               </p>
             </div>
           </Card>
 
-          {/* Призи — з донатів; блок видно лише якщо підтримку увімкнено в адмінці */}
+          {/* Підтримка проєкту; блок видно лише якщо підтримку увімкнено в адмінці */}
           <SupportCard place="giveaway" />
 
           <div>
@@ -459,7 +460,7 @@ export const LeaderboardPage = () => {
                   <Trophy className="w-6 h-6" />
                 </div>
                 <p className="text-sm font-bold text-[var(--text-main)]">
-                  Перший розіграш ще попереду!
+                  Перший тиждень змагання ще триває!
                 </p>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
                   Грай щодня, щоб потрапити в історію.

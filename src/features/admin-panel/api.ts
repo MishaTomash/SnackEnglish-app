@@ -110,6 +110,8 @@ export interface BroadcastForm {
     buttonText: string;
     buttonUrl: string;
     buttonOpenApp: boolean;
+    /** Кнопка «Підтримати» — посилання на банку з налаштувань */
+    buttonSupport: boolean;
     audienceType: AudienceType;
     level: string;
 }
@@ -350,6 +352,7 @@ const toBroadcastFormData = (form: BroadcastForm): FormData => {
         data.append("buttonText", form.buttonText.trim());
         data.append("buttonUrl", form.buttonUrl.trim());
         data.append("buttonOpenApp", String(form.buttonOpenApp));
+        data.append("buttonSupport", String(form.buttonSupport));
     }
     if (form.photo) data.append("photo", form.photo);
     return data;

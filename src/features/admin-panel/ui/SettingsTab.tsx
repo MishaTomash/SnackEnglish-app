@@ -182,7 +182,7 @@ export const SettingsTab: FC = () => {
                         checked={form.supportEnabled}
                         onChange={(value) => update({ supportEnabled: value })}
                         label="Показувати «Підтримати»"
-                        hint="Після уроку (не частіше за раз на 3 дні), у вкладці «Розіграш» і в налаштуваннях."
+                        hint="Після уроку (не частіше за раз на 3 дні), у вкладці «Змагання» і в налаштуваннях."
                     />
                     <Field label="Посилання на банку" hint="Наприклад, https://send.monobank.ua/jar/...">
                         <input
@@ -210,7 +210,7 @@ export const SettingsTab: FC = () => {
                             className={`${fieldClass} resize-y`}
                         />
                     </Field>
-                    <Field label="Текст у вкладці «Розіграш»">
+                    <Field label="Текст у вкладці «Змагання»">
                         <textarea
                             value={form.supportGiveawayText}
                             onChange={(e) => update({ supportGiveawayText: e.target.value })}
